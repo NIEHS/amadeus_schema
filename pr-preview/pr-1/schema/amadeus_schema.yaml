@@ -6823,7 +6823,7 @@ classes:
     class_uri: amadeus:ProvenanceChain
 metamodel_version: 1.11.0
 source_file: amadeus_schema.yaml
-source_file_date: '2026-11-01T15:38:32'
+source_file_date: '2026-11-02T13:30:15'
 source_file_size: 6087
-generation_date: '2026-11-01T15:38:41'
+generation_date: '2026-11-02T13:30:27'
 
