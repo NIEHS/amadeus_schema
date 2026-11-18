@@ -29,7 +29,7 @@ from pydantic import (
 )
 
 
-metamodel_version = "1.11.0"
+metamodel_version = "1.12.0"
 version = "0.1.0"
 
 
@@ -169,7 +169,7 @@ linkml_meta = LinkMLMeta({'default_prefix': 'amadeus',
      'see_also': ['https://monarch-initiative.github.io/linkml-microschemas-envar/overview/',
                   'https://github.com/NIEHS/HEW_Catalog_Data_Model/tree/develop',
                   'https://github.com/NIEHS/amadeus/issues/249'],
-     'source_file': 'src/amadeus_schema/schema/amadeus_schema.yaml',
+     'source_file': 'amadeus_schema/src/amadeus_schema/schema/amadeus_schema.yaml',
      'title': 'AmadeusDB — Data Model'} )
 
 class SpatialSupportTypeEnum(str, Enum):
@@ -241,6 +241,10 @@ class TemporalResolutionEnum(str, Enum):
     hourly = "hourly"
     three_hourly = "three_hourly"
     daily = "daily"
+    multi_day = "multi_day"
+    """
+    Observations or composites at a nominal interval longer than one day and shorter than a month. Record the nominal interval separately in temporal_resolution_iso; actual asset times/bounds take precedence at calendar boundaries. Includes GridMET pentads and MOD13A2.
+    """
     monthly = "monthly"
     seasonal = "seasonal"
     annual = "annual"
@@ -580,11 +584,145 @@ class RunRoleEnum(str, Enum):
 
 class PhiStatusEnum(str, Enum):
     """
-    Whether a location set, and anything derived from it, is protected health information. An enum rather than a boolean for two reasons: it matches EnVar's `phi_status` exactly, and — see `ValueMaterializationEnum` — a boolean cannot be used as a LinkML rule precondition.
+    Scoped PHI classification for source data, supplied locations or an exact output. The owning slot defines the scope; classifications do not propagate automatically. Preserves EnVar's phi_status value set. An enum rather than a boolean also supports LinkML rule preconditions; see ValueMaterializationEnum.
     """
     no_phi = "no_phi"
     aggregated_no_phi = "aggregated_no_phi"
     phi_present = "phi_present"
+
+
+class PrivacyAssessmentStatusEnum(str, Enum):
+    """
+    Local assessment lifecycle, separate from PHI classification. An absent classification or an unassessed record never means no_phi.
+    """
+    not_assessed = "not_assessed"
+    """
+    No assessment is asserted.
+    """
+    in_progress = "in_progress"
+    """
+    Assessment is underway; no completed finding is asserted.
+    """
+    assessed = "assessed"
+    """
+    A finding with supporting evidence has been recorded.
+    """
+
+
+class LocationIdentifiabilityEnum(str, Enum):
+    """
+    Local geographic identifiability finding, independent of legal PHI classification and meaningful only in the documented assessment context.
+    """
+    not_assessed = "not_assessed"
+    """
+    Individual or household location identifiability is unknown.
+    """
+    potentially_identifiable = "potentially_identifiable"
+    """
+    Location inference may be possible in the assessed context.
+    """
+    not_identifiable_in_assessed_context = "not_identifiable_in_assessed_context"
+    """
+    No identifiability established within the documented scope.
+    """
+
+
+class PrivacyTransformationEnum(str, Enum):
+    """
+    Transformation vocabulary from EnVar SPEC section 4.8. A method name records an action, never a guarantee of privacy or de-identification.
+    """
+    none = "none"
+    """
+    Explicitly no transformation; distinct from an absent record.
+    """
+    deterministic_geographic_jitter = "deterministic_geographic_jitter"
+    """
+    Deterministic coordinate displacement.
+    """
+    suppression = "suppression"
+    """
+    Withholding selected locations, values or records.
+    """
+    aggregation_to_coarser_unit = "aggregation_to_coarser_unit"
+    """
+    Spatial or temporal aggregation to a coarser support.
+    """
+    stochastic_perturbation = "stochastic_perturbation"
+    """
+    Random perturbation of geometry or values.
+    """
+
+
+class PrivacyTransformationStageEnum(str, Enum):
+    """
+    Local stage at which a requested or performed action applies.
+    """
+    before_extraction = "before_extraction"
+    """
+    Changes the locations used to obtain environmental values.
+    """
+    after_extraction = "after_extraction"
+    """
+    Changes extracted values or their linked locations.
+    """
+    release_representation = "release_representation"
+    """
+    Changes released representation; original values may retain location information.
+    """
+
+
+class PrivacyReleaseDecisionEnum(str, Enum):
+    """
+    Local authorization record for one exact output artifact. Approval is recorded governance, not independently verified legal de-identification.
+    """
+    pending = "pending"
+    """
+    No release authorization recorded.
+    """
+    denied = "denied"
+    """
+    Release authorization withheld.
+    """
+    approved = "approved"
+    """
+    An assessor authorized the artifact for the recorded audience.
+    """
+
+
+class PrivacyReleaseAccessEnum(str, Enum):
+    """
+    Access context for an artifact-specific release authorization.
+    """
+    restricted = "restricted"
+    """
+    Controlled recipients and access conditions.
+    """
+    public = "public"
+    """
+    Unrestricted recipients; PHI-present outputs cannot be approved.
+    """
+
+
+class LocationPrivacyRoleEnum(str, Enum):
+    """
+    Role of a location, without automatically classifying it as PHI.
+    """
+    unspecified = "unspecified"
+    """
+    Location role has not been declared.
+    """
+    public_site = "public_site"
+    """
+    Public monitoring or reference location.
+    """
+    individual_or_household = "individual_or_household"
+    """
+    Location associated with a person or household.
+    """
+    synthetic = "synthetic"
+    """
+    Invented location; not an actual participant location.
+    """
 
 
 class ValueMaterializationEnum(str, Enum):
@@ -725,6 +863,7 @@ class DataSource(ConfiguredBaseModel):
          'title': 'Data Source'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -732,12 +871,16 @@ class DataSource(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     name: str = Field(default=..., description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -749,7 +892,11 @@ class DataSource(ConfiguredBaseModel):
                        'GridDefinition',
                        'CanonicalVariable',
                        'ProductVariable']} })
-    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource', 'Product', 'CanonicalVariable', 'LocationSet'],
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'CanonicalVariable',
+                       'LocationSet'],
          'slot_uri': 'dcterms:description'} })
     producer_institution: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource'],
          'exact_mappings': ['envar:source_producer_institution'],
@@ -775,13 +922,90 @@ class DataSource(ConfiguredBaseModel):
         pattern=re.compile(r"^10\.[0-9]{4,9}/.+$")
         if isinstance(v, list):
             for element in v:
-                if isinstance(element, str) and not pattern.match(element):
+                if isinstance(element, str) and not pattern.search(element):
                     err_msg = f"Invalid doi format: {element}"
                     raise ValueError(err_msg)
-        elif isinstance(v, str) and not pattern.match(v):
+        elif isinstance(v, str) and not pattern.search(v):
             err_msg = f"Invalid doi format: {v}"
             raise ValueError(err_msg)
         return v
+
+
+class PrivacyProfile(ConfiguredBaseModel):
+    """
+    Reusable public metadata about source classification and potential location-linkage concerns. Contains no individual locations, linkage keys, transformation secrets or release records. Product and its grid retain authoritative spatial and temporal resolution; this profile does not duplicate those values. Source PHI status does not propagate to location-linked results. Presence of a profile is not a risk assessment.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/catalog',
+         'rules': [{'description': 'A source classification finding must name its '
+                                   'status and evidence.',
+                    'postconditions': {'slot_conditions': {'assessment_evidence_reference': {'name': 'assessment_evidence_reference',
+                                                                                             'required': True},
+                                                           'source_phi_status': {'name': 'source_phi_status',
+                                                                                 'required': True}}},
+                    'preconditions': {'slot_conditions': {'source_phi_assessment_status': {'equals_string': 'assessed',
+                                                                                           'name': 'source_phi_assessment_status'}}}},
+                   {'description': 'A completed linkage-risk assessment needs evidence '
+                                   'and context.',
+                    'postconditions': {'slot_conditions': {'assessment_evidence_reference': {'name': 'assessment_evidence_reference',
+                                                                                             'required': True},
+                                                           'linkage_risk_note': {'name': 'linkage_risk_note',
+                                                                                 'required': True}}},
+                    'preconditions': {'slot_conditions': {'linkage_risk_assessment_status': {'equals_string': 'assessed',
+                                                                                             'name': 'linkage_risk_assessment_status'}}}}],
+         'slot_usage': {'linkage_risk_assessment_status': {'name': 'linkage_risk_assessment_status',
+                                                           'required': True},
+                        'location_identifiability': {'name': 'location_identifiability',
+                                                     'required': True},
+                        'location_linked_review_required': {'name': 'location_linked_review_required',
+                                                            'required': True},
+                        'name': {'name': 'name', 'required': True},
+                        'privacy_profile_version': {'name': 'privacy_profile_version',
+                                                    'required': True},
+                        'source_phi_assessment_status': {'name': 'source_phi_assessment_status',
+                                                         'required': True}},
+         'title': 'Public Product Privacy Profile'})
+
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    name: str = Field(default=..., description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'LocationSet',
+                       'ExtractionRequest']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'CanonicalVariable',
+                       'LocationSet'],
+         'slot_uri': 'dcterms:description'} })
+    privacy_profile_version: str = Field(default=..., description="""Version of the curated profile definition, not a completed assessment.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile']} })
+    source_phi_assessment_status: PrivacyAssessmentStatusEnum = Field(default=..., description="""Assessment lifecycle for PHI classification of the described source only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile']} })
+    source_phi_status: Optional[PhiStatusEnum] = Field(default=None, description="""Source-scoped PHI finding using the existing vocabulary. Not an assertion about the entire EnVar sidecar or any downstream location-linked output.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile']} })
+    source_phi_status_missing_reason: Optional[MissingReasonEnum] = Field(default=None, description="""Reason source classification is unspecified; never substitutes for no_phi.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile']} })
+    assessment_evidence_reference: Optional[str] = Field(default=None, description="""Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile',
+                       'PrivacyDeclaration',
+                       'PrivacyReleaseAssessment']} })
+    location_identifiability: LocationIdentifiabilityEnum = Field(default=..., description="""Potential individual or household location identifiability within assessment scope.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile', 'PrivacyDeclaration']} })
+    linkage_risk_assessment_status: PrivacyAssessmentStatusEnum = Field(default=..., description="""Assessment lifecycle for geographic inference from linked outputs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile']} })
+    linkage_risk_note: Optional[str] = Field(default=None, description="""Context and limitations of potential inference from variables, time series, distances or combined datasets. A caution is not a measured risk score.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile']} })
+    location_linked_review_required: bool = Field(default=..., description="""Whether release of location-linked outputs requires a separate contextual review.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile']} })
 
 
 class Product(ConfiguredBaseModel):
@@ -842,6 +1066,7 @@ class Product(ConfiguredBaseModel):
          'title': 'Product'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -849,12 +1074,16 @@ class Product(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     name: str = Field(default=..., description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -865,7 +1094,11 @@ class Product(ConfiguredBaseModel):
                        'GridDefinition',
                        'CanonicalVariable',
                        'ProductVariable']} })
-    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource', 'Product', 'CanonicalVariable', 'LocationSet'],
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'CanonicalVariable',
+                       'LocationSet'],
          'slot_uri': 'dcterms:description'} })
     data_source: str = Field(default=..., description="""The publishing programme.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product']} })
     product_version: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Product'],
@@ -925,16 +1158,17 @@ class Product(ConfiguredBaseModel):
     amadeus_calculate_covariate: Optional[str] = Field(default=None, description="""The string accepted by `calculate_covariates(covariate=)`. Distinct from the process name — `modis_swath`/`modis_merge` both calculate as `modis`, and `aqs` processes but does not calculate.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product']} })
     supports_server_side_subset: Optional[bool] = Field(default=None, description="""Whether the provider will return a geometry/time/variable subset. Drives the achievable `MaterializationModeEnum`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product']} })
     stac_collection_id: Optional[str] = Field(default=None, description="""STAC collection identifier, where the product is STAC-published.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'Asset']} })
+    privacy_profile: Optional[str] = Field(default=None, description="""Optional reference to public privacy metadata. Omission preserves legacy catalogs and makes no statement about source PHI or downstream safety.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product']} })
 
     @field_validator('crs')
     def pattern_crs(cls, v):
         pattern=re.compile(r"^[A-Za-z]+:[0-9]+$")
         if isinstance(v, list):
             for element in v:
-                if isinstance(element, str) and not pattern.match(element):
+                if isinstance(element, str) and not pattern.search(element):
                     err_msg = f"Invalid crs format: {element}"
                     raise ValueError(err_msg)
-        elif isinstance(v, str) and not pattern.match(v):
+        elif isinstance(v, str) and not pattern.search(v):
             err_msg = f"Invalid crs format: {v}"
             raise ValueError(err_msg)
         return v
@@ -944,10 +1178,10 @@ class Product(ConfiguredBaseModel):
         pattern=re.compile(r"^10\.[0-9]{4,9}/.+$")
         if isinstance(v, list):
             for element in v:
-                if isinstance(element, str) and not pattern.match(element):
+                if isinstance(element, str) and not pattern.search(element):
                     err_msg = f"Invalid doi format: {element}"
                     raise ValueError(err_msg)
-        elif isinstance(v, str) and not pattern.match(v):
+        elif isinstance(v, str) and not pattern.search(v):
             err_msg = f"Invalid doi format: {v}"
             raise ValueError(err_msg)
         return v
@@ -977,6 +1211,7 @@ class GridDefinition(ConfiguredBaseModel):
          'title': 'Grid Definition'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -984,12 +1219,16 @@ class GridDefinition(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     name: Optional[str] = Field(default=None, description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1036,10 +1275,10 @@ class GridDefinition(ConfiguredBaseModel):
         pattern=re.compile(r"^[A-Za-z]+:[0-9]+$")
         if isinstance(v, list):
             for element in v:
-                if isinstance(element, str) and not pattern.match(element):
+                if isinstance(element, str) and not pattern.search(element):
                     err_msg = f"Invalid crs format: {element}"
                     raise ValueError(err_msg)
-        elif isinstance(v, str) and not pattern.match(v):
+        elif isinstance(v, str) and not pattern.search(v):
             err_msg = f"Invalid crs format: {v}"
             raise ValueError(err_msg)
         return v
@@ -1082,6 +1321,7 @@ class CanonicalVariable(ConfiguredBaseModel):
          'title': 'Canonical Variable'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1089,12 +1329,16 @@ class CanonicalVariable(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     name: str = Field(default=..., description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1107,7 +1351,11 @@ class CanonicalVariable(ConfiguredBaseModel):
                        'GridDefinition',
                        'CanonicalVariable',
                        'ProductVariable']} })
-    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource', 'Product', 'CanonicalVariable', 'LocationSet'],
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'CanonicalVariable',
+                       'LocationSet'],
          'slot_uri': 'dcterms:description'} })
     standard_name: str = Field(default=..., description="""The standard-name identifier for the physical quantity, as a CURIE so no single naming authority is privileged. Prefer a CF standard name where one exists; fall back to ECTO/ENVO or a minted `AMADEUS:` term. The prefix carries the authority; the slot name does not.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CanonicalVariable'],
          'exact_mappings': ['envar:standard_name', 'hew:measured_property'],
@@ -1187,6 +1435,7 @@ class ProductVariable(ConfiguredBaseModel):
          'title': 'Product Variable'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1194,11 +1443,14 @@ class ProductVariable(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'Asset', 'VectorFeature']} })
     canonical_variable: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
     native_name: str = Field(default=..., description="""The variable's name in the source: a netCDF variable name, a MODIS subdataset, an AQS parameter code.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable'],
@@ -1308,6 +1560,7 @@ class Asset(ConfiguredBaseModel):
          'title': 'Asset'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1315,11 +1568,14 @@ class Asset(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'Asset', 'VectorFeature']} })
     asset_key: Optional[str] = Field(default=None, description="""STAC asset key or other within-item key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     url: Optional[str] = Field(default=None, description="""Where the bytes live upstream. Retained even after local caching so a result can be re-derived from source.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
@@ -1349,7 +1605,7 @@ class Asset(ConfiguredBaseModel):
     vertical_levels_present: Optional[list[float]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     stac_collection_id: Optional[str] = Field(default=None, description="""STAC collection identifier, where the product is STAC-published.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'Asset']} })
     stac_item_id: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
-    materialization_mode: MaterializationModeEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'ExtractionRequest', 'ToolRun']} })
+    materialization_mode: MaterializationModeEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'ToolRun', 'ExtractionRequest']} })
     cache_expires_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     value_state: ValueMaterializationEnum = Field(default=..., description="""Whether rows for this asset exist in a value table. `registered_only` is the normal case for the asset-centric discovery path.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     produced_by_run: Optional[str] = Field(default=None, description="""Identifier of the tool run that registered or materialised this asset. Typed as a string rather than an object reference to keep the catalog and provenance modules independently loadable; the FK is added by the SQL post-processor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
@@ -1433,6 +1689,7 @@ class AmbientValue(ConfiguredBaseModel):
          'title': 'Ambient Value'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1440,15 +1697,18 @@ class AmbientValue(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product_variable: str = Field(default=..., description="""Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     canonical_variable: str = Field(default=..., description="""Denormalised from `product_variable` on purpose. Cross-source queries (\"all daily maximum temperature within this polygon\") are the common case, and making them a two-hop join is a performance tax on the query the whole architecture exists to serve.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
     asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
     value: Optional[float] = Field(default=None, description="""The value in the canonical variable's units. Null when `null_semantics` explains why.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     value_unit_ucum: Optional[str] = Field(default=None, description="""Units of `value`, denormalised from the canonical variable. Redundant by design: a value row that travels out of the database as CSV or Parquet must not lose its units on the way.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     native_value: Optional[float] = Field(default=None, description="""The value exactly as the source shipped it, before scale, offset and unit conversion. Kept so a conversion bug is discoverable after the fact instead of being baked in irreversibly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
@@ -1518,6 +1778,7 @@ class StationObservation(AmbientValue):
     station_valid_from: Optional[date] = Field(default=None, description="""Station moves are modelled as a validity interval on the observation's station identity rather than by mutating the station. \"Station moves/POC changes\" is a named edge case in the plan's test matrix.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StationObservation']} })
     station_valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StationObservation']} })
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1525,15 +1786,18 @@ class StationObservation(AmbientValue):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product_variable: str = Field(default=..., description="""Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     canonical_variable: str = Field(default=..., description="""Denormalised from `product_variable` on purpose. Cross-source queries (\"all daily maximum temperature within this polygon\") are the common case, and making them a two-hop join is a performance tax on the query the whole architecture exists to serve.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
     asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
     value: Optional[float] = Field(default=None, description="""The value in the canonical variable's units. Null when `null_semantics` explains why.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     value_unit_ucum: Optional[str] = Field(default=None, description="""Units of `value`, denormalised from the canonical variable. Redundant by design: a value row that travels out of the database as CSV or Parquet must not lose its units on the way.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     native_value: Optional[float] = Field(default=None, description="""The value exactly as the source shipped it, before scale, offset and unit conversion. Kept so a conversion bug is discoverable after the fact instead of being baked in irreversibly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
@@ -1611,6 +1875,7 @@ class GridCellValue(AmbientValue):
                        'LocationSet',
                        'Location']} })
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1618,15 +1883,18 @@ class GridCellValue(AmbientValue):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product_variable: str = Field(default=..., description="""Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     canonical_variable: str = Field(default=..., description="""Denormalised from `product_variable` on purpose. Cross-source queries (\"all daily maximum temperature within this polygon\") are the common case, and making them a two-hop join is a performance tax on the query the whole architecture exists to serve.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
     asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
     value: Optional[float] = Field(default=None, description="""The value in the canonical variable's units. Null when `null_semantics` explains why.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     value_unit_ucum: Optional[str] = Field(default=None, description="""Units of `value`, denormalised from the canonical variable. Redundant by design: a value row that travels out of the database as CSV or Parquet must not lose its units on the way.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     native_value: Optional[float] = Field(default=None, description="""The value exactly as the source shipped it, before scale, offset and unit conversion. Kept so a conversion bug is discoverable after the fact instead of being baked in irreversibly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
@@ -1684,6 +1952,7 @@ class AreaValue(AmbientValue):
                        'Location']} })
     area_km2: Optional[float] = Field(default=None, description="""Materialised area. Needed to make extensive values (an emission mass) convertible to intensive ones (a flux density) without recomputing geodesic area per query.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AreaValue']} })
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1691,15 +1960,18 @@ class AreaValue(AmbientValue):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product_variable: str = Field(default=..., description="""Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     canonical_variable: str = Field(default=..., description="""Denormalised from `product_variable` on purpose. Cross-source queries (\"all daily maximum temperature within this polygon\") are the common case, and making them a two-hop join is a performance tax on the query the whole architecture exists to serve.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
     asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
     value: Optional[float] = Field(default=None, description="""The value in the canonical variable's units. Null when `null_semantics` explains why.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     value_unit_ucum: Optional[str] = Field(default=None, description="""Units of `value`, denormalised from the canonical variable. Redundant by design: a value row that travels out of the database as CSV or Parquet must not lose its units on the way.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     native_value: Optional[float] = Field(default=None, description="""The value exactly as the source shipped it, before scale, offset and unit conversion. Kept so a conversion bug is discoverable after the fact instead of being baked in irreversibly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
@@ -1762,6 +2034,7 @@ class HexCellValue(AmbientValue):
     coverage_fraction: float = Field(default=..., description="""Fraction of the hex actually covered by contributing source support.""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['HexCellValue', 'AmbientValueAtLocation']} })
     contributing_cell_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['HexCellValue']} })
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1769,15 +2042,18 @@ class HexCellValue(AmbientValue):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product_variable: str = Field(default=..., description="""Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     canonical_variable: str = Field(default=..., description="""Denormalised from `product_variable` on purpose. Cross-source queries (\"all daily maximum temperature within this polygon\") are the common case, and making them a two-hop join is a performance tax on the query the whole architecture exists to serve.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
     asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
     value: Optional[float] = Field(default=None, description="""The value in the canonical variable's units. Null when `null_semantics` explains why.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     value_unit_ucum: Optional[str] = Field(default=None, description="""Units of `value`, denormalised from the canonical variable. Redundant by design: a value row that travels out of the database as CSV or Parquet must not lose its units on the way.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
     native_value: Optional[float] = Field(default=None, description="""The value exactly as the source shipped it, before scale, offset and unit conversion. Kept so a conversion bug is discoverable after the fact instead of being baked in irreversibly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
@@ -1810,6 +2086,7 @@ class VectorFeature(ConfiguredBaseModel):
          'title': 'Vector Feature'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -1817,11 +2094,14 @@ class VectorFeature(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     product: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'Asset', 'VectorFeature']} })
     feature_id: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['VectorFeature']} })
     feature_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['VectorFeature'], 'examples': [{'value': 'road_segment'}]} })
@@ -1840,352 +2120,7 @@ class VectorFeature(ConfiguredBaseModel):
     feature_attributes: Optional[str] = Field(default=None, description="""Source attributes as a JSON object string. Deliberately opaque: road classifications and similar source-specific schemas should not be forced into the core model, and promoting one to a first-class slot is a decision to take when a real query needs it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['VectorFeature']} })
     length_m: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['VectorFeature']} })
     asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-
-
-class LocationSet(ConfiguredBaseModel):
-    """
-    A user-supplied collection of locations — the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user supplied, and a PHI declaration.
-    `phi_status` defaults to `no_phi` and is the gate on everything else: if a location set is flagged, results derived from it must not be written to shared catalog tables or embedded in an exported EnVar record, whose `phi_status` is a required field precisely so this cannot be left implicit.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
-         'slot_usage': {'crs': {'description': 'Declared, never assumed. '
-                                               '`calculate_covariates()` currently '
-                                               'reprojects `locs` to `crs(from)` '
-                                               'silently; an undeclared input CRS is '
-                                               'the most common way a spatial join '
-                                               'goes quietly wrong.',
-                                'name': 'crs',
-                                'required': True},
-                        'locs_id_field': {'description': "Name of the user's "
-                                                         'identifier column. amadeus '
-                                                         'already takes this as '
-                                                         '`locs_id`; recording it '
-                                                         'means the output column '
-                                                         'names are derivable rather '
-                                                         'than conventional.',
-                                          'examples': [{'value': 'site_id'}],
-                                          'name': 'locs_id_field',
-                                          'required': True},
-                        'phi_status': {'name': 'phi_status', 'required': True}},
-         'title': 'Location Set'})
-
-    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
-                       'Product',
-                       'GridDefinition',
-                       'CanonicalVariable',
-                       'ProductVariable',
-                       'Asset',
-                       'AmbientValue',
-                       'VectorFeature',
-                       'LocationSet',
-                       'Location',
-                       'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
-    name: Optional[str] = Field(default=None, description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
-                       'Product',
-                       'GridDefinition',
-                       'CanonicalVariable',
-                       'LocationSet',
-                       'ExtractionRequest']} })
-    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource', 'Product', 'CanonicalVariable', 'LocationSet'],
-         'slot_uri': 'dcterms:description'} })
-    locs_id_field: str = Field(default=..., description="""Name of the user's identifier column. amadeus already takes this as `locs_id`; recording it means the output column names are derivable rather than conventional.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet'], 'examples': [{'value': 'site_id'}]} })
-    crs: str = Field(default=..., description="""Declared, never assumed. `calculate_covariates()` currently reprojects `locs` to `crs(from)` silently; an undeclared input CRS is the most common way a spatial join goes quietly wrong.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'GridDefinition', 'LocationSet'],
-         'exact_mappings': ['envar:crs', 'hew:coordinate_reference_system_uri'],
-         'examples': [{'value': 'EPSG:4326'}, {'value': 'EPSG:5070'}]} })
-    srid: Optional[int] = Field(default=None, description="""Numeric spatial reference identifier, derived from `crs`. Materialised because `ST_SetSRID` takes an integer and the geometry views need it without a lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product',
-                       'GridDefinition',
-                       'Asset',
-                       'StationObservation',
-                       'GridCellValue',
-                       'AreaValue',
-                       'HexCellValue',
-                       'VectorFeature',
-                       'LocationSet',
-                       'Location']} })
-    geometry_type: Optional[GeometryTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['VectorFeature', 'LocationSet']} })
-    location_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet']} })
-    phi_status: PhiStatusEnum = Field(default=PhiStatusEnum.no_phi, description="""Whether these locations are or derive from protected health information. Gates persistence and export. Same slot name, range and value set as EnVar's required `phi_status`, so an exported record carries it verbatim.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet'],
-         'exact_mappings': ['envar:phi_status'],
-         'ifabsent': 'string(no_phi)'} })
-    provided_by: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet']} })
-    created_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet']} })
-
-    @field_validator('crs')
-    def pattern_crs(cls, v):
-        pattern=re.compile(r"^[A-Za-z]+:[0-9]+$")
-        if isinstance(v, list):
-            for element in v:
-                if isinstance(element, str) and not pattern.match(element):
-                    err_msg = f"Invalid crs format: {element}"
-                    raise ValueError(err_msg)
-        elif isinstance(v, str) and not pattern.match(v):
-            err_msg = f"Invalid crs format: {v}"
-            raise ValueError(err_msg)
-        return v
-
-
-class Location(ConfiguredBaseModel):
-    """
-    One location in a set, with an optional validity interval.
-    `valid_from` / `valid_to` exist because a residential address is not timeless. Address histories, known travel intervals and synthetic residence periods all need them, and without them a value is joined to a place the subject may not have occupied on that date. amadeus does not need to model *why* the interval exists — that is the health layer's business — only to honour it in the join.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
-         'slot_usage': {'location_geom_wkt': {'name': 'location_geom_wkt',
-                                              'required': True},
-                        'location_key': {'description': "The user's own identifier "
-                                                        'value, preserved verbatim.',
-                                         'name': 'location_key',
-                                         'required': True},
-                        'location_set': {'name': 'location_set', 'required': True}},
-         'title': 'Location'})
-
-    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
-                       'Product',
-                       'GridDefinition',
-                       'CanonicalVariable',
-                       'ProductVariable',
-                       'Asset',
-                       'AmbientValue',
-                       'VectorFeature',
-                       'LocationSet',
-                       'Location',
-                       'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
-    location_set: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest']} })
-    location_key: str = Field(default=..., description="""The user's own identifier value, preserved verbatim.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
-    location_geom_wkt: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
-    srid: Optional[int] = Field(default=None, description="""Numeric spatial reference identifier, derived from `crs`. Materialised because `ST_SetSRID` takes an integer and the geometry views need it without a lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product',
-                       'GridDefinition',
-                       'Asset',
-                       'StationObservation',
-                       'GridCellValue',
-                       'AreaValue',
-                       'HexCellValue',
-                       'VectorFeature',
-                       'LocationSet',
-                       'Location']} })
-    buffer_radius_m: Optional[float] = Field(default=None, description="""Buffer radius in metres. Metres, explicitly — amadeus currently interprets `radius` in the units of the *projected* geometry's CRS, which for a geographic CRS means degrees, and the docs describe it as metres. Declaring the unit in the schema removes the ambiguity.""", ge=0.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'AmbientValueAtLocation'],
-         'exact_mappings': ['envar:extraction_buffer_m']} })
-    valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
-    valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
-    target_geography_type: Optional[TargetGeographyTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest']} })
-
-
-class ExtractionRequest(ConfiguredBaseModel):
-    """
-    A declarative, reproducible specification of an extraction: which variables, over which locations, for which time window, with which buffer, aggregation, weighting and lags.
-    The rules below are the ones that make the request *checkable before it runs*, which is the point. The extensivity rule in particular turns the project lead's \"intensive vs extensive should be explicit\" from documentation into a validation error.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
-         'rules': [{'description': 'A buffer without an aggregation method is '
-                                   'ambiguous — there are now many source values per '
-                                   'location and nothing says how they combine. '
-                                   'amadeus\'s current default (`fun = "mean"`) is '
-                                   'silently wrong for every extensive variable.',
-                    'postconditions': {'slot_conditions': {'aggregation_method': {'name': 'aggregation_method',
-                                                                                  'required': True}}},
-                    'preconditions': {'slot_conditions': {'buffer_radius_m': {'minimum_value': 1e-06,
-                                                                              'name': 'buffer_radius_m'}}}},
-                   {'description': 'Population weighting must name the population '
-                                   'product it weighted by. "Population-weighted" with '
-                                   'no stated population raster is not reproducible.',
-                    'postconditions': {'slot_conditions': {'weighting_product_variable': {'name': 'weighting_product_variable',
-                                                                                          'required': True}}},
-                    'preconditions': {'slot_conditions': {'aggregation_method': {'any_of': [{'equals_string': 'population_weighted_mean'}],
-                                                                                 'name': 'aggregation_method'}}}},
-                   {'description': 'The AQS/AirNow rule, enforced at request time. '
-                                   'Mixing preliminary and quality-controlled values '
-                                   'into one result requires the user to have '
-                                   'explicitly chosen a reconciliation policy. The '
-                                   'default is to refuse.',
-                    'postconditions': {'slot_conditions': {'source_priority_policy': {'name': 'source_priority_policy',
-                                                                                      'required': True}}},
-                    'preconditions': {'slot_conditions': {'status_mixing_policy': {'equals_string': 'allow_with_policy',
-                                                                                   'name': 'status_mixing_policy'}}}}],
-         'slot_usage': {'extraction_method': {'name': 'extraction_method',
-                                              'required': True},
-                        'generated_sql': {'description': 'The SQL actually issued. '
-                                                         'Stored so the result is '
-                                                         'auditable against the plan '
-                                                         'the optimiser chose, and so '
-                                                         'a user can take the query '
-                                                         'away and run it themselves — '
-                                                         'which is the "same contract '
-                                                         'in R, SQL, Python or a '
-                                                         'container" promise, made '
-                                                         'concrete.',
-                                          'name': 'generated_sql'},
-                        'location_set': {'name': 'location_set', 'required': True},
-                        'request_hash': {'description': 'Hash over the normalised '
-                                                        'request. The idempotency key: '
-                                                        'the same request re-submitted '
-                                                        'resolves to the existing '
-                                                        'result set instead of '
-                                                        'recomputing it, and a changed '
-                                                        'request is visibly a '
-                                                        'different request.',
-                                         'name': 'request_hash',
-                                         'required': True},
-                        'time_window_end': {'name': 'time_window_end',
-                                            'required': True},
-                        'time_window_start': {'name': 'time_window_start',
-                                              'required': True}},
-         'title': 'Extraction Request'})
-
-    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
-                       'Product',
-                       'GridDefinition',
-                       'CanonicalVariable',
-                       'ProductVariable',
-                       'Asset',
-                       'AmbientValue',
-                       'VectorFeature',
-                       'LocationSet',
-                       'Location',
-                       'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
-    name: Optional[str] = Field(default=None, description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
-                       'Product',
-                       'GridDefinition',
-                       'CanonicalVariable',
-                       'LocationSet',
-                       'ExtractionRequest']} })
-    location_set: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest']} })
-    requested_canonical_variables: Optional[list[str]] = Field(default=None, description="""Request by canonical variable to let the planner choose a source. The preferred form: the user asks for daily maximum temperature, not for `gridmet.tmmx`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    requested_product_variables: Optional[list[str]] = Field(default=None, description="""Request a specific source delivery, pinning the answer. Required when reproducing a published result, since the planner's choice may change.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    time_window_start: datetime  = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    time_window_end: datetime  = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    temporal_grouping: Optional[TemporalGroupingEnum] = Field(default=None, description="""The `.by_time` argument.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
-    buffer_radius_m: Optional[float] = Field(default=None, description="""Buffer radius in metres. Metres, explicitly — amadeus currently interprets `radius` in the units of the *projected* geometry's CRS, which for a geographic CRS means degrees, and the docs describe it as metres. Declaring the unit in the schema removes the ambiguity.""", ge=0.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'AmbientValueAtLocation'],
-         'exact_mappings': ['envar:extraction_buffer_m']} })
-    extraction_method: ExtractionMethodEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
-    aggregation_method: Optional[AggregationMethodEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable',
-                       'ExtractionRequest',
-                       'AmbientValueAtLocation'],
-         'exact_mappings': ['envar:temporal_aggregation_method',
-                            'hew:aggregation_method']} })
-    weighting_product_variable: Optional[str] = Field(default=None, description="""The product variable used as weights (a population density grid).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    lag_days: Optional[list[int]] = Field(default=None, description="""Lags to compute, in days. `calculate_lagged()` already does this; naming them in the request is what lets the result carry which lag it is.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    target_geography_type: Optional[TargetGeographyTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest']} })
-    output_orientation: Optional[TableOrientationEnum] = Field(default=TableOrientationEnum.long, json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'ifabsent': 'string(long)'} })
-    materialization_mode: Optional[MaterializationModeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'ExtractionRequest', 'ToolRun']} })
-    source_priority_policy: Optional[str] = Field(default=None, description="""Ordered source preference for reconciliation, e.g. `aqs > airnow`. Required whenever `status_mixing_policy` is `allow_with_policy`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'examples': [{'value': 'aqs>airnow'}]} })
-    status_mixing_policy: Optional[StatusMixingPolicyEnum] = Field(default=StatusMixingPolicyEnum.refuse, description="""Whether preliminary and quality-controlled values may appear in one result. Defaults to refusing.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'ifabsent': 'string(refuse)'} })
-    strict_extensivity_check: Optional[StrictnessEnum] = Field(default=StrictnessEnum.strict, description="""Whether to reject a request whose aggregation is illegal for the variable's extensivity, or whose variable declares `extensivity: unknown`. Defaults to on: an aggregation that cannot be justified should fail loudly at request time, not produce a plausible number.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'ifabsent': 'string(strict)'} })
-    requested_by: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    request_timestamp_utc: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    request_hash: str = Field(default=..., description="""Hash over the normalised request. The idempotency key: the same request re-submitted resolves to the existing result set instead of recomputing it, and a changed request is visibly a different request.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-    generated_sql: Optional[str] = Field(default=None, description="""The SQL actually issued. Stored so the result is auditable against the plan the optimiser chose, and so a user can take the query away and run it themselves — which is the \"same contract in R, SQL, Python or a container\" promise, made concrete.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
-
-
-class AmbientValueAtLocation(AmbientValue):
-    """
-    The output row: an ambient value assigned to a user location for a time interval, with the extraction that produced it recorded alongside. This is what `calculate_covariates()` returns today, plus the metadata it currently drops.
-    Not an exposure. The location may be a person's address and the row may carry a cohort key, but the value is a property of the place: swap the person, keep the address, and it does not change.
-    What today's output has, that this keeps: location key, time, value. What today's output lacks, that this adds: which product variable and which canonical variable (today encoded positionally in a column name like `weasd_0`), the extraction method and buffer actually used, how many source values contributed, coverage, distance to the contributing station, the quality and status of the inputs, and the run that produced it.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
-         'slot_usage': {'contributing_value_count': {'description': 'How many source '
-                                                                    'values went into '
-                                                                    'this one. A '
-                                                                    'buffer mean over '
-                                                                    'one cell and over '
-                                                                    'four hundred '
-                                                                    'cells are '
-                                                                    'different claims; '
-                                                                    'today both come '
-                                                                    'back as an '
-                                                                    'undistinguished '
-                                                                    'number.',
-                                                     'name': 'contributing_value_count'},
-                        'distance_to_source_m': {'description': 'Distance to the '
-                                                                'contributing station, '
-                                                                'for nearest-station '
-                                                                'extraction. Paired '
-                                                                "with the request's "
-                                                                'max-distance setting, '
-                                                                'this is what makes a '
-                                                                'nearest-station '
-                                                                'assignment '
-                                                                'defensible.',
-                                                 'name': 'distance_to_source_m'},
-                        'extraction_method': {'name': 'extraction_method',
-                                              'required': True},
-                        'extraction_request': {'name': 'extraction_request',
-                                               'required': True},
-                        'location': {'name': 'location', 'required': True},
-                        'output_column_name': {'description': 'The wide-format column '
-                                                              'name this value would '
-                                                              'occupy, for backward '
-                                                              'compatibility with '
-                                                              'existing amadeus and '
-                                                              'beethoven consumers '
-                                                              '(`weasd_0`, '
-                                                              '`tmmx_10000`). '
-                                                              'Generated from the '
-                                                              'request, not parsed '
-                                                              'back out of it — the '
-                                                              'long form is canonical '
-                                                              'and the wide form is a '
-                                                              'projection.',
-                                               'name': 'output_column_name'}},
-         'title': 'Ambient Value at Location'})
-
-    location: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
-    extraction_request: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
-    buffer_radius_m: Optional[float] = Field(default=None, description="""Buffer radius in metres. Metres, explicitly — amadeus currently interprets `radius` in the units of the *projected* geometry's CRS, which for a geographic CRS means degrees, and the docs describe it as metres. Declaring the unit in the schema removes the ambiguity.""", ge=0.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'AmbientValueAtLocation'],
-         'exact_mappings': ['envar:extraction_buffer_m']} })
-    extraction_method: ExtractionMethodEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
-    aggregation_method: Optional[AggregationMethodEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable',
-                       'ExtractionRequest',
-                       'AmbientValueAtLocation'],
-         'exact_mappings': ['envar:temporal_aggregation_method',
-                            'hew:aggregation_method']} })
-    contributing_value_count: Optional[int] = Field(default=None, description="""How many source values went into this one. A buffer mean over one cell and over four hundred cells are different claims; today both come back as an undistinguished number.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
-    coverage_fraction: Optional[float] = Field(default=None, description="""Fraction of the hex actually covered by contributing source support.""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['HexCellValue', 'AmbientValueAtLocation']} })
-    distance_to_source_m: Optional[float] = Field(default=None, description="""Distance to the contributing station, for nearest-station extraction. Paired with the request's max-distance setting, this is what makes a nearest-station assignment defensible.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
-    lag_days_applied: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
-    temporal_grouping: Optional[TemporalGroupingEnum] = Field(default=None, description="""The `.by_time` argument.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
-    output_column_name: Optional[str] = Field(default=None, description="""The wide-format column name this value would occupy, for backward compatibility with existing amadeus and beethoven consumers (`weasd_0`, `tmmx_10000`). Generated from the request, not parsed back out of it — the long form is canonical and the wide form is a projection.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
-    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
-                       'Product',
-                       'GridDefinition',
-                       'CanonicalVariable',
-                       'ProductVariable',
-                       'Asset',
-                       'AmbientValue',
-                       'VectorFeature',
-                       'LocationSet',
-                       'Location',
-                       'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
-    product_variable: str = Field(default=..., description="""Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    canonical_variable: str = Field(default=..., description="""Denormalised from `product_variable` on purpose. Cross-source queries (\"all daily maximum temperature within this polygon\") are the common case, and making them a two-hop join is a performance tax on the query the whole architecture exists to serve.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
-    asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
-    value: Optional[float] = Field(default=None, description="""The value in the canonical variable's units. Null when `null_semantics` explains why.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    value_unit_ucum: Optional[str] = Field(default=None, description="""Units of `value`, denormalised from the canonical variable. Redundant by design: a value row that travels out of the database as CSV or Parquet must not lose its units on the way.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    native_value: Optional[float] = Field(default=None, description="""The value exactly as the source shipped it, before scale, offset and unit conversion. Kept so a conversion bug is discoverable after the fact instead of being baked in irreversibly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    native_value_unit_ucum: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    valid_time_start: datetime  = Field(default=..., description="""Inclusive start of the interval the value is valid for. Left-closed, right-open by default (`[start, end)`) — declared here once so no individual dataset has to litigate it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'AmbientValue']} })
-    valid_time_end: Optional[datetime ] = Field(default=None, description="""Exclusive end of the validity interval.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'AmbientValue']} })
-    reference_time: Optional[datetime ] = Field(default=None, description="""Model initialisation / cycle time, distinct from valid time. Required for HRRR and any forecast product: \"valid versus reference time\" is called out explicitly in the P0 subdaily work.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'AmbientValue']} })
-    retrieval_time_utc: Optional[datetime ] = Field(default=None, description="""When amadeus obtained the value. Required by the AQS/AirNow rule: with revisable sources, \"when we asked\" is part of the value's identity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    vertical_level: Optional[float] = Field(default=None, description="""Pressure or height level for multi-level products (NARR, MERRA-2, GEOS-CF). Part of the value's identity, not an attribute of it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    vertical_level_unit: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GridDefinition', 'AmbientValue']} })
-    quality_flag: Optional[str] = Field(default=None, description="""The source's quality flag, verbatim, interpreted against the `quality_flag_vocabulary` on the product variable. Never normalised on ingest — normalising discards information, and the vocabularies do not align.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    data_status: DataStatusEnum = Field(default=..., description="""Per-row, not per-product. The AQS/AirNow rule requires it: a preliminary AirNow value and a quality-controlled AQS value for the same monitor, parameter and hour must be able to coexist as distinct rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    source_system: str = Field(default=..., description="""Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue'],
-         'examples': [{'value': 'aqs'}, {'value': 'airnow'}]} })
-    source_version: Optional[str] = Field(default=None, description="""The source's own version or revision identifier for this value, where it publishes one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    null_semantics: NullSemanticsEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
-    superseded_by: Optional[str] = Field(default=None, description="""Identifier of the row that replaces this one. Revisions append; they do not mutate.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
 
 
 class ToolRun(ConfiguredBaseModel):
@@ -2286,6 +2221,7 @@ class ToolRun(ConfiguredBaseModel):
          'title': 'Tool Run'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -2293,11 +2229,14 @@ class ToolRun(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     run_role: RunRoleEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ToolRun']} })
     tool_name: str = Field(default="amadeus", json_schema_extra = { "linkml_meta": {'domain_of': ['ToolRun'],
          'exact_mappings': ['envar:tool_name'],
@@ -2321,7 +2260,7 @@ class ToolRun(ConfiguredBaseModel):
     upstream_runs: Optional[list[str]] = Field(default=None, description="""Identifiers of the runs this one consumed. The DAG edge. Typed as strings rather than object references so the table is self-contained and loadable before its own foreign keys resolve — a run may be recorded before its parents are fully written.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ToolRun']} })
     status: RunStatusEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ToolRun']} })
     log_excerpt: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ToolRun'], 'exact_mappings': ['envar:run_log_excerpt']} })
-    materialization_mode: Optional[MaterializationModeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'ExtractionRequest', 'ToolRun']} })
+    materialization_mode: Optional[MaterializationModeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'ToolRun', 'ExtractionRequest']} })
     bytes_transferred: Optional[int] = Field(default=None, description="""Network bytes for this run. The benchmark plan's acceptance target is \"at least 75% fewer bytes transferred for a remote subset request where the upstream format/API supports pushdown\" — which requires this to be measured per run rather than estimated.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ToolRun']} })
     request_count: Optional[int] = Field(default=None, description="""Number of HTTP or API requests issued, for rate-limit accounting.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ToolRun']} })
 
@@ -2330,10 +2269,10 @@ class ToolRun(ConfiguredBaseModel):
         pattern=re.compile(r"^sha256:[0-9a-f]{64}$")
         if isinstance(v, list):
             for element in v:
-                if isinstance(element, str) and not pattern.match(element):
+                if isinstance(element, str) and not pattern.search(element):
                     err_msg = f"Invalid container_image_digest format: {element}"
                     raise ValueError(err_msg)
-        elif isinstance(v, str) and not pattern.match(v):
+        elif isinstance(v, str) and not pattern.search(v):
             err_msg = f"Invalid container_image_digest format: {v}"
             raise ValueError(err_msg)
         return v
@@ -2349,6 +2288,7 @@ class ProvenanceChain(ConfiguredBaseModel):
          'title': 'Provenance Chain'})
 
     id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
                        'Product',
                        'GridDefinition',
                        'CanonicalVariable',
@@ -2356,21 +2296,567 @@ class ProvenanceChain(ConfiguredBaseModel):
                        'Asset',
                        'AmbientValue',
                        'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
                        'LocationSet',
                        'Location',
                        'ExtractionRequest',
-                       'ToolRun',
-                       'ProvenanceChain']} })
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
     chain_steps: Optional[list[str]] = Field(default=None, description="""Run identifiers, ordered from the derived value back to the terminus.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceChain']} })
     terminus_type: ProvenanceChainTerminusEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceChain'],
          'exact_mappings': ['envar:provenance_chain_terminus_type']} })
     compatibility_assertions: Optional[list[str]] = Field(default=None, description="""Assertions that consecutive steps were compatible — matching CRS, units, calendar, day boundary. The seam between two steps belongs to neither step, and this is where a mismatch gets recorded instead of silently absorbed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceChain']} })
 
 
+class LocationSet(ConfiguredBaseModel):
+    """
+    A user-supplied collection of locations — the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user supplied, and a PHI declaration.
+    The legacy `phi_status` default remains for compatibility; it is not evidence of assessment. New privacy-aware requests use a separate PrivacyDeclaration with explicit assessment status and evidence. These schema records describe handling requirements, not access controls.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
+         'slot_usage': {'crs': {'description': 'Declared, never assumed. '
+                                               '`calculate_covariates()` currently '
+                                               'reprojects `locs` to `crs(from)` '
+                                               'silently; an undeclared input CRS is '
+                                               'the most common way a spatial join '
+                                               'goes quietly wrong.',
+                                'name': 'crs',
+                                'required': True},
+                        'locs_id_field': {'description': "Name of the user's "
+                                                         'identifier column. amadeus '
+                                                         'already takes this as '
+                                                         '`locs_id`; recording it '
+                                                         'means the output column '
+                                                         'names are derivable rather '
+                                                         'than conventional.',
+                                          'examples': [{'value': 'site_id'}],
+                                          'name': 'locs_id_field',
+                                          'required': True},
+                        'phi_status': {'name': 'phi_status', 'required': True}},
+         'title': 'Location Set'})
+
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    name: Optional[str] = Field(default=None, description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'LocationSet',
+                       'ExtractionRequest']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'CanonicalVariable',
+                       'LocationSet'],
+         'slot_uri': 'dcterms:description'} })
+    locs_id_field: str = Field(default=..., description="""Name of the user's identifier column. amadeus already takes this as `locs_id`; recording it means the output column names are derivable rather than conventional.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet'], 'examples': [{'value': 'site_id'}]} })
+    crs: str = Field(default=..., description="""Declared, never assumed. `calculate_covariates()` currently reprojects `locs` to `crs(from)` silently; an undeclared input CRS is the most common way a spatial join goes quietly wrong.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'GridDefinition', 'LocationSet'],
+         'exact_mappings': ['envar:crs', 'hew:coordinate_reference_system_uri'],
+         'examples': [{'value': 'EPSG:4326'}, {'value': 'EPSG:5070'}]} })
+    srid: Optional[int] = Field(default=None, description="""Numeric spatial reference identifier, derived from `crs`. Materialised because `ST_SetSRID` takes an integer and the geometry views need it without a lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product',
+                       'GridDefinition',
+                       'Asset',
+                       'StationObservation',
+                       'GridCellValue',
+                       'AreaValue',
+                       'HexCellValue',
+                       'VectorFeature',
+                       'LocationSet',
+                       'Location']} })
+    geometry_type: Optional[GeometryTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['VectorFeature', 'LocationSet']} })
+    location_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet']} })
+    phi_status: PhiStatusEnum = Field(default=PhiStatusEnum("no_phi"), description="""Whether these locations are or derive from protected health information. Legacy declaration retained for compatibility, including its no_phi default. It does not prove assessment or enforce persistence/export. Privacy-aware requests require an explicit PrivacyDeclaration; new input/output findings reuse PhiStatusEnum without this default.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet'],
+         'exact_mappings': ['envar:phi_status'],
+         'ifabsent': 'string(no_phi)'} })
+    provided_by: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet']} })
+    created_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LocationSet']} })
+
+    @field_validator('crs')
+    def pattern_crs(cls, v):
+        pattern=re.compile(r"^[A-Za-z]+:[0-9]+$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.search(element):
+                    err_msg = f"Invalid crs format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.search(v):
+            err_msg = f"Invalid crs format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class Location(ConfiguredBaseModel):
+    """
+    One location in a set, with an optional validity interval.
+    `valid_from` / `valid_to` exist because a residential address is not timeless. Address histories, known travel intervals and synthetic residence periods all need them, and without them a value is joined to a place the subject may not have occupied on that date. amadeus does not need to model *why* the interval exists — that is the health layer's business — only to honour it in the join.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
+         'slot_usage': {'location_geom_wkt': {'name': 'location_geom_wkt',
+                                              'required': True},
+                        'location_key': {'description': "The user's own identifier "
+                                                        'value, preserved verbatim.',
+                                         'name': 'location_key',
+                                         'required': True},
+                        'location_set': {'name': 'location_set', 'required': True}},
+         'title': 'Location'})
+
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    location_set: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'PrivacyDeclaration']} })
+    location_key: str = Field(default=..., description="""The user's own identifier value, preserved verbatim.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
+    location_geom_wkt: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
+    srid: Optional[int] = Field(default=None, description="""Numeric spatial reference identifier, derived from `crs`. Materialised because `ST_SetSRID` takes an integer and the geometry views need it without a lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product',
+                       'GridDefinition',
+                       'Asset',
+                       'StationObservation',
+                       'GridCellValue',
+                       'AreaValue',
+                       'HexCellValue',
+                       'VectorFeature',
+                       'LocationSet',
+                       'Location']} })
+    buffer_radius_m: Optional[float] = Field(default=None, description="""Buffer radius in metres. Metres, explicitly — amadeus currently interprets `radius` in the units of the *projected* geometry's CRS, which for a geographic CRS means degrees, and the docs describe it as metres. Declaring the unit in the schema removes the ambiguity.""", ge=0.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'AmbientValueAtLocation'],
+         'exact_mappings': ['envar:extraction_buffer_m']} })
+    valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
+    valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
+    target_geography_type: Optional[TargetGeographyTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest']} })
+    location_privacy_role: Optional[LocationPrivacyRoleEnum] = Field(default=None, description="""Optional role of a particular location, independent of PHI classification.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
+    location_precision_m: Optional[float] = Field(default=None, description="""Declared coordinate precision or uncertainty in metres; not a privacy guarantee.""", ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['Location']} })
+
+
+class ExtractionRequest(ConfiguredBaseModel):
+    """
+    A declarative, reproducible specification of an extraction: which variables, over which locations, for which time window, with which buffer, aggregation, weighting and lags.
+    The rules below are the ones that make the request *checkable before it runs*, which is the point. The extensivity rule in particular turns the project lead's \"intensive vs extensive should be explicit\" from documentation into a validation error.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
+         'rules': [{'description': 'A buffer without an aggregation method is '
+                                   'ambiguous — there are now many source values per '
+                                   'location and nothing says how they combine. '
+                                   'amadeus\'s current default (`fun = "mean"`) is '
+                                   'silently wrong for every extensive variable.',
+                    'postconditions': {'slot_conditions': {'aggregation_method': {'name': 'aggregation_method',
+                                                                                  'required': True}}},
+                    'preconditions': {'slot_conditions': {'buffer_radius_m': {'minimum_value': 1e-06,
+                                                                              'name': 'buffer_radius_m'}}}},
+                   {'description': 'Population weighting must name the population '
+                                   'product it weighted by. "Population-weighted" with '
+                                   'no stated population raster is not reproducible.',
+                    'postconditions': {'slot_conditions': {'weighting_product_variable': {'name': 'weighting_product_variable',
+                                                                                          'required': True}}},
+                    'preconditions': {'slot_conditions': {'aggregation_method': {'any_of': [{'equals_string': 'population_weighted_mean'}],
+                                                                                 'name': 'aggregation_method'}}}},
+                   {'description': 'The AQS/AirNow rule, enforced at request time. '
+                                   'Mixing preliminary and quality-controlled values '
+                                   'into one result requires the user to have '
+                                   'explicitly chosen a reconciliation policy. The '
+                                   'default is to refuse.',
+                    'postconditions': {'slot_conditions': {'source_priority_policy': {'name': 'source_priority_policy',
+                                                                                      'required': True}}},
+                    'preconditions': {'slot_conditions': {'status_mixing_policy': {'equals_string': 'allow_with_policy',
+                                                                                   'name': 'status_mixing_policy'}}}}],
+         'slot_usage': {'extraction_method': {'name': 'extraction_method',
+                                              'required': True},
+                        'generated_sql': {'description': 'The SQL actually issued. '
+                                                         'Stored so the result is '
+                                                         'auditable against the plan '
+                                                         'the optimiser chose, and so '
+                                                         'a user can take the query '
+                                                         'away and run it themselves — '
+                                                         'which is the "same contract '
+                                                         'in R, SQL, Python or a '
+                                                         'container" promise, made '
+                                                         'concrete.',
+                                          'name': 'generated_sql'},
+                        'location_set': {'name': 'location_set', 'required': True},
+                        'request_hash': {'description': 'Hash over the normalised '
+                                                        'request. The idempotency key: '
+                                                        'the same request re-submitted '
+                                                        'resolves to the existing '
+                                                        'result set instead of '
+                                                        'recomputing it, and a changed '
+                                                        'request is visibly a '
+                                                        'different request.',
+                                         'name': 'request_hash',
+                                         'required': True},
+                        'time_window_end': {'name': 'time_window_end',
+                                            'required': True},
+                        'time_window_start': {'name': 'time_window_start',
+                                              'required': True}},
+         'title': 'Extraction Request'})
+
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    name: Optional[str] = Field(default=None, description="""A short machine-friendly name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'LocationSet',
+                       'ExtractionRequest']} })
+    location_set: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'PrivacyDeclaration']} })
+    requested_canonical_variables: Optional[list[str]] = Field(default=None, description="""Request by canonical variable to let the planner choose a source. The preferred form: the user asks for daily maximum temperature, not for `gridmet.tmmx`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    requested_product_variables: Optional[list[str]] = Field(default=None, description="""Request a specific source delivery, pinning the answer. Required when reproducing a published result, since the planner's choice may change.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    time_window_start: datetime  = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    time_window_end: datetime  = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    temporal_grouping: Optional[TemporalGroupingEnum] = Field(default=None, description="""The `.by_time` argument.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
+    buffer_radius_m: Optional[float] = Field(default=None, description="""Buffer radius in metres. Metres, explicitly — amadeus currently interprets `radius` in the units of the *projected* geometry's CRS, which for a geographic CRS means degrees, and the docs describe it as metres. Declaring the unit in the schema removes the ambiguity.""", ge=0.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'AmbientValueAtLocation'],
+         'exact_mappings': ['envar:extraction_buffer_m']} })
+    extraction_method: ExtractionMethodEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
+    aggregation_method: Optional[AggregationMethodEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable',
+                       'ExtractionRequest',
+                       'AmbientValueAtLocation'],
+         'exact_mappings': ['envar:temporal_aggregation_method',
+                            'hew:aggregation_method']} })
+    weighting_product_variable: Optional[str] = Field(default=None, description="""The product variable used as weights (a population density grid).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    lag_days: Optional[list[int]] = Field(default=None, description="""Lags to compute, in days. `calculate_lagged()` already does this; naming them in the request is what lets the result carry which lag it is.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    target_geography_type: Optional[TargetGeographyTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest']} })
+    output_orientation: Optional[TableOrientationEnum] = Field(default=TableOrientationEnum("long"), json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'ifabsent': 'string(long)'} })
+    materialization_mode: Optional[MaterializationModeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'ToolRun', 'ExtractionRequest']} })
+    source_priority_policy: Optional[str] = Field(default=None, description="""Ordered source preference for reconciliation, e.g. `aqs > airnow`. Required whenever `status_mixing_policy` is `allow_with_policy`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'examples': [{'value': 'aqs>airnow'}]} })
+    status_mixing_policy: Optional[StatusMixingPolicyEnum] = Field(default=StatusMixingPolicyEnum("refuse"), description="""Whether preliminary and quality-controlled values may appear in one result. Defaults to refusing.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'ifabsent': 'string(refuse)'} })
+    strict_extensivity_check: Optional[StrictnessEnum] = Field(default=StrictnessEnum("strict"), description="""Whether to reject a request whose aggregation is illegal for the variable's extensivity, or whose variable declares `extensivity: unknown`. Defaults to on: an aggregation that cannot be justified should fail loudly at request time, not produce a plausible number.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'ifabsent': 'string(strict)'} })
+    requested_by: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    request_timestamp_utc: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    request_hash: str = Field(default=..., description="""Hash over the normalised request. The idempotency key: the same request re-submitted resolves to the existing result set instead of recomputing it, and a changed request is visibly a different request.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    generated_sql: Optional[str] = Field(default=None, description="""The SQL actually issued. Stored so the result is auditable against the plan the optimiser chose, and so a user can take the query away and run it themselves — which is the \"same contract in R, SQL, Python or a container\" promise, made concrete.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest']} })
+    privacy_declaration: Optional[str] = Field(default=None, description="""Restricted declaration for the request's actual input locations.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'PrivacyReleaseAssessment']} })
+    requested_privacy_transformations: Optional[list[str]] = Field(default=None, description="""Ordered requested action references; absence or an empty list asserts no performed history.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest'], 'list_elements_ordered': True} })
+
+
+class PrivacyDeclaration(ConfiguredBaseModel):
+    """
+    Request-specific classification of a supplied LocationSet, kept outside public catalog bundles. Reuses PhiStatusEnum without defaulting an unassessed input to no_phi. References may themselves be sensitive.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
+         'rules': [{'description': 'An assessed input declaration requires an explicit '
+                                   'classification and evidence.',
+                    'postconditions': {'slot_conditions': {'assessment_evidence_reference': {'name': 'assessment_evidence_reference',
+                                                                                             'required': True},
+                                                           'input_phi_status': {'name': 'input_phi_status',
+                                                                                'required': True}}},
+                    'preconditions': {'slot_conditions': {'input_phi_assessment_status': {'equals_string': 'assessed',
+                                                                                          'name': 'input_phi_assessment_status'}}}}],
+         'slot_usage': {'input_phi_assessment_status': {'name': 'input_phi_assessment_status',
+                                                        'required': True},
+                        'location_identifiability': {'name': 'location_identifiability',
+                                                     'required': True},
+                        'location_set': {'name': 'location_set', 'required': True}},
+         'title': 'Restricted Input Privacy Declaration'})
+
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    location_set: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'PrivacyDeclaration']} })
+    input_phi_assessment_status: PrivacyAssessmentStatusEnum = Field(default=..., description="""Assessment lifecycle of input PHI classification; has no safe default.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyDeclaration']} })
+    input_phi_status: Optional[PhiStatusEnum] = Field(default=None, description="""Explicit input classification using the existing PHI enum; never inferred from a Product.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyDeclaration']} })
+    location_identifiability: LocationIdentifiabilityEnum = Field(default=..., description="""Potential individual or household location identifiability within assessment scope.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile', 'PrivacyDeclaration']} })
+    privacy_declaration_note: Optional[str] = Field(default=None, description="""Restricted context for classification; no clinical data are needed here.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyDeclaration']} })
+    assessment_evidence_reference: Optional[str] = Field(default=None, description="""Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile',
+                       'PrivacyDeclaration',
+                       'PrivacyReleaseAssessment']} })
+
+
+class PrivacyTransformation(ConfiguredBaseModel):
+    """
+    One versioned action. ExtractionRequest lists requested actions in order; PrivacyReleaseAssessment independently lists actions actually performed. A performed action must reference a successful ToolRun. Restricted parameters may reference controlled configuration; never publish seeds, displacement vectors, participant keys or reversal mappings.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
+         'slot_usage': {'privacy_transformation': {'name': 'privacy_transformation',
+                                                   'required': True},
+                        'privacy_transformation_specification': {'name': 'privacy_transformation_specification',
+                                                                 'required': True},
+                        'privacy_transformation_stage': {'name': 'privacy_transformation_stage',
+                                                         'required': True}},
+         'title': 'Restricted Privacy Transformation Specification'})
+
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    privacy_transformation: PrivacyTransformationEnum = Field(default=..., description="""Action type; none is an explicit action assertion, not an unknown value.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyTransformation'],
+         'exact_mappings': ['envar:privacy_transformation']} })
+    privacy_transformation_stage: PrivacyTransformationStageEnum = Field(default=..., description="""Stage where this specification changes geometry, values or release representation.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyTransformation']} })
+    privacy_transformation_specification: str = Field(default=..., description="""Versioned parameters or controlled configuration reference, without public secrets.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyTransformation']} })
+    privacy_transformation_note: Optional[str] = Field(default=None, description="""Restricted trigger, determinism, constraints and limitations of the action.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyTransformation'],
+         'exact_mappings': ['envar:privacy_transformation_note']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
+
+
+class PrivacyReleaseAssessment(ConfiguredBaseModel):
+    """
+    Assessment and authorization metadata for one exact output artifact, request, input declaration and intended audience. Separate from source classification and performed transformations. Metadata validation checks recorded evidence and relationships, not the scientific sufficiency of a risk analysis, legal compliance or enforcement of access restrictions. Public catalog generation must reject this collection.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
+         'rules': [{'description': 'A completed assessment is bound to an artifact and '
+                                   'documented evidence.',
+                    'postconditions': {'slot_conditions': {'assessed_at': {'name': 'assessed_at',
+                                                                           'required': True},
+                                                           'assessed_by': {'name': 'assessed_by',
+                                                                           'required': True},
+                                                           'assessment_evidence_reference': {'name': 'assessment_evidence_reference',
+                                                                                             'required': True},
+                                                           'output_artifact_sha256': {'name': 'output_artifact_sha256',
+                                                                                      'required': True},
+                                                           'output_phi_status': {'name': 'output_phi_status',
+                                                                                 'required': True},
+                                                           'release_assessment_method': {'name': 'release_assessment_method',
+                                                                                         'required': True},
+                                                           'release_assessment_scope': {'name': 'release_assessment_scope',
+                                                                                        'required': True}}},
+                    'preconditions': {'slot_conditions': {'release_assessment_status': {'equals_string': 'assessed',
+                                                                                        'name': 'release_assessment_status'}}}},
+                   {'description': 'A pending or in-progress assessment cannot '
+                                   'authorize release.',
+                    'postconditions': {'slot_conditions': {'release_assessment_status': {'equals_string': 'assessed',
+                                                                                         'name': 'release_assessment_status'}}},
+                    'preconditions': {'slot_conditions': {'release_decision': {'equals_string': 'approved',
+                                                                               'name': 'release_decision'}}}}],
+         'slot_usage': {'extraction_request': {'name': 'extraction_request',
+                                               'required': True},
+                        'output_artifact_reference': {'name': 'output_artifact_reference',
+                                                      'required': True},
+                        'privacy_declaration': {'name': 'privacy_declaration',
+                                                'required': True},
+                        'release_access_level': {'name': 'release_access_level',
+                                                 'required': True},
+                        'release_assessment_status': {'name': 'release_assessment_status',
+                                                      'required': True},
+                        'release_audience': {'name': 'release_audience',
+                                             'required': True},
+                        'release_decision': {'name': 'release_decision',
+                                             'required': True}},
+         'title': 'Restricted Location-linked Release Assessment'})
+
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    extraction_request: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment', 'AmbientValueAtLocation']} })
+    privacy_declaration: str = Field(default=..., description="""Restricted declaration for the request's actual input locations.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'PrivacyReleaseAssessment']} })
+    performed_privacy_transformations: Optional[list[str]] = Field(default=None, description="""Ordered actual action references, each with a successful run; independent of requests.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment'], 'list_elements_ordered': True} })
+    privacy_transformation_deviation_note: Optional[str] = Field(default=None, description="""Rationale for any difference between requested and performed action sequences.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    output_artifact_reference: str = Field(default=..., description="""Opaque controlled output reference, never an inline individual result.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    output_artifact_sha256: Optional[str] = Field(default=None, description="""Hash binding an assessment to exact output bytes; does not anonymize its contents.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    output_phi_status: Optional[PhiStatusEnum] = Field(default=None, description="""Output-scoped finding, not automatically copied from input or source status.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    release_assessment_status: PrivacyAssessmentStatusEnum = Field(default=..., description="""Assessment lifecycle for the exact proposed release.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    release_decision: PrivacyReleaseDecisionEnum = Field(default=..., description="""Recorded authorization decision; not an executable access-control mechanism.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    release_audience: str = Field(default=..., description="""Intended recipients and access context covered by this decision.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    release_access_level: PrivacyReleaseAccessEnum = Field(default=..., description="""Whether authorization is restricted or public; independent of PHI classification.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    release_assessment_method: Optional[str] = Field(default=None, description="""Versioned contextual disclosure-risk method; no universal safe distance is assumed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    release_assessment_scope: Optional[str] = Field(default=None, description="""Joint variables, dates, geography, auxiliary information, threat model and utility limits assessed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    assessment_evidence_reference: Optional[str] = Field(default=None, description="""Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyProfile',
+                       'PrivacyDeclaration',
+                       'PrivacyReleaseAssessment']} })
+    assessed_by: Optional[str] = Field(default=None, description="""Accountable assessor identity or controlled identifier.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    assessed_at: Optional[datetime ] = Field(default=None, description="""Time of the recorded assessment.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    released_geography_type: Optional[TargetGeographyTypeEnum] = Field(default=None, description="""Actual output geography; separate from native Product support.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    released_spatial_resolution_m: Optional[float] = Field(default=None, description="""Actual released spatial detail in metres, where a scalar resolution is meaningful.""", ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+    released_temporal_resolution_iso: Optional[str] = Field(default=None, description="""Actual released temporal support, separate from native source sampling.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment']} })
+
+
+class AmbientValueAtLocation(AmbientValue):
+    """
+    The output row: an ambient value assigned to a user location for a time interval, with the extraction that produced it recorded alongside. This is what `calculate_covariates()` returns today, plus the metadata it currently drops.
+    Not an exposure. The location may be a person's address and the row may carry a cohort key, but the value is a property of the place: swap the person, keep the address, and it does not change.
+    What today's output has, that this keeps: location key, time, value. What today's output lacks, that this adds: which product variable and which canonical variable (today encoded positionally in a column name like `weasd_0`), the extraction method and buffer actually used, how many source values contributed, coverage, distance to the contributing station, the quality and status of the inputs, and the run that produced it.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/request',
+         'slot_usage': {'contributing_value_count': {'description': 'How many source '
+                                                                    'values went into '
+                                                                    'this one. A '
+                                                                    'buffer mean over '
+                                                                    'one cell and over '
+                                                                    'four hundred '
+                                                                    'cells are '
+                                                                    'different claims; '
+                                                                    'today both come '
+                                                                    'back as an '
+                                                                    'undistinguished '
+                                                                    'number.',
+                                                     'name': 'contributing_value_count'},
+                        'distance_to_source_m': {'description': 'Distance to the '
+                                                                'contributing station, '
+                                                                'for nearest-station '
+                                                                'extraction. Paired '
+                                                                "with the request's "
+                                                                'max-distance setting, '
+                                                                'this is what makes a '
+                                                                'nearest-station '
+                                                                'assignment '
+                                                                'defensible.',
+                                                 'name': 'distance_to_source_m'},
+                        'extraction_method': {'name': 'extraction_method',
+                                              'required': True},
+                        'extraction_request': {'name': 'extraction_request',
+                                               'required': True},
+                        'location': {'name': 'location', 'required': True},
+                        'output_column_name': {'description': 'The wide-format column '
+                                                              'name this value would '
+                                                              'occupy, for backward '
+                                                              'compatibility with '
+                                                              'existing amadeus and '
+                                                              'beethoven consumers '
+                                                              '(`weasd_0`, '
+                                                              '`tmmx_10000`). '
+                                                              'Generated from the '
+                                                              'request, not parsed '
+                                                              'back out of it — the '
+                                                              'long form is canonical '
+                                                              'and the wide form is a '
+                                                              'projection.',
+                                               'name': 'output_column_name'}},
+         'title': 'Ambient Value at Location'})
+
+    location: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
+    extraction_request: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PrivacyReleaseAssessment', 'AmbientValueAtLocation']} })
+    buffer_radius_m: Optional[float] = Field(default=None, description="""Buffer radius in metres. Metres, explicitly — amadeus currently interprets `radius` in the units of the *projected* geometry's CRS, which for a geographic CRS means degrees, and the docs describe it as metres. Declaring the unit in the schema removes the ambiguity.""", ge=0.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Location', 'ExtractionRequest', 'AmbientValueAtLocation'],
+         'exact_mappings': ['envar:extraction_buffer_m']} })
+    extraction_method: ExtractionMethodEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
+    aggregation_method: Optional[AggregationMethodEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable',
+                       'ExtractionRequest',
+                       'AmbientValueAtLocation'],
+         'exact_mappings': ['envar:temporal_aggregation_method',
+                            'hew:aggregation_method']} })
+    contributing_value_count: Optional[int] = Field(default=None, description="""How many source values went into this one. A buffer mean over one cell and over four hundred cells are different claims; today both come back as an undistinguished number.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
+    coverage_fraction: Optional[float] = Field(default=None, description="""Fraction of the hex actually covered by contributing source support.""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['HexCellValue', 'AmbientValueAtLocation']} })
+    distance_to_source_m: Optional[float] = Field(default=None, description="""Distance to the contributing station, for nearest-station extraction. Paired with the request's max-distance setting, this is what makes a nearest-station assignment defensible.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
+    lag_days_applied: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
+    temporal_grouping: Optional[TemporalGroupingEnum] = Field(default=None, description="""The `.by_time` argument.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionRequest', 'AmbientValueAtLocation']} })
+    output_column_name: Optional[str] = Field(default=None, description="""The wide-format column name this value would occupy, for backward compatibility with existing amadeus and beethoven consumers (`weasd_0`, `tmmx_10000`). Generated from the request, not parsed back out of it — the long form is canonical and the wide form is a projection.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValueAtLocation']} })
+    id: str = Field(default=..., description="""Stable identifier for this entity within an AmadeusDB instance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource',
+                       'PrivacyProfile',
+                       'Product',
+                       'GridDefinition',
+                       'CanonicalVariable',
+                       'ProductVariable',
+                       'Asset',
+                       'AmbientValue',
+                       'VectorFeature',
+                       'ToolRun',
+                       'ProvenanceChain',
+                       'LocationSet',
+                       'Location',
+                       'ExtractionRequest',
+                       'PrivacyDeclaration',
+                       'PrivacyTransformation',
+                       'PrivacyReleaseAssessment']} })
+    product_variable: str = Field(default=..., description="""Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    canonical_variable: str = Field(default=..., description="""Denormalised from `product_variable` on purpose. Cross-source queries (\"all daily maximum temperature within this polygon\") are the common case, and making them a two-hop join is a performance tax on the query the whole architecture exists to serve.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'AmbientValue']} })
+    asset: Optional[str] = Field(default=None, description="""The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's \"every derived output resolves to source assets and processing runs\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature']} })
+    processing_run: Optional[str] = Field(default=None, description="""Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue', 'VectorFeature', 'PrivacyTransformation']} })
+    value: Optional[float] = Field(default=None, description="""The value in the canonical variable's units. Null when `null_semantics` explains why.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    value_unit_ucum: Optional[str] = Field(default=None, description="""Units of `value`, denormalised from the canonical variable. Redundant by design: a value row that travels out of the database as CSV or Parquet must not lose its units on the way.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    native_value: Optional[float] = Field(default=None, description="""The value exactly as the source shipped it, before scale, offset and unit conversion. Kept so a conversion bug is discoverable after the fact instead of being baked in irreversibly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    native_value_unit_ucum: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    valid_time_start: datetime  = Field(default=..., description="""Inclusive start of the interval the value is valid for. Left-closed, right-open by default (`[start, end)`) — declared here once so no individual dataset has to litigate it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'AmbientValue']} })
+    valid_time_end: Optional[datetime ] = Field(default=None, description="""Exclusive end of the validity interval.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'AmbientValue']} })
+    reference_time: Optional[datetime ] = Field(default=None, description="""Model initialisation / cycle time, distinct from valid time. Required for HRRR and any forecast product: \"valid versus reference time\" is called out explicitly in the P0 subdaily work.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset', 'AmbientValue']} })
+    retrieval_time_utc: Optional[datetime ] = Field(default=None, description="""When amadeus obtained the value. Required by the AQS/AirNow rule: with revisable sources, \"when we asked\" is part of the value's identity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    vertical_level: Optional[float] = Field(default=None, description="""Pressure or height level for multi-level products (NARR, MERRA-2, GEOS-CF). Part of the value's identity, not an attribute of it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    vertical_level_unit: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GridDefinition', 'AmbientValue']} })
+    quality_flag: Optional[str] = Field(default=None, description="""The source's quality flag, verbatim, interpreted against the `quality_flag_vocabulary` on the product variable. Never normalised on ingest — normalising discards information, and the vocabularies do not align.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    data_status: DataStatusEnum = Field(default=..., description="""Per-row, not per-product. The AQS/AirNow rule requires it: a preliminary AirNow value and a quality-controlled AQS value for the same monitor, parameter and hour must be able to coexist as distinct rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    source_system: str = Field(default=..., description="""Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue'],
+         'examples': [{'value': 'aqs'}, {'value': 'airnow'}]} })
+    source_version: Optional[str] = Field(default=None, description="""The source's own version or revision identifier for this value, where it publishes one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    null_semantics: NullSemanticsEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+    superseded_by: Optional[str] = Field(default=None, description="""Identifier of the row that replaces this one. Revisions append; they do not mutate.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmbientValue']} })
+
+
 class AmadeusDatabase(ConfiguredBaseModel):
     """
     Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.
     All collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.
+    PrivacyProfile is public source metadata. PrivacyDeclaration, PrivacyTransformation and PrivacyReleaseAssessment are restricted instance records. The public catalog workflow rejects restricted collections; root-schema validity alone is not publication authorization.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus',
          'title': 'Amadeus Database',
@@ -2394,11 +2880,16 @@ class AmadeusDatabase(ConfiguredBaseModel):
     ambient_values_at_location: Optional[list[AmbientValueAtLocation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AmadeusDatabase']} })
     tool_runs: Optional[list[ToolRun]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AmadeusDatabase']} })
     provenance_chains: Optional[list[ProvenanceChain]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AmadeusDatabase']} })
+    privacy_profiles: Optional[list[PrivacyProfile]] = Field(default=None, description="""Optional public source profiles, never location-specific release findings.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmadeusDatabase']} })
+    privacy_declarations: Optional[list[PrivacyDeclaration]] = Field(default=None, description="""Restricted input declarations; excluded from public catalog artifacts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmadeusDatabase']} })
+    privacy_transformations: Optional[list[PrivacyTransformation]] = Field(default=None, description="""Restricted requested/performed specifications; excluded from public catalogs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmadeusDatabase']} })
+    privacy_release_assessments: Optional[list[PrivacyReleaseAssessment]] = Field(default=None, description="""Restricted artifact-specific assessments; excluded from public catalogs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AmadeusDatabase']} })
 
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 DataSource.model_rebuild()
+PrivacyProfile.model_rebuild()
 Product.model_rebuild()
 GridDefinition.model_rebuild()
 CanonicalVariable.model_rebuild()
@@ -2411,10 +2902,13 @@ GridCellValue.model_rebuild()
 AreaValue.model_rebuild()
 HexCellValue.model_rebuild()
 VectorFeature.model_rebuild()
+ToolRun.model_rebuild()
+ProvenanceChain.model_rebuild()
 LocationSet.model_rebuild()
 Location.model_rebuild()
 ExtractionRequest.model_rebuild()
+PrivacyDeclaration.model_rebuild()
+PrivacyTransformation.model_rebuild()
+PrivacyReleaseAssessment.model_rebuild()
 AmbientValueAtLocation.model_rebuild()
-ToolRun.model_rebuild()
-ProvenanceChain.model_rebuild()
 AmadeusDatabase.model_rebuild()

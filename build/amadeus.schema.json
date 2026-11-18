@@ -41,7 +41,7 @@
         },
         "AmadeusDatabase": {
             "additionalProperties": false,
-            "description": "Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.\nAll collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.",
+            "description": "Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.\nAll collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.\nPrivacyProfile is public source metadata. PrivacyDeclaration, PrivacyTransformation and PrivacyReleaseAssessment are restricted instance records. The public catalog workflow rejects restricted collections; root-schema validity alone is not publication authorization.",
             "properties": {
                 "ambient_values_at_location": {
                     "items": {
@@ -136,6 +136,46 @@
                 "locations": {
                     "items": {
                         "$ref": "#/$defs/Location"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "privacy_declarations": {
+                    "description": "Restricted input declarations; excluded from public catalog artifacts.",
+                    "items": {
+                        "$ref": "#/$defs/PrivacyDeclaration"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "privacy_profiles": {
+                    "description": "Optional public source profiles, never location-specific release findings.",
+                    "items": {
+                        "$ref": "#/$defs/PrivacyProfile"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "privacy_release_assessments": {
+                    "description": "Restricted artifact-specific assessments; excluded from public catalogs.",
+                    "items": {
+                        "$ref": "#/$defs/PrivacyReleaseAssessment"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "privacy_transformations": {
+                    "description": "Restricted requested/performed specifications; excluded from public catalogs.",
+                    "items": {
+                        "$ref": "#/$defs/PrivacyTransformation"
                     },
                     "type": [
                         "array",
@@ -373,6 +413,10 @@
                 },
                 "source_system": {
                     "description": "Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.",
+                    "examples": [
+                        "aqs",
+                        "airnow"
+                    ],
                     "type": "string"
                 },
                 "source_version": {
@@ -538,7 +582,14 @@
             "description": "The output row: an ambient value assigned to a user location for a time interval, with the extraction that produced it recorded alongside. This is what `calculate_covariates()` returns today, plus the metadata it currently drops.\nNot an exposure. The location may be a person's address and the row may carry a cohort key, but the value is a property of the place: swap the person, keep the address, and it does not change.\nWhat today's output has, that this keeps: location key, time, value. What today's output lacks, that this adds: which product variable and which canonical variable (today encoded positionally in a column name like `weasd_0`), the extraction method and buffer actually used, how many source values contributed, coverage, distance to the contributing station, the quality and status of the inputs, and the run that produced it.",
             "properties": {
                 "aggregation_method": {
-                    "$ref": "#/$defs/AggregationMethodEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AggregationMethodEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "asset": {
                     "description": "The byte stream this value came from. Every number resolves to a file and a hash \u2014 half of objective O-02's \"every derived output resolves to source assets and processing runs\".",
@@ -664,6 +715,10 @@
                 },
                 "source_system": {
                     "description": "Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.",
+                    "examples": [
+                        "aqs",
+                        "airnow"
+                    ],
                     "type": "string"
                 },
                 "source_version": {
@@ -681,7 +736,14 @@
                     ]
                 },
                 "temporal_grouping": {
-                    "$ref": "#/$defs/TemporalGroupingEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TemporalGroupingEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "The `.by_time` argument."
                 },
                 "valid_time_end": {
@@ -864,6 +926,10 @@
             "properties": {
                 "area_code": {
                     "description": "The external code identifying the area.",
+                    "examples": [
+                        "37063",
+                        "030202"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -965,6 +1031,10 @@
                 },
                 "source_system": {
                     "description": "Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.",
+                    "examples": [
+                        "aqs",
+                        "airnow"
+                    ],
                     "type": "string"
                 },
                 "source_version": {
@@ -1143,13 +1213,23 @@
                     "$ref": "#/$defs/MaterializationModeEnum"
                 },
                 "media_type": {
+                    "examples": [
+                        "application/x-netcdf"
+                    ],
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "native_format": {
-                    "$ref": "#/$defs/NativeFormatEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/NativeFormatEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "produced_by_run": {
                     "description": "Identifier of the tool run that registered or materialised this asset. Typed as a string rather than an object reference to keep the catalog and provenance modules independently loadable; the FK is added by the SQL post-processor.",
@@ -1364,7 +1444,14 @@
                     ]
                 },
                 "default_aggregation_method": {
-                    "$ref": "#/$defs/AggregationMethodEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AggregationMethodEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "The aggregation applied when a request does not name one. Must be legal for the declared extensivity."
                 },
                 "description": {
@@ -1375,6 +1462,10 @@
                 },
                 "envar_variable_family": {
                     "description": "Which EnVar variable family this belongs to, and therefore which variable-specific extension block an emitted EnVar record must carry (`derived_heat_metric` for the heat family).",
+                    "examples": [
+                        "heat",
+                        "air_quality"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -1397,6 +1488,10 @@
                 },
                 "name": {
                     "description": "A short machine-friendly name.",
+                    "examples": [
+                        "air_temperature_daily_maximum",
+                        "pm25_mass_concentration"
+                    ],
                     "type": "string"
                 },
                 "omop_concept_binding": {
@@ -1423,9 +1518,16 @@
                 },
                 "standard_name": {
                     "description": "The standard-name identifier for the physical quantity, as a CURIE so no single naming authority is privileged. Prefer a CF standard name where one exists; fall back to ECTO/ENVO or a minted `AMADEUS:` term. The prefix carries the authority; the slot name does not.",
+                    "examples": [
+                        "CF:air_temperature",
+                        "CF:mass_concentration_of_pm2p5_ambient_aerosol_particles_in_air"
+                    ],
                     "type": "string"
                 },
                 "standard_name_authority": {
+                    "examples": [
+                        "CF Standard Name Table v85"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -1439,6 +1541,10 @@
                 },
                 "units_ucum": {
                     "description": "Canonical units in UCUM notation, bare (not CURIE-prefixed). HEW prefixes (`UCUM:Cel`), EnVar does not (`Cel`); we follow EnVar and note the difference, because it is exactly the kind of thing a mechanical mapper gets wrong silently.",
+                    "examples": [
+                        "Cel",
+                        "ug/m3"
+                    ],
                     "type": "string"
                 },
                 "value_data_type": {
@@ -1499,17 +1605,32 @@
             "description": "A provider programme that publishes one or more products: EPA AQS, NASA MODIS, NOAA NARR, Climatology Lab. One row per row of the amadeus README source table.",
             "properties": {
                 "access_protocol": {
-                    "$ref": "#/$defs/AccessProtocolEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AccessProtocolEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "Primary access mechanism. Determines whether \"subset early\" is achievable at all for this source."
                 },
                 "amadeus_function_suffix": {
                     "description": "The suffix amadeus uses for this source's functions (`_narr` \u2192 `download_narr`, `process_narr`, `calculate_narr`). Recorded so the catalog and the R API can be checked against each other mechanically \u2014 a catalog entry with no implementing function, or a function with no catalog entry, is a test failure.",
+                    "examples": [
+                        "_narr",
+                        "_aqs"
+                    ],
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "auth_mechanism": {
+                    "examples": [
+                        "NASA Earthdata bearer token",
+                        "EPA AQS email + API key"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -1553,6 +1674,10 @@
                     ]
                 },
                 "license_spdx": {
+                    "examples": [
+                        "CC0-1.0",
+                        "NOASSERTION"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -1560,9 +1685,16 @@
                 },
                 "name": {
                     "description": "A short machine-friendly name.",
+                    "examples": [
+                        "epa_aqs",
+                        "noaa_ncep_narr"
+                    ],
                     "type": "string"
                 },
                 "producer_institution": {
+                    "examples": [
+                        "US Environmental Protection Agency"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -1707,7 +1839,14 @@
             "description": "A declarative, reproducible specification of an extraction: which variables, over which locations, for which time window, with which buffer, aggregation, weighting and lags.\nThe rules below are the ones that make the request *checkable before it runs*, which is the point. The extensivity rule in particular turns the project lead's \"intensive vs extensive should be explicit\" from documentation into a validation error.",
             "properties": {
                 "aggregation_method": {
-                    "$ref": "#/$defs/AggregationMethodEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AggregationMethodEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "buffer_radius_m": {
                     "description": "Buffer radius in metres. Metres, explicitly \u2014 amadeus currently interprets `radius` in the units of the *projected* geometry's CRS, which for a geographic CRS means degrees, and the docs describe it as metres. Declaring the unit in the schema removes the ambiguity.",
@@ -1745,7 +1884,14 @@
                     "type": "string"
                 },
                 "materialization_mode": {
-                    "$ref": "#/$defs/MaterializationModeEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MaterializationModeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "name": {
                     "description": "A short machine-friendly name.",
@@ -1755,7 +1901,21 @@
                     ]
                 },
                 "output_orientation": {
-                    "$ref": "#/$defs/TableOrientationEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TableOrientationEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "privacy_declaration": {
+                    "description": "Restricted declaration for the request's actual input locations.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "request_hash": {
                     "description": "Hash over the normalised request. The idempotency key: the same request re-submitted resolves to the existing result set instead of recomputing it, and a changed request is visibly a different request.",
@@ -1785,6 +1945,16 @@
                         "null"
                     ]
                 },
+                "requested_privacy_transformations": {
+                    "description": "Ordered requested action references; absence or an empty list asserts no performed history.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "requested_product_variables": {
                     "description": "Request a specific source delivery, pinning the answer. Required when reproducing a published result, since the planner's choice may change.",
                     "items": {
@@ -1797,24 +1967,55 @@
                 },
                 "source_priority_policy": {
                     "description": "Ordered source preference for reconciliation, e.g. `aqs > airnow`. Required whenever `status_mixing_policy` is `allow_with_policy`.",
+                    "examples": [
+                        "aqs>airnow"
+                    ],
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "status_mixing_policy": {
-                    "$ref": "#/$defs/StatusMixingPolicyEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/StatusMixingPolicyEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "Whether preliminary and quality-controlled values may appear in one result. Defaults to refusing."
                 },
                 "strict_extensivity_check": {
-                    "$ref": "#/$defs/StrictnessEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/StrictnessEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "Whether to reject a request whose aggregation is illegal for the variable's extensivity, or whose variable declares `extensivity: unknown`. Defaults to on: an aggregation that cannot be justified should fail loudly at request time, not produce a plausible number."
                 },
                 "target_geography_type": {
-                    "$ref": "#/$defs/TargetGeographyTypeEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TargetGeographyTypeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "temporal_grouping": {
-                    "$ref": "#/$defs/TemporalGroupingEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TemporalGroupingEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "The `.by_time` argument."
                 },
                 "time_window_end": {
@@ -2045,6 +2246,10 @@
                 },
                 "source_system": {
                     "description": "Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.",
+                    "examples": [
+                        "aqs",
+                        "airnow"
+                    ],
                     "type": "string"
                 },
                 "source_version": {
@@ -2131,11 +2336,19 @@
             "properties": {
                 "crs": {
                     "description": "Coordinate reference system as an authority code. Stored as the string form (`EPSG:4326`) because that is what both `terra` and the SQL engines accept; the numeric SRID is derived for `ST_SetSRID`.",
+                    "examples": [
+                        "EPSG:4326",
+                        "EPSG:5070"
+                    ],
                     "pattern": "^[A-Za-z]+:[0-9]+$",
                     "type": "string"
                 },
                 "grid_mapping_name": {
                     "description": "CF grid mapping name.",
+                    "examples": [
+                        "lambert_conformal_conic",
+                        "latitude_longitude"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -2191,6 +2404,10 @@
                     ]
                 },
                 "resolution_unit": {
+                    "examples": [
+                        "m",
+                        "deg"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -2210,6 +2427,10 @@
                     ]
                 },
                 "vertical_level_type": {
+                    "examples": [
+                        "isobaric_pressure_hPa",
+                        "height_above_ground_m"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -2462,6 +2683,10 @@
                 },
                 "source_system": {
                     "description": "Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.",
+                    "examples": [
+                        "aqs",
+                        "airnow"
+                    ],
                     "type": "string"
                 },
                 "source_version": {
@@ -2576,6 +2801,25 @@
                     "description": "The user's own identifier value, preserved verbatim.",
                     "type": "string"
                 },
+                "location_precision_m": {
+                    "description": "Declared coordinate precision or uncertainty in metres; not a privacy guarantee.",
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "location_privacy_role": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/LocationPrivacyRoleEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Optional role of a particular location, independent of PHI classification."
+                },
                 "location_set": {
                     "type": "string"
                 },
@@ -2587,7 +2831,14 @@
                     ]
                 },
                 "target_geography_type": {
-                    "$ref": "#/$defs/TargetGeographyTypeEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TargetGeographyTypeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "valid_from": {
                     "format": "date",
@@ -2613,9 +2864,30 @@
             "title": "Location",
             "type": "object"
         },
+        "LocationIdentifiabilityEnum": {
+            "description": "Local geographic identifiability finding, independent of legal PHI classification and meaningful only in the documented assessment context.",
+            "enum": [
+                "not_assessed",
+                "potentially_identifiable",
+                "not_identifiable_in_assessed_context"
+            ],
+            "title": "LocationIdentifiabilityEnum",
+            "type": "string"
+        },
+        "LocationPrivacyRoleEnum": {
+            "description": "Role of a location, without automatically classifying it as PHI.",
+            "enum": [
+                "unspecified",
+                "public_site",
+                "individual_or_household",
+                "synthetic"
+            ],
+            "title": "LocationPrivacyRoleEnum",
+            "type": "string"
+        },
         "LocationSet": {
             "additionalProperties": false,
-            "description": "A user-supplied collection of locations \u2014 the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user supplied, and a PHI declaration.\n`phi_status` defaults to `no_phi` and is the gate on everything else: if a location set is flagged, results derived from it must not be written to shared catalog tables or embedded in an exported EnVar record, whose `phi_status` is a required field precisely so this cannot be left implicit.",
+            "description": "A user-supplied collection of locations \u2014 the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user supplied, and a PHI declaration.\nThe legacy `phi_status` default remains for compatibility; it is not evidence of assessment. New privacy-aware requests use a separate PrivacyDeclaration with explicit assessment status and evidence. These schema records describe handling requirements, not access controls.",
             "properties": {
                 "created_at": {
                     "format": "date-time",
@@ -2626,6 +2898,10 @@
                 },
                 "crs": {
                     "description": "Declared, never assumed. `calculate_covariates()` currently reprojects `locs` to `crs(from)` silently; an undeclared input CRS is the most common way a spatial join goes quietly wrong.",
+                    "examples": [
+                        "EPSG:4326",
+                        "EPSG:5070"
+                    ],
                     "pattern": "^[A-Za-z]+:[0-9]+$",
                     "type": "string"
                 },
@@ -2636,7 +2912,14 @@
                     ]
                 },
                 "geometry_type": {
-                    "$ref": "#/$defs/GeometryTypeEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/GeometryTypeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "id": {
                     "description": "Stable identifier for this entity within an AmadeusDB instance.",
@@ -2650,6 +2933,9 @@
                 },
                 "locs_id_field": {
                     "description": "Name of the user's identifier column. amadeus already takes this as `locs_id`; recording it means the output column names are derivable rather than conventional.",
+                    "examples": [
+                        "site_id"
+                    ],
                     "type": "string"
                 },
                 "name": {
@@ -2661,7 +2947,7 @@
                 },
                 "phi_status": {
                     "$ref": "#/$defs/PhiStatusEnum",
-                    "description": "Whether these locations are or derive from protected health information. Gates persistence and export. Same slot name, range and value set as EnVar's required `phi_status`, so an exported record carries it verbatim."
+                    "description": "Whether these locations are or derive from protected health information. Legacy declaration retained for compatibility, including its no_phi default. It does not prove assessment or enforce persistence/export. Privacy-aware requests require an explicit PrivacyDeclaration; new input/output findings reuse PhiStatusEnum without this default."
                 },
                 "provided_by": {
                     "type": [
@@ -2791,13 +3077,523 @@
             "type": "object"
         },
         "PhiStatusEnum": {
-            "description": "Whether a location set, and anything derived from it, is protected health information. An enum rather than a boolean for two reasons: it matches EnVar's `phi_status` exactly, and \u2014 see `ValueMaterializationEnum` \u2014 a boolean cannot be used as a LinkML rule precondition.",
+            "description": "Scoped PHI classification for source data, supplied locations or an exact output. The owning slot defines the scope; classifications do not propagate automatically. Preserves EnVar's phi_status value set. An enum rather than a boolean also supports LinkML rule preconditions; see ValueMaterializationEnum.",
             "enum": [
                 "no_phi",
                 "aggregated_no_phi",
                 "phi_present"
             ],
             "title": "PhiStatusEnum",
+            "type": "string"
+        },
+        "PrivacyAssessmentStatusEnum": {
+            "description": "Local assessment lifecycle, separate from PHI classification. An absent classification or an unassessed record never means no_phi.",
+            "enum": [
+                "not_assessed",
+                "in_progress",
+                "assessed"
+            ],
+            "title": "PrivacyAssessmentStatusEnum",
+            "type": "string"
+        },
+        "PrivacyDeclaration": {
+            "additionalProperties": false,
+            "description": "Request-specific classification of a supplied LocationSet, kept outside public catalog bundles. Reuses PhiStatusEnum without defaulting an unassessed input to no_phi. References may themselves be sensitive.",
+            "if": {
+                "properties": {
+                    "input_phi_assessment_status": {
+                        "const": "assessed"
+                    }
+                },
+                "required": [
+                    "input_phi_assessment_status"
+                ]
+            },
+            "properties": {
+                "assessment_evidence_reference": {
+                    "description": "Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.",
+                    "format": "uri",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for this entity within an AmadeusDB instance.",
+                    "type": "string"
+                },
+                "input_phi_assessment_status": {
+                    "$ref": "#/$defs/PrivacyAssessmentStatusEnum",
+                    "description": "Assessment lifecycle of input PHI classification; has no safe default."
+                },
+                "input_phi_status": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PhiStatusEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Explicit input classification using the existing PHI enum; never inferred from a Product."
+                },
+                "location_identifiability": {
+                    "$ref": "#/$defs/LocationIdentifiabilityEnum",
+                    "description": "Potential individual or household location identifiability within assessment scope."
+                },
+                "location_set": {
+                    "type": "string"
+                },
+                "privacy_declaration_note": {
+                    "description": "Restricted context for classification; no clinical data are needed here.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "location_set",
+                "input_phi_assessment_status",
+                "location_identifiability"
+            ],
+            "then": {
+                "properties": {
+                    "assessment_evidence_reference": {},
+                    "input_phi_status": {}
+                },
+                "required": [
+                    "input_phi_status",
+                    "assessment_evidence_reference"
+                ]
+            },
+            "title": "PrivacyDeclaration",
+            "type": "object"
+        },
+        "PrivacyProfile": {
+            "additionalProperties": false,
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "source_phi_assessment_status": {
+                                "const": "assessed"
+                            }
+                        },
+                        "required": [
+                            "source_phi_assessment_status"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "assessment_evidence_reference": {},
+                            "source_phi_status": {}
+                        },
+                        "required": [
+                            "source_phi_status",
+                            "assessment_evidence_reference"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "linkage_risk_assessment_status": {
+                                "const": "assessed"
+                            }
+                        },
+                        "required": [
+                            "linkage_risk_assessment_status"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "assessment_evidence_reference": {},
+                            "linkage_risk_note": {}
+                        },
+                        "required": [
+                            "assessment_evidence_reference",
+                            "linkage_risk_note"
+                        ]
+                    }
+                }
+            ],
+            "description": "Reusable public metadata about source classification and potential location-linkage concerns. Contains no individual locations, linkage keys, transformation secrets or release records. Product and its grid retain authoritative spatial and temporal resolution; this profile does not duplicate those values. Source PHI status does not propagate to location-linked results. Presence of a profile is not a risk assessment.",
+            "properties": {
+                "assessment_evidence_reference": {
+                    "description": "Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.",
+                    "format": "uri",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for this entity within an AmadeusDB instance.",
+                    "type": "string"
+                },
+                "linkage_risk_assessment_status": {
+                    "$ref": "#/$defs/PrivacyAssessmentStatusEnum",
+                    "description": "Assessment lifecycle for geographic inference from linked outputs."
+                },
+                "linkage_risk_note": {
+                    "description": "Context and limitations of potential inference from variables, time series, distances or combined datasets. A caution is not a measured risk score.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "location_identifiability": {
+                    "$ref": "#/$defs/LocationIdentifiabilityEnum",
+                    "description": "Potential individual or household location identifiability within assessment scope."
+                },
+                "location_linked_review_required": {
+                    "description": "Whether release of location-linked outputs requires a separate contextual review.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "A short machine-friendly name.",
+                    "type": "string"
+                },
+                "privacy_profile_version": {
+                    "description": "Version of the curated profile definition, not a completed assessment.",
+                    "type": "string"
+                },
+                "source_phi_assessment_status": {
+                    "$ref": "#/$defs/PrivacyAssessmentStatusEnum",
+                    "description": "Assessment lifecycle for PHI classification of the described source only."
+                },
+                "source_phi_status": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PhiStatusEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Source-scoped PHI finding using the existing vocabulary. Not an assertion about the entire EnVar sidecar or any downstream location-linked output."
+                },
+                "source_phi_status_missing_reason": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MissingReasonEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Reason source classification is unspecified; never substitutes for no_phi."
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "privacy_profile_version",
+                "source_phi_assessment_status",
+                "location_identifiability",
+                "linkage_risk_assessment_status",
+                "location_linked_review_required"
+            ],
+            "title": "PrivacyProfile",
+            "type": "object"
+        },
+        "PrivacyReleaseAccessEnum": {
+            "description": "Access context for an artifact-specific release authorization.",
+            "enum": [
+                "restricted",
+                "public"
+            ],
+            "title": "PrivacyReleaseAccessEnum",
+            "type": "string"
+        },
+        "PrivacyReleaseAssessment": {
+            "additionalProperties": false,
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "release_assessment_status": {
+                                "const": "assessed"
+                            }
+                        },
+                        "required": [
+                            "release_assessment_status"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "assessed_at": {},
+                            "assessed_by": {},
+                            "assessment_evidence_reference": {},
+                            "output_artifact_sha256": {},
+                            "output_phi_status": {},
+                            "release_assessment_method": {},
+                            "release_assessment_scope": {}
+                        },
+                        "required": [
+                            "assessed_by",
+                            "assessed_at",
+                            "assessment_evidence_reference",
+                            "release_assessment_method",
+                            "release_assessment_scope",
+                            "output_artifact_sha256",
+                            "output_phi_status"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "release_decision": {
+                                "const": "approved"
+                            }
+                        },
+                        "required": [
+                            "release_decision"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "release_assessment_status": {
+                                "const": "assessed"
+                            }
+                        },
+                        "required": [
+                            "release_assessment_status"
+                        ]
+                    }
+                }
+            ],
+            "description": "Assessment and authorization metadata for one exact output artifact, request, input declaration and intended audience. Separate from source classification and performed transformations. Metadata validation checks recorded evidence and relationships, not the scientific sufficiency of a risk analysis, legal compliance or enforcement of access restrictions. Public catalog generation must reject this collection.",
+            "properties": {
+                "assessed_at": {
+                    "description": "Time of the recorded assessment.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "assessed_by": {
+                    "description": "Accountable assessor identity or controlled identifier.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "assessment_evidence_reference": {
+                    "description": "Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.",
+                    "format": "uri",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "extraction_request": {
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Stable identifier for this entity within an AmadeusDB instance.",
+                    "type": "string"
+                },
+                "output_artifact_reference": {
+                    "description": "Opaque controlled output reference, never an inline individual result.",
+                    "format": "uri",
+                    "type": "string"
+                },
+                "output_artifact_sha256": {
+                    "description": "Hash binding an assessment to exact output bytes; does not anonymize its contents.",
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "output_phi_status": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PhiStatusEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Output-scoped finding, not automatically copied from input or source status."
+                },
+                "performed_privacy_transformations": {
+                    "description": "Ordered actual action references, each with a successful run; independent of requests.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "privacy_declaration": {
+                    "description": "Restricted declaration for the request's actual input locations.",
+                    "type": "string"
+                },
+                "privacy_transformation_deviation_note": {
+                    "description": "Rationale for any difference between requested and performed action sequences.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "release_access_level": {
+                    "$ref": "#/$defs/PrivacyReleaseAccessEnum",
+                    "description": "Whether authorization is restricted or public; independent of PHI classification."
+                },
+                "release_assessment_method": {
+                    "description": "Versioned contextual disclosure-risk method; no universal safe distance is assumed.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "release_assessment_scope": {
+                    "description": "Joint variables, dates, geography, auxiliary information, threat model and utility limits assessed.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "release_assessment_status": {
+                    "$ref": "#/$defs/PrivacyAssessmentStatusEnum",
+                    "description": "Assessment lifecycle for the exact proposed release."
+                },
+                "release_audience": {
+                    "description": "Intended recipients and access context covered by this decision.",
+                    "type": "string"
+                },
+                "release_decision": {
+                    "$ref": "#/$defs/PrivacyReleaseDecisionEnum",
+                    "description": "Recorded authorization decision; not an executable access-control mechanism."
+                },
+                "released_geography_type": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TargetGeographyTypeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Actual output geography; separate from native Product support."
+                },
+                "released_spatial_resolution_m": {
+                    "description": "Actual released spatial detail in metres, where a scalar resolution is meaningful.",
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "released_temporal_resolution_iso": {
+                    "description": "Actual released temporal support, separate from native source sampling.",
+                    "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "extraction_request",
+                "privacy_declaration",
+                "output_artifact_reference",
+                "release_assessment_status",
+                "release_decision",
+                "release_audience",
+                "release_access_level"
+            ],
+            "title": "PrivacyReleaseAssessment",
+            "type": "object"
+        },
+        "PrivacyReleaseDecisionEnum": {
+            "description": "Local authorization record for one exact output artifact. Approval is recorded governance, not independently verified legal de-identification.",
+            "enum": [
+                "pending",
+                "denied",
+                "approved"
+            ],
+            "title": "PrivacyReleaseDecisionEnum",
+            "type": "string"
+        },
+        "PrivacyTransformation": {
+            "additionalProperties": false,
+            "description": "One versioned action. ExtractionRequest lists requested actions in order; PrivacyReleaseAssessment independently lists actions actually performed. A performed action must reference a successful ToolRun. Restricted parameters may reference controlled configuration; never publish seeds, displacement vectors, participant keys or reversal mappings.",
+            "properties": {
+                "id": {
+                    "description": "Stable identifier for this entity within an AmadeusDB instance.",
+                    "type": "string"
+                },
+                "privacy_transformation": {
+                    "$ref": "#/$defs/PrivacyTransformationEnum",
+                    "description": "Action type; none is an explicit action assertion, not an unknown value."
+                },
+                "privacy_transformation_note": {
+                    "description": "Restricted trigger, determinism, constraints and limitations of the action.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "privacy_transformation_specification": {
+                    "description": "Versioned parameters or controlled configuration reference, without public secrets.",
+                    "type": "string"
+                },
+                "privacy_transformation_stage": {
+                    "$ref": "#/$defs/PrivacyTransformationStageEnum",
+                    "description": "Stage where this specification changes geometry, values or release representation."
+                },
+                "processing_run": {
+                    "description": "Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "privacy_transformation",
+                "privacy_transformation_stage",
+                "privacy_transformation_specification"
+            ],
+            "title": "PrivacyTransformation",
+            "type": "object"
+        },
+        "PrivacyTransformationEnum": {
+            "description": "Transformation vocabulary from EnVar SPEC section 4.8. A method name records an action, never a guarantee of privacy or de-identification.",
+            "enum": [
+                "none",
+                "deterministic_geographic_jitter",
+                "suppression",
+                "aggregation_to_coarser_unit",
+                "stochastic_perturbation"
+            ],
+            "title": "PrivacyTransformationEnum",
+            "type": "string"
+        },
+        "PrivacyTransformationStageEnum": {
+            "description": "Local stage at which a requested or performed action applies.",
+            "enum": [
+                "before_extraction",
+                "after_extraction",
+                "release_representation"
+            ],
+            "title": "PrivacyTransformationStageEnum",
             "type": "string"
         },
         "Product": {
@@ -2913,6 +3709,10 @@
                 },
                 "amadeus_dataset_name": {
                     "description": "The exact string accepted by `download_data(dataset_name=)`. The bridge between the catalog and the existing R API.",
+                    "examples": [
+                        "narr",
+                        "gridmet"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -2926,7 +3726,14 @@
                     ]
                 },
                 "calendar": {
-                    "$ref": "#/$defs/CalendarEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CalendarEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "citation_apa": {
                     "type": [
@@ -2936,6 +3743,10 @@
                 },
                 "crs": {
                     "description": "Coordinate reference system as an authority code. Stored as the string form (`EPSG:4326`) because that is what both `terra` and the SQL engines accept; the numeric SRID is derived for `ST_SetSRID`.",
+                    "examples": [
+                        "EPSG:4326",
+                        "EPSG:5070"
+                    ],
                     "pattern": "^[A-Za-z]+:[0-9]+$",
                     "type": [
                         "string",
@@ -2957,10 +3768,24 @@
                     "type": "string"
                 },
                 "day_boundary_convention": {
-                    "$ref": "#/$defs/DayBoundaryConventionEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DayBoundaryConventionEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "default_data_status": {
-                    "$ref": "#/$defs/DataStatusEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DataStatusEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "The status values from this product carry unless a row says otherwise."
                 },
                 "description": {
@@ -2984,7 +3809,14 @@
                     ]
                 },
                 "homogenisation_status": {
-                    "$ref": "#/$defs/HomogenisationStatusEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/HomogenisationStatusEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "id": {
                     "description": "Stable identifier for this entity within an AmadeusDB instance.",
@@ -2998,6 +3830,10 @@
                     ]
                 },
                 "license_spdx": {
+                    "examples": [
+                        "CC0-1.0",
+                        "NOASSERTION"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3008,9 +3844,20 @@
                     "type": "string"
                 },
                 "native_format": {
-                    "$ref": "#/$defs/NativeFormatEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/NativeFormatEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "native_spatial_resolution_descriptor": {
+                    "examples": [
+                        "4 km",
+                        "census tract"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3023,7 +3870,19 @@
                         "null"
                     ]
                 },
+                "privacy_profile": {
+                    "description": "Optional reference to public privacy metadata. Omission preserves legacy catalogs and makes no statement about source PHI or downstream safety.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "product_version": {
+                    "examples": [
+                        "061",
+                        "v1.5",
+                        "2021"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3037,6 +3896,10 @@
                     ]
                 },
                 "spatial_extent_descriptor": {
+                    "examples": [
+                        "Contiguous United States",
+                        "Global"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3067,7 +3930,14 @@
                     ]
                 },
                 "temporal_alignment": {
-                    "$ref": "#/$defs/TemporalAlignmentEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TemporalAlignmentEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "temporal_coverage_end": {
                     "description": "Absent means \"ongoing\".",
@@ -3167,7 +4037,14 @@
             "description": "One source's delivery of one canonical variable: the native name, the native units and conversion, the CF metadata, the aggregation actually applied, and the layer-name template amadeus parses.\nEvery slot here exists because it is a reason two sources of \"the same\" variable are not interchangeable. `native_units_ucum` + `native_value_scale_factor` + `native_value_offset` are the gridMET Kelvin\u2192Celsius case, where the conversion happened at render time and was recorded nowhere.",
             "properties": {
                 "aggregation_method": {
-                    "$ref": "#/$defs/AggregationMethodEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AggregationMethodEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "aggregation_window_iso": {
                     "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$",
@@ -3188,6 +4065,10 @@
                 },
                 "cf_cell_methods": {
                     "description": "The CF `cell_methods` attribute verbatim. CF already has a standard way to say \"daily maximum\" and it is sitting unread in the file.",
+                    "examples": [
+                        "time: maximum",
+                        "time: mean within days time: maximum over days"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3201,7 +4082,14 @@
                     ]
                 },
                 "extensivity": {
-                    "$ref": "#/$defs/VariableExtensivityEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/VariableExtensivityEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "Optional override, same semantics as `value_data_type`. Overriding it is a strong signal something is wrong and should be reviewed."
                 },
                 "harmonization_note": {
@@ -3224,6 +4112,11 @@
                 },
                 "layer_name_template": {
                     "description": "How amadeus composes `terra` layer names for this variable. Recorded because `calc_worker()` currently recovers variable, level and time by splitting the layer name on `_` and indexing by position; a declared template turns that from an implicit convention into a checkable one.",
+                    "examples": [
+                        "{native_name}_{YYYYMMDD}",
+                        "{native_name}_{level}_{YYYYMMDD}",
+                        "{native_name}_{YYYYMMDD}_{HHMMSS}"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3240,6 +4133,9 @@
                     ]
                 },
                 "missing_value_sentinel": {
+                    "examples": [
+                        "-9999"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3247,6 +4143,11 @@
                 },
                 "native_name": {
                     "description": "The variable's name in the source: a netCDF variable name, a MODIS subdataset, an AQS parameter code.",
+                    "examples": [
+                        "weasd",
+                        "tmmx",
+                        "88101"
+                    ],
                     "type": "string"
                 },
                 "native_units_ucum": {
@@ -3277,19 +4178,40 @@
                     ]
                 },
                 "temporal_alignment": {
-                    "$ref": "#/$defs/TemporalAlignmentEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TemporalAlignmentEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "unit_conversion_formula": {
+                    "examples": [
+                        "value_Cel = value_K - 273.15"
+                    ],
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "value_data_type": {
-                    "$ref": "#/$defs/ValueDataTypeEnum",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ValueDataTypeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "Optional override. Absent means \"as the canonical variable declares\". Present means this source genuinely differs \u2014 e.g. a source that publishes a binary exceedance flag for a quantity that is continuous elsewhere."
                 },
                 "vertical_level_type": {
+                    "examples": [
+                        "isobaric_pressure_hPa",
+                        "height_above_ground_m"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3543,6 +4465,9 @@
                 },
                 "parameter_code": {
                     "description": "The source's parameter code, retained verbatim alongside the canonical variable because it is part of the source's primary key.",
+                    "examples": [
+                        "88101"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -3599,6 +4524,10 @@
                 },
                 "source_system": {
                     "description": "Which system supplied this row (`aqs`, `airnow`). Required on every row by the harmonization rule so preliminary and quality-controlled values for the same monitor-hour coexist rather than overwrite.",
+                    "examples": [
+                        "aqs",
+                        "airnow"
+                    ],
                     "type": "string"
                 },
                 "source_version": {
@@ -3620,6 +4549,9 @@
                 },
                 "station_id": {
                     "description": "The source's site identifier \u2014 an AQS state+county+site key, an IMPROVE site code, a USGS gauge number.",
+                    "examples": [
+                        "37-063-0015"
+                    ],
                     "type": "string"
                 },
                 "station_name": {
@@ -3782,6 +4714,7 @@
                 "hourly",
                 "three_hourly",
                 "daily",
+                "multi_day",
                 "monthly",
                 "seasonal",
                 "annual",
@@ -3943,7 +4876,14 @@
                     ]
                 },
                 "materialization_mode": {
-                    "$ref": "#/$defs/MaterializationModeEnum"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MaterializationModeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "output_file_sha256": {
                     "pattern": "^[0-9a-f]{64}$",
@@ -3999,6 +4939,9 @@
                     "type": "string"
                 },
                 "tool_version": {
+                    "examples": [
+                        "1.3.2.1"
+                    ],
                     "type": "string"
                 },
                 "upstream_runs": {
@@ -4084,6 +5027,9 @@
                     ]
                 },
                 "feature_type": {
+                    "examples": [
+                        "road_segment"
+                    ],
                     "type": [
                         "string",
                         "null"
@@ -4132,9 +5078,9 @@
     },
     "$id": "https://w3id.org/niehs/amadeus",
     "$schema": "https://json-schema.org/draft/2019-09/schema",
-    "additionalProperties": true,
-    "description": "Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.\nAll collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.",
-    "metamodel_version": "1.11.0",
+    "additionalProperties": false,
+    "description": "Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.\nAll collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.\nPrivacyProfile is public source metadata. PrivacyDeclaration, PrivacyTransformation and PrivacyReleaseAssessment are restricted instance records. The public catalog workflow rejects restricted collections; root-schema validity alone is not publication authorization.",
+    "metamodel_version": "1.12.0",
     "properties": {
         "ambient_values_at_location": {
             "items": {
@@ -4229,6 +5175,46 @@
         "locations": {
             "items": {
                 "$ref": "#/$defs/Location"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "privacy_declarations": {
+            "description": "Restricted input declarations; excluded from public catalog artifacts.",
+            "items": {
+                "$ref": "#/$defs/PrivacyDeclaration"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "privacy_profiles": {
+            "description": "Optional public source profiles, never location-specific release findings.",
+            "items": {
+                "$ref": "#/$defs/PrivacyProfile"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "privacy_release_assessments": {
+            "description": "Restricted artifact-specific assessments; excluded from public catalogs.",
+            "items": {
+                "$ref": "#/$defs/PrivacyReleaseAssessment"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "privacy_transformations": {
+            "description": "Restricted requested/performed specifications; excluded from public catalogs.",
+            "items": {
+                "$ref": "#/$defs/PrivacyTransformation"
             },
             "type": [
                 "array",

@@ -1,4 +1,4 @@
--- # Class: AmadeusDatabase Description: Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.All collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.
+-- # Class: AmadeusDatabase Description: Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.All collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.PrivacyProfile is public source metadata. PrivacyDeclaration, PrivacyTransformation and PrivacyReleaseAssessment are restricted instance records. The public catalog workflow rejects restricted collections; root-schema validity alone is not publication authorization.
 --     * Slot: id
 --     * Slot: schema_version Description: Version of the AmadeusDB schema a record conforms to, so consumers can branch on schema evolution rather than guess.
 -- # Class: DataSource Description: A provider programme that publishes one or more products: EPA AQS, NASA MODIS, NOAA NARR, Climatology Lab. One row per row of the amadeus README source table.
@@ -16,6 +16,20 @@
 --     * Slot: citation_apa
 --     * Slot: doi
 --     * Slot: amadeus_function_suffix Description: The suffix amadeus uses for this source's functions (`_narr` → `download_narr`, `process_narr`, `calculate_narr`). Recorded so the catalog and the R API can be checked against each other mechanically — a catalog entry with no implementing function, or a function with no catalog entry, is a test failure.
+--     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+-- # Class: PrivacyProfile Description: Reusable public metadata about source classification and potential location-linkage concerns. Contains no individual locations, linkage keys, transformation secrets or release records. Product and its grid retain authoritative spatial and temporal resolution; this profile does not duplicate those values. Source PHI status does not propagate to location-linked results. Presence of a profile is not a risk assessment.
+--     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
+--     * Slot: name Description: A short machine-friendly name.
+--     * Slot: description
+--     * Slot: privacy_profile_version Description: Version of the curated profile definition, not a completed assessment.
+--     * Slot: source_phi_assessment_status Description: Assessment lifecycle for PHI classification of the described source only.
+--     * Slot: source_phi_status Description: Source-scoped PHI finding using the existing vocabulary. Not an assertion about the entire EnVar sidecar or any downstream location-linked output.
+--     * Slot: source_phi_status_missing_reason Description: Reason source classification is unspecified; never substitutes for no_phi.
+--     * Slot: assessment_evidence_reference Description: Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.
+--     * Slot: location_identifiability Description: Potential individual or household location identifiability within assessment scope.
+--     * Slot: linkage_risk_assessment_status Description: Assessment lifecycle for geographic inference from linked outputs.
+--     * Slot: linkage_risk_note Description: Context and limitations of potential inference from variables, time series, distances or combined datasets. A caution is not a measured risk score.
+--     * Slot: location_linked_review_required Description: Whether release of location-linked outputs requires a separate contextual review.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
 -- # Class: Product Description: A specific, versioned data product from a source — the unit a user actually requests, and the unit that carries the *profile*: spatial support, temporal support, format, calendar, day boundary.This is where the answer to "do we need different schemas for different types of source data?" lives. We do not. The variation across the amadeus catalog decomposes into five orthogonal axes recorded here (`spatial_support_type`, `temporal_resolution`, `value` kind via the variables, `native_format`, and extensivity via the variables). One schema, one product table; a MODIS swath and an AQS monitor differ in their *values on these axes*, not in their structure.
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
@@ -53,6 +67,7 @@
 --     * Slot: amadeus_calculate_covariate Description: The string accepted by `calculate_covariates(covariate=)`. Distinct from the process name — `modis_swath`/`modis_merge` both calculate as `modis`, and `aqs` processes but does not calculate.
 --     * Slot: supports_server_side_subset Description: Whether the provider will return a geometry/time/variable subset. Drives the achievable `MaterializationModeEnum`.
 --     * Slot: stac_collection_id Description: STAC collection identifier, where the product is STAC-published.
+--     * Slot: privacy_profile Description: Optional reference to public privacy metadata. Omission preserves legacy catalogs and makes no statement about source PHI or downstream safety.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
 -- # Class: GridDefinition Description: A reusable description of a raster or model grid. Its own entity because several products share one grid (all NARR monolevel variables) and because resolution, projection and vertical levels must be computable, not prose.
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
@@ -305,7 +320,33 @@
 --     * Slot: asset Description: The byte stream this value came from. Every number resolves to a file and a hash — half of objective O-02's "every derived output resolves to source assets and processing runs".
 --     * Slot: processing_run Description: Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
--- # Class: LocationSet Description: A user-supplied collection of locations — the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user supplied, and a PHI declaration.`phi_status` defaults to `no_phi` and is the gate on everything else: if a location set is flagged, results derived from it must not be written to shared catalog tables or embedded in an exported EnVar record, whose `phi_status` is a required field precisely so this cannot be left implicit.
+-- # Class: ToolRun Description: One execution of one amadeus operation, with everything needed to decide whether it can be trusted and whether it can be skipped."Whether it can be skipped" is the idempotency requirement: re-running a workflow with the same inputs and configuration should reuse valid outputs and recover from partial failures without silent duplication. That needs `input_file_sha256`, `output_file_sha256`, `run_arguments` and `status` — not a timestamp and a log line.
+--     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
+--     * Slot: run_role
+--     * Slot: tool_name
+--     * Slot: tool_version
+--     * Slot: function_name Description: The specific amadeus function called (`download_narr`, `process_narr`, `calculate_narr`). More useful than `tool_name` alone, since one package version contains many operations with different failure modes.
+--     * Slot: run_arguments Description: The call's arguments as a JSON object string. The single field that decides whether a result is reproducible. Kept opaque because the argument sets differ per function and per source; validating them is the `ExtractionRequest`'s job for the calculate path, and an adapter contract test's job for the download path.
+--     * Slot: container_image_repository
+--     * Slot: container_image_digest Description: Immutable image digest, not a tag. Tags move; a digest is the only thing that makes "the same container" a checkable claim, and the plan requires digest references in run manifests.
+--     * Slot: run_timestamp_utc
+--     * Slot: run_duration_seconds
+--     * Slot: run_environment Description: Runtime environment as a JSON object string — R version, platform, key package versions (`terra`, `sf`, `exactextractr`), and the database engine and version. The engine matters: a SedonaDB result and a DuckDB result of the same request are not guaranteed identical, and the capability matrix the plan calls for is only auditable if each run says which engine ran it.
+--     * Slot: input_file_sha256
+--     * Slot: input_row_count
+--     * Slot: output_file_sha256
+--     * Slot: output_row_count
+--     * Slot: status
+--     * Slot: log_excerpt
+--     * Slot: materialization_mode
+--     * Slot: bytes_transferred Description: Network bytes for this run. The benchmark plan's acceptance target is "at least 75% fewer bytes transferred for a remote subset request where the upstream format/API supports pushdown" — which requires this to be measured per run rather than estimated.
+--     * Slot: request_count Description: Number of HTTP or API requests issued, for rate-limit accounting.
+--     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+-- # Class: ProvenanceChain Description: A materialised walk of `upstream_runs` from a derived value back to its terminus, plus what the terminus is. Stored rather than always recomputed because it is what an exported EnVar record carries, and because the recursive query is expensive to run per row at export time.
+--     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
+--     * Slot: terminus_type
+--     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+-- # Class: LocationSet Description: A user-supplied collection of locations — the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user supplied, and a PHI declaration.The legacy `phi_status` default remains for compatibility; it is not evidence of assessment. New privacy-aware requests use a separate PrivacyDeclaration with explicit assessment status and evidence. These schema records describe handling requirements, not access controls.
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
 --     * Slot: name Description: A short machine-friendly name.
 --     * Slot: description
@@ -314,7 +355,7 @@
 --     * Slot: srid Description: Numeric spatial reference identifier, derived from `crs`. Materialised because `ST_SetSRID` takes an integer and the geometry views need it without a lookup.
 --     * Slot: geometry_type
 --     * Slot: location_count
---     * Slot: phi_status Description: Whether these locations are or derive from protected health information. Gates persistence and export. Same slot name, range and value set as EnVar's required `phi_status`, so an exported record carries it verbatim.
+--     * Slot: phi_status Description: Whether these locations are or derive from protected health information. Legacy declaration retained for compatibility, including its no_phi default. It does not prove assessment or enforce persistence/export. Privacy-aware requests require an explicit PrivacyDeclaration; new input/output findings reuse PhiStatusEnum without this default.
 --     * Slot: provided_by
 --     * Slot: created_at
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
@@ -328,6 +369,8 @@
 --     * Slot: valid_from
 --     * Slot: valid_to
 --     * Slot: target_geography_type
+--     * Slot: location_privacy_role Description: Optional role of a particular location, independent of PHI classification.
+--     * Slot: location_precision_m Description: Declared coordinate precision or uncertainty in metres; not a privacy guarantee.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
 -- # Class: ExtractionRequest Description: A declarative, reproducible specification of an extraction: which variables, over which locations, for which time window, with which buffer, aggregation, weighting and lags.The rules below are the ones that make the request *checkable before it runs*, which is the point. The extensivity rule in particular turns the project lead's "intensive vs extensive should be explicit" from documentation into a validation error.
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
@@ -350,6 +393,45 @@
 --     * Slot: request_timestamp_utc
 --     * Slot: request_hash Description: Hash over the normalised request. The idempotency key: the same request re-submitted resolves to the existing result set instead of recomputing it, and a changed request is visibly a different request.
 --     * Slot: generated_sql Description: The SQL actually issued. Stored so the result is auditable against the plan the optimiser chose, and so a user can take the query away and run it themselves — which is the "same contract in R, SQL, Python or a container" promise, made concrete.
+--     * Slot: privacy_declaration Description: Restricted declaration for the request's actual input locations.
+--     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+-- # Class: PrivacyDeclaration Description: Request-specific classification of a supplied LocationSet, kept outside public catalog bundles. Reuses PhiStatusEnum without defaulting an unassessed input to no_phi. References may themselves be sensitive.
+--     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
+--     * Slot: location_set
+--     * Slot: input_phi_assessment_status Description: Assessment lifecycle of input PHI classification; has no safe default.
+--     * Slot: input_phi_status Description: Explicit input classification using the existing PHI enum; never inferred from a Product.
+--     * Slot: location_identifiability Description: Potential individual or household location identifiability within assessment scope.
+--     * Slot: privacy_declaration_note Description: Restricted context for classification; no clinical data are needed here.
+--     * Slot: assessment_evidence_reference Description: Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.
+--     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+-- # Class: PrivacyTransformation Description: One versioned action. ExtractionRequest lists requested actions in order; PrivacyReleaseAssessment independently lists actions actually performed. A performed action must reference a successful ToolRun. Restricted parameters may reference controlled configuration; never publish seeds, displacement vectors, participant keys or reversal mappings.
+--     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
+--     * Slot: privacy_transformation Description: Action type; none is an explicit action assertion, not an unknown value.
+--     * Slot: privacy_transformation_stage Description: Stage where this specification changes geometry, values or release representation.
+--     * Slot: privacy_transformation_specification Description: Versioned parameters or controlled configuration reference, without public secrets.
+--     * Slot: privacy_transformation_note Description: Restricted trigger, determinism, constraints and limitations of the action.
+--     * Slot: processing_run Description: Identifier of the `ToolRun` that produced this value. The other half of O-02. A plain string rather than an object reference so the value and provenance modules stay independently loadable; the SQL post-processor adds the foreign key.
+--     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+-- # Class: PrivacyReleaseAssessment Description: Assessment and authorization metadata for one exact output artifact, request, input declaration and intended audience. Separate from source classification and performed transformations. Metadata validation checks recorded evidence and relationships, not the scientific sufficiency of a risk analysis, legal compliance or enforcement of access restrictions. Public catalog generation must reject this collection.
+--     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
+--     * Slot: extraction_request
+--     * Slot: privacy_declaration Description: Restricted declaration for the request's actual input locations.
+--     * Slot: privacy_transformation_deviation_note Description: Rationale for any difference between requested and performed action sequences.
+--     * Slot: output_artifact_reference Description: Opaque controlled output reference, never an inline individual result.
+--     * Slot: output_artifact_sha256 Description: Hash binding an assessment to exact output bytes; does not anonymize its contents.
+--     * Slot: output_phi_status Description: Output-scoped finding, not automatically copied from input or source status.
+--     * Slot: release_assessment_status Description: Assessment lifecycle for the exact proposed release.
+--     * Slot: release_decision Description: Recorded authorization decision; not an executable access-control mechanism.
+--     * Slot: release_audience Description: Intended recipients and access context covered by this decision.
+--     * Slot: release_access_level Description: Whether authorization is restricted or public; independent of PHI classification.
+--     * Slot: release_assessment_method Description: Versioned contextual disclosure-risk method; no universal safe distance is assumed.
+--     * Slot: release_assessment_scope Description: Joint variables, dates, geography, auxiliary information, threat model and utility limits assessed.
+--     * Slot: assessment_evidence_reference Description: Evidence reference for recorded findings. Public profiles must reference public non-identifying evidence; restricted records may use controlled references.
+--     * Slot: assessed_by Description: Accountable assessor identity or controlled identifier.
+--     * Slot: assessed_at Description: Time of the recorded assessment.
+--     * Slot: released_geography_type Description: Actual output geography; separate from native Product support.
+--     * Slot: released_spatial_resolution_m Description: Actual released spatial detail in metres, where a scalar resolution is meaningful.
+--     * Slot: released_temporal_resolution_iso Description: Actual released temporal support, separate from native source sampling.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
 -- # Class: AmbientValueAtLocation Description: The output row: an ambient value assigned to a user location for a time interval, with the extraction that produced it recorded alongside. This is what `calculate_covariates()` returns today, plus the metadata it currently drops.Not an exposure. The location may be a person's address and the row may carry a cohort key, but the value is a property of the place: swap the person, keep the address, and it does not change.What today's output has, that this keeps: location key, time, value. What today's output lacks, that this adds: which product variable and which canonical variable (today encoded positionally in a column name like `weasd_0`), the extraction method and buffer actually used, how many source values contributed, coverage, distance to the contributing station, the quality and status of the inputs, and the run that produced it.
 --     * Slot: location
@@ -385,32 +467,6 @@
 --     * Slot: null_semantics
 --     * Slot: superseded_by Description: Identifier of the row that replaces this one. Revisions append; they do not mutate.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
--- # Class: ToolRun Description: One execution of one amadeus operation, with everything needed to decide whether it can be trusted and whether it can be skipped."Whether it can be skipped" is the idempotency requirement: re-running a workflow with the same inputs and configuration should reuse valid outputs and recover from partial failures without silent duplication. That needs `input_file_sha256`, `output_file_sha256`, `run_arguments` and `status` — not a timestamp and a log line.
---     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
---     * Slot: run_role
---     * Slot: tool_name
---     * Slot: tool_version
---     * Slot: function_name Description: The specific amadeus function called (`download_narr`, `process_narr`, `calculate_narr`). More useful than `tool_name` alone, since one package version contains many operations with different failure modes.
---     * Slot: run_arguments Description: The call's arguments as a JSON object string. The single field that decides whether a result is reproducible. Kept opaque because the argument sets differ per function and per source; validating them is the `ExtractionRequest`'s job for the calculate path, and an adapter contract test's job for the download path.
---     * Slot: container_image_repository
---     * Slot: container_image_digest Description: Immutable image digest, not a tag. Tags move; a digest is the only thing that makes "the same container" a checkable claim, and the plan requires digest references in run manifests.
---     * Slot: run_timestamp_utc
---     * Slot: run_duration_seconds
---     * Slot: run_environment Description: Runtime environment as a JSON object string — R version, platform, key package versions (`terra`, `sf`, `exactextractr`), and the database engine and version. The engine matters: a SedonaDB result and a DuckDB result of the same request are not guaranteed identical, and the capability matrix the plan calls for is only auditable if each run says which engine ran it.
---     * Slot: input_file_sha256
---     * Slot: input_row_count
---     * Slot: output_file_sha256
---     * Slot: output_row_count
---     * Slot: status
---     * Slot: log_excerpt
---     * Slot: materialization_mode
---     * Slot: bytes_transferred Description: Network bytes for this run. The benchmark plan's acceptance target is "at least 75% fewer bytes transferred for a remote subset request where the upstream format/API supports pushdown" — which requires this to be measured per run rather than estimated.
---     * Slot: request_count Description: Number of HTTP or API requests issued, for rate-limit accounting.
---     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
--- # Class: ProvenanceChain Description: A materialised walk of `upstream_runs` from a derived value back to its terminus, plus what the terminus is. Stored rather than always recomputed because it is what an exported EnVar record carries, and because the recursive query is expensive to run per row at export time.
---     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
---     * Slot: terminus_type
---     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
 -- # Class: Product_data_genre
 --     * Slot: Product_id Description: Autocreated FK slot
 --     * Slot: data_genre Description: Thematic classification, from the README source table.
@@ -429,15 +485,6 @@
 -- # Class: Asset_vertical_levels_present
 --     * Slot: Asset_id Description: Autocreated FK slot
 --     * Slot: vertical_levels_present
--- # Class: ExtractionRequest_requested_canonical_variables
---     * Slot: ExtractionRequest_id Description: Autocreated FK slot
---     * Slot: requested_canonical_variables_id Description: Request by canonical variable to let the planner choose a source. The preferred form: the user asks for daily maximum temperature, not for `gridmet.tmmx`.
--- # Class: ExtractionRequest_requested_product_variables
---     * Slot: ExtractionRequest_id Description: Autocreated FK slot
---     * Slot: requested_product_variables_id Description: Request a specific source delivery, pinning the answer. Required when reproducing a published result, since the planner's choice may change.
--- # Class: ExtractionRequest_lag_days
---     * Slot: ExtractionRequest_id Description: Autocreated FK slot
---     * Slot: lag_days Description: Lags to compute, in days. `calculate_lagged()` already does this; naming them in the request is what lets the result carry which lag it is.
 -- # Class: ToolRun_input_asset_ids
 --     * Slot: ToolRun_id Description: Autocreated FK slot
 --     * Slot: input_asset_ids Description: Assets consumed by this run.
@@ -450,6 +497,21 @@
 -- # Class: ProvenanceChain_compatibility_assertions
 --     * Slot: ProvenanceChain_id Description: Autocreated FK slot
 --     * Slot: compatibility_assertions Description: Assertions that consecutive steps were compatible — matching CRS, units, calendar, day boundary. The seam between two steps belongs to neither step, and this is where a mismatch gets recorded instead of silently absorbed.
+-- # Class: ExtractionRequest_requested_canonical_variables
+--     * Slot: ExtractionRequest_id Description: Autocreated FK slot
+--     * Slot: requested_canonical_variables_id Description: Request by canonical variable to let the planner choose a source. The preferred form: the user asks for daily maximum temperature, not for `gridmet.tmmx`.
+-- # Class: ExtractionRequest_requested_product_variables
+--     * Slot: ExtractionRequest_id Description: Autocreated FK slot
+--     * Slot: requested_product_variables_id Description: Request a specific source delivery, pinning the answer. Required when reproducing a published result, since the planner's choice may change.
+-- # Class: ExtractionRequest_lag_days
+--     * Slot: ExtractionRequest_id Description: Autocreated FK slot
+--     * Slot: lag_days Description: Lags to compute, in days. `calculate_lagged()` already does this; naming them in the request is what lets the result carry which lag it is.
+-- # Class: ExtractionRequest_requested_privacy_transformations
+--     * Slot: ExtractionRequest_id Description: Autocreated FK slot
+--     * Slot: requested_privacy_transformations_id Description: Ordered requested action references; absence or an empty list asserts no performed history.
+-- # Class: PrivacyReleaseAssessment_performed_privacy_transformations
+--     * Slot: PrivacyReleaseAssessment_id Description: Autocreated FK slot
+--     * Slot: performed_privacy_transformations_id Description: Ordered actual action references, each with a successful run; independent of requests.
 
 CREATE TABLE "AmadeusDatabase" (
 	id INTEGER NOT NULL,
@@ -483,6 +545,24 @@ CREATE TABLE "DataSource" (
 	citation_apa TEXT,
 	doi TEXT,
 	amadeus_function_suffix TEXT,
+	"AmadeusDatabase_id" INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
+);
+
+CREATE TABLE "PrivacyProfile" (
+	id TEXT NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	privacy_profile_version TEXT NOT NULL,
+	source_phi_assessment_status VARCHAR(12) NOT NULL,
+	source_phi_status VARCHAR(17),
+	source_phi_status_missing_reason VARCHAR(28),
+	assessment_evidence_reference TEXT,
+	location_identifiability VARCHAR(36) NOT NULL,
+	linkage_risk_assessment_status VARCHAR(12) NOT NULL,
+	linkage_risk_note TEXT,
+	location_linked_review_required BOOLEAN NOT NULL,
 	"AmadeusDatabase_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
@@ -532,23 +612,6 @@ CREATE TABLE "CanonicalVariable" (
 	FOREIGN KEY(omop_concept_binding_id) REFERENCES "OmopConceptBinding" (id)
 );
 
-CREATE TABLE "LocationSet" (
-	id TEXT NOT NULL,
-	name TEXT,
-	description TEXT,
-	locs_id_field TEXT NOT NULL,
-	crs TEXT NOT NULL,
-	srid INTEGER,
-	geometry_type VARCHAR(18),
-	location_count INTEGER,
-	phi_status VARCHAR(17) NOT NULL,
-	provided_by TEXT,
-	created_at DATETIME,
-	"AmadeusDatabase_id" INTEGER,
-	PRIMARY KEY (id),
-	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
-);
-
 CREATE TABLE "ToolRun" (
 	id TEXT NOT NULL,
 	run_role VARCHAR(9) NOT NULL,
@@ -578,6 +641,35 @@ CREATE TABLE "ToolRun" (
 CREATE TABLE "ProvenanceChain" (
 	id TEXT NOT NULL,
 	terminus_type VARCHAR(28) NOT NULL,
+	"AmadeusDatabase_id" INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
+);
+
+CREATE TABLE "LocationSet" (
+	id TEXT NOT NULL,
+	name TEXT,
+	description TEXT,
+	locs_id_field TEXT NOT NULL,
+	crs TEXT NOT NULL,
+	srid INTEGER,
+	geometry_type VARCHAR(18),
+	location_count INTEGER,
+	phi_status VARCHAR(17) NOT NULL,
+	provided_by TEXT,
+	created_at DATETIME,
+	"AmadeusDatabase_id" INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
+);
+
+CREATE TABLE "PrivacyTransformation" (
+	id TEXT NOT NULL,
+	privacy_transformation VARCHAR(31) NOT NULL,
+	privacy_transformation_stage VARCHAR(22) NOT NULL,
+	privacy_transformation_specification TEXT NOT NULL,
+	privacy_transformation_note TEXT,
+	processing_run TEXT,
 	"AmadeusDatabase_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
@@ -619,10 +711,12 @@ CREATE TABLE "Product" (
 	amadeus_calculate_covariate TEXT,
 	supports_server_side_subset BOOLEAN,
 	stac_collection_id TEXT,
+	privacy_profile TEXT,
 	"AmadeusDatabase_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(data_source) REFERENCES "DataSource" (id),
 	FOREIGN KEY(grid_definition) REFERENCES "GridDefinition" (id),
+	FOREIGN KEY(privacy_profile) REFERENCES "PrivacyProfile" (id),
 	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
 );
 
@@ -636,6 +730,22 @@ CREATE TABLE "Location" (
 	valid_from DATE,
 	valid_to DATE,
 	target_geography_type VARCHAR(19),
+	location_privacy_role VARCHAR(23),
+	location_precision_m FLOAT,
+	"AmadeusDatabase_id" INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY(location_set) REFERENCES "LocationSet" (id),
+	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
+);
+
+CREATE TABLE "PrivacyDeclaration" (
+	id TEXT NOT NULL,
+	location_set TEXT NOT NULL,
+	input_phi_assessment_status VARCHAR(12) NOT NULL,
+	input_phi_status VARCHAR(17),
+	location_identifiability VARCHAR(36) NOT NULL,
+	privacy_declaration_note TEXT,
+	assessment_evidence_reference TEXT,
 	"AmadeusDatabase_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(location_set) REFERENCES "LocationSet" (id),
@@ -973,10 +1083,12 @@ CREATE TABLE "ExtractionRequest" (
 	request_timestamp_utc DATETIME,
 	request_hash TEXT NOT NULL,
 	generated_sql TEXT,
+	privacy_declaration TEXT,
 	"AmadeusDatabase_id" INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(location_set) REFERENCES "LocationSet" (id),
 	FOREIGN KEY(weighting_product_variable) REFERENCES "ProductVariable" (id),
+	FOREIGN KEY(privacy_declaration) REFERENCES "PrivacyDeclaration" (id),
 	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
 );
 
@@ -1000,6 +1112,33 @@ CREATE TABLE "Asset_vertical_levels_present" (
 	vertical_levels_present FLOAT,
 	PRIMARY KEY ("Asset_id", vertical_levels_present),
 	FOREIGN KEY("Asset_id") REFERENCES "Asset" (id)
+);
+
+CREATE TABLE "PrivacyReleaseAssessment" (
+	id TEXT NOT NULL,
+	extraction_request TEXT NOT NULL,
+	privacy_declaration TEXT NOT NULL,
+	privacy_transformation_deviation_note TEXT,
+	output_artifact_reference TEXT NOT NULL,
+	output_artifact_sha256 TEXT,
+	output_phi_status VARCHAR(17),
+	release_assessment_status VARCHAR(12) NOT NULL,
+	release_decision VARCHAR(8) NOT NULL,
+	release_audience TEXT NOT NULL,
+	release_access_level VARCHAR(10) NOT NULL,
+	release_assessment_method TEXT,
+	release_assessment_scope TEXT,
+	assessment_evidence_reference TEXT,
+	assessed_by TEXT,
+	assessed_at DATETIME,
+	released_geography_type VARCHAR(19),
+	released_spatial_resolution_m FLOAT,
+	released_temporal_resolution_iso TEXT,
+	"AmadeusDatabase_id" INTEGER,
+	PRIMARY KEY (id),
+	FOREIGN KEY(extraction_request) REFERENCES "ExtractionRequest" (id),
+	FOREIGN KEY(privacy_declaration) REFERENCES "PrivacyDeclaration" (id),
+	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
 );
 
 CREATE TABLE "AmbientValueAtLocation" (
@@ -1066,5 +1205,21 @@ CREATE TABLE "ExtractionRequest_lag_days" (
 	lag_days INTEGER,
 	PRIMARY KEY ("ExtractionRequest_id", lag_days),
 	FOREIGN KEY("ExtractionRequest_id") REFERENCES "ExtractionRequest" (id)
+);
+
+CREATE TABLE "ExtractionRequest_requested_privacy_transformations" (
+	"ExtractionRequest_id" TEXT,
+	requested_privacy_transformations_id TEXT,
+	PRIMARY KEY ("ExtractionRequest_id", requested_privacy_transformations_id),
+	FOREIGN KEY("ExtractionRequest_id") REFERENCES "ExtractionRequest" (id),
+	FOREIGN KEY(requested_privacy_transformations_id) REFERENCES "PrivacyTransformation" (id)
+);
+
+CREATE TABLE "PrivacyReleaseAssessment_performed_privacy_transformations" (
+	"PrivacyReleaseAssessment_id" TEXT,
+	performed_privacy_transformations_id TEXT,
+	PRIMARY KEY ("PrivacyReleaseAssessment_id", performed_privacy_transformations_id),
+	FOREIGN KEY("PrivacyReleaseAssessment_id") REFERENCES "PrivacyReleaseAssessment" (id),
+	FOREIGN KEY(performed_privacy_transformations_id) REFERENCES "PrivacyTransformation" (id)
 );
 

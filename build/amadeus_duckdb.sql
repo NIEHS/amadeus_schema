@@ -1,6 +1,6 @@
 -- AmadeusDB DDL — dialect: duckdb
 -- Generated from amadeus_schema.yaml via linkml gen-sqltables + scripts/gen_backend_ddl.py
--- 32 tables, 8 geometry views
+-- 38 tables, 8 geometry views
 
 INSTALL spatial;
 LOAD spatial;
@@ -34,6 +34,27 @@ CREATE TABLE "DataSource" (
 	amadeus_function_suffix TEXT,
 	PRIMARY KEY (id),
 	CONSTRAINT "ck_DataSource_access_protocol" CHECK (access_protocol IN ('https_bulk_file', 'ftp', 's3_object_store', 'stac_api', 'opendap', 'thredds', 'rest_api', 'harmony', 'arcgis_service'))
+);
+
+CREATE TABLE "PrivacyProfile" (
+	id TEXT NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	privacy_profile_version TEXT NOT NULL,
+	source_phi_assessment_status VARCHAR(12) NOT NULL,
+	source_phi_status VARCHAR(17),
+	source_phi_status_missing_reason VARCHAR(28),
+	assessment_evidence_reference TEXT,
+	location_identifiability VARCHAR(36) NOT NULL,
+	linkage_risk_assessment_status VARCHAR(12) NOT NULL,
+	linkage_risk_note TEXT,
+	location_linked_review_required BOOLEAN NOT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT "ck_PrivacyProfile_source_phi_assessment_status" CHECK (source_phi_assessment_status IN ('not_assessed', 'in_progress', 'assessed')),
+	CONSTRAINT "ck_PrivacyProfile_source_phi_status" CHECK (source_phi_status IN ('no_phi', 'aggregated_no_phi', 'phi_present')),
+	CONSTRAINT "ck_PrivacyProfile_source_phi_status_missing_reason" CHECK (source_phi_status_missing_reason IN ('not_provided_by_source', 'available_but_not_extracted', 'upstream_data_not_propagated', 'under_investigation', 'not_applicable')),
+	CONSTRAINT "ck_PrivacyProfile_location_identifiability" CHECK (location_identifiability IN ('not_assessed', 'potentially_identifiable', 'not_identifiable_in_assessed_context')),
+	CONSTRAINT "ck_PrivacyProfile_linkage_risk_assessment_status" CHECK (linkage_risk_assessment_status IN ('not_assessed', 'in_progress', 'assessed'))
 );
 
 CREATE TABLE "GridDefinition" (
@@ -79,23 +100,6 @@ CREATE TABLE "CanonicalVariable" (
 	CONSTRAINT "ck_CanonicalVariable_default_aggregation_method" CHECK (default_aggregation_method IN ('instantaneous', 'mean', 'minimum', 'maximum', 'median', 'sum', 'count', 'percentile', 'cumulative', 'area_weighted_mean', 'population_weighted_mean', 'mode', 'class_proportion', 'density', 'nearest', 'other'))
 );
 
-CREATE TABLE "LocationSet" (
-	id TEXT NOT NULL,
-	name TEXT,
-	description TEXT,
-	locs_id_field TEXT NOT NULL,
-	crs TEXT NOT NULL,
-	srid INTEGER,
-	geometry_type VARCHAR(18),
-	location_count INTEGER,
-	phi_status VARCHAR(17) NOT NULL,
-	provided_by TEXT,
-	created_at TIMESTAMP,
-	PRIMARY KEY (id),
-	CONSTRAINT "ck_LocationSet_geometry_type" CHECK (geometry_type IN ('point', 'multipoint', 'linestring', 'multilinestring', 'polygon', 'multipolygon', 'geometrycollection')),
-	CONSTRAINT "ck_LocationSet_phi_status" CHECK (phi_status IN ('no_phi', 'aggregated_no_phi', 'phi_present'))
-);
-
 CREATE TABLE "ToolRun" (
 	id TEXT NOT NULL,
 	run_role VARCHAR(9) NOT NULL,
@@ -128,6 +132,35 @@ CREATE TABLE "ProvenanceChain" (
 	terminus_type VARCHAR(28) NOT NULL,
 	PRIMARY KEY (id),
 	CONSTRAINT "ck_ProvenanceChain_terminus_type" CHECK (terminus_type IN ('raw_source_download', 'remote_asset_scan', 'pre_existing_curated_dataset', 'externally_imported_dataset', 'synthetic_data'))
+);
+
+CREATE TABLE "LocationSet" (
+	id TEXT NOT NULL,
+	name TEXT,
+	description TEXT,
+	locs_id_field TEXT NOT NULL,
+	crs TEXT NOT NULL,
+	srid INTEGER,
+	geometry_type VARCHAR(18),
+	location_count INTEGER,
+	phi_status VARCHAR(17) NOT NULL,
+	provided_by TEXT,
+	created_at TIMESTAMP,
+	PRIMARY KEY (id),
+	CONSTRAINT "ck_LocationSet_geometry_type" CHECK (geometry_type IN ('point', 'multipoint', 'linestring', 'multilinestring', 'polygon', 'multipolygon', 'geometrycollection')),
+	CONSTRAINT "ck_LocationSet_phi_status" CHECK (phi_status IN ('no_phi', 'aggregated_no_phi', 'phi_present'))
+);
+
+CREATE TABLE "PrivacyTransformation" (
+	id TEXT NOT NULL,
+	privacy_transformation VARCHAR(31) NOT NULL,
+	privacy_transformation_stage VARCHAR(22) NOT NULL,
+	privacy_transformation_specification TEXT NOT NULL,
+	privacy_transformation_note TEXT,
+	processing_run TEXT,
+	PRIMARY KEY (id),
+	CONSTRAINT "ck_PrivacyTransformation_privacy_transformation" CHECK (privacy_transformation IN ('none', 'deterministic_geographic_jitter', 'suppression', 'aggregation_to_coarser_unit', 'stochastic_perturbation')),
+	CONSTRAINT "ck_PrivacyTransformation_privacy_transformation_stage" CHECK (privacy_transformation_stage IN ('before_extraction', 'after_extraction', 'release_representation'))
 );
 
 CREATE TABLE "Product" (
@@ -166,12 +199,14 @@ CREATE TABLE "Product" (
 	amadeus_calculate_covariate TEXT,
 	supports_server_side_subset BOOLEAN,
 	stac_collection_id TEXT,
+	privacy_profile TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(data_source) REFERENCES "DataSource" (id),
 	FOREIGN KEY(grid_definition) REFERENCES "GridDefinition" (id),
+	FOREIGN KEY(privacy_profile) REFERENCES "PrivacyProfile" (id),
 	CONSTRAINT "ck_Product_native_format" CHECK (native_format IN ('netcdf4_cf', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet')),
 	CONSTRAINT "ck_Product_spatial_support_type" CHECK (spatial_support_type IN ('point', 'monitoring_station', 'raster_grid_cell', 'model_grid_cell', 'polygon', 'administrative_area', 'statistical_area', 'hex_cell', 'line_feature', 'other')),
-	CONSTRAINT "ck_Product_temporal_resolution" CHECK (temporal_resolution IN ('instantaneous', 'subhourly', 'hourly', 'three_hourly', 'daily', 'monthly', 'seasonal', 'annual', 'multi_year_epoch', 'timeless')),
+	CONSTRAINT "ck_Product_temporal_resolution" CHECK (temporal_resolution IN ('instantaneous', 'subhourly', 'hourly', 'three_hourly', 'daily', 'multi_day', 'monthly', 'seasonal', 'annual', 'multi_year_epoch', 'timeless')),
 	CONSTRAINT "ck_Product_temporal_alignment" CHECK (temporal_alignment IN ('start', 'center', 'end', 'interval', 'unknown')),
 	CONSTRAINT "ck_Product_day_boundary_convention" CHECK (day_boundary_convention IN ('local_midnight', 'utc_midnight', 'ending_1200_gmt', 'solar_noon_centered', 'observation_dependent', 'not_applicable')),
 	CONSTRAINT "ck_Product_calendar" CHECK (calendar IN ('gregorian', 'proleptic_gregorian', 'noleap', 'daymet_365', 'all_leap', 'day_360', 'julian')),
@@ -189,9 +224,27 @@ CREATE TABLE "Location" (
 	valid_from DATE,
 	valid_to DATE,
 	target_geography_type VARCHAR(19),
+	location_privacy_role VARCHAR(23),
+	location_precision_m FLOAT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(location_set) REFERENCES "LocationSet" (id),
-	CONSTRAINT "ck_Location_target_geography_type" CHECK (target_geography_type IN ('point_location', 'buffered_point', 'census_block_group', 'census_tract', 'zcta', 'county', 'state', 'hydrologic_unit', 'h3_hex', 'grid_cell', 'public_water_system'))
+	CONSTRAINT "ck_Location_target_geography_type" CHECK (target_geography_type IN ('point_location', 'buffered_point', 'census_block_group', 'census_tract', 'zcta', 'county', 'state', 'hydrologic_unit', 'h3_hex', 'grid_cell', 'public_water_system')),
+	CONSTRAINT "ck_Location_location_privacy_role" CHECK (location_privacy_role IN ('unspecified', 'public_site', 'individual_or_household', 'synthetic'))
+);
+
+CREATE TABLE "PrivacyDeclaration" (
+	id TEXT NOT NULL,
+	location_set TEXT NOT NULL,
+	input_phi_assessment_status VARCHAR(12) NOT NULL,
+	input_phi_status VARCHAR(17),
+	location_identifiability VARCHAR(36) NOT NULL,
+	privacy_declaration_note TEXT,
+	assessment_evidence_reference TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY(location_set) REFERENCES "LocationSet" (id),
+	CONSTRAINT "ck_PrivacyDeclaration_input_phi_assessment_status" CHECK (input_phi_assessment_status IN ('not_assessed', 'in_progress', 'assessed')),
+	CONSTRAINT "ck_PrivacyDeclaration_input_phi_status" CHECK (input_phi_status IN ('no_phi', 'aggregated_no_phi', 'phi_present')),
+	CONSTRAINT "ck_PrivacyDeclaration_location_identifiability" CHECK (location_identifiability IN ('not_assessed', 'potentially_identifiable', 'not_identifiable_in_assessed_context'))
 );
 
 CREATE TABLE "GridDefinition_vertical_levels" (
@@ -531,9 +584,11 @@ CREATE TABLE "ExtractionRequest" (
 	request_timestamp_utc TIMESTAMP,
 	request_hash TEXT NOT NULL,
 	generated_sql TEXT,
+	privacy_declaration TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY(location_set) REFERENCES "LocationSet" (id),
 	FOREIGN KEY(weighting_product_variable) REFERENCES "ProductVariable" (id),
+	FOREIGN KEY(privacy_declaration) REFERENCES "PrivacyDeclaration" (id),
 	CONSTRAINT "ck_ExtractionRequest_temporal_grouping" CHECK (temporal_grouping IN ('none', 'hour', 'day', 'month', 'year')),
 	CONSTRAINT "ck_ExtractionRequest_extraction_method" CHECK (extraction_method IN ('nearest_cell', 'bilinear', 'inverse_distance_weighted_4_nearest_cells', 'area_weighted_polygon_mean', 'population_weighted_mean', 'point_station_lookup', 'nearest_station', 'intersection_area_proportion', 'raster_zonal_sum', 'feature_density', 'exact_extract')),
 	CONSTRAINT "ck_ExtractionRequest_aggregation_method" CHECK (aggregation_method IN ('instantaneous', 'mean', 'minimum', 'maximum', 'median', 'sum', 'count', 'percentile', 'cumulative', 'area_weighted_mean', 'population_weighted_mean', 'mode', 'class_proportion', 'density', 'nearest', 'other')),
@@ -564,6 +619,36 @@ CREATE TABLE "Asset_vertical_levels_present" (
 	vertical_levels_present FLOAT,
 	PRIMARY KEY ("Asset_id", vertical_levels_present),
 	FOREIGN KEY("Asset_id") REFERENCES "Asset" (id)
+);
+
+CREATE TABLE "PrivacyReleaseAssessment" (
+	id TEXT NOT NULL,
+	extraction_request TEXT NOT NULL,
+	privacy_declaration TEXT NOT NULL,
+	privacy_transformation_deviation_note TEXT,
+	output_artifact_reference TEXT NOT NULL,
+	output_artifact_sha256 TEXT,
+	output_phi_status VARCHAR(17),
+	release_assessment_status VARCHAR(12) NOT NULL,
+	release_decision VARCHAR(8) NOT NULL,
+	release_audience TEXT NOT NULL,
+	release_access_level VARCHAR(10) NOT NULL,
+	release_assessment_method TEXT,
+	release_assessment_scope TEXT,
+	assessment_evidence_reference TEXT,
+	assessed_by TEXT,
+	assessed_at TIMESTAMP,
+	released_geography_type VARCHAR(19),
+	released_spatial_resolution_m FLOAT,
+	released_temporal_resolution_iso TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY(extraction_request) REFERENCES "ExtractionRequest" (id),
+	FOREIGN KEY(privacy_declaration) REFERENCES "PrivacyDeclaration" (id),
+	CONSTRAINT "ck_PrivacyReleaseAssessment_output_phi_status" CHECK (output_phi_status IN ('no_phi', 'aggregated_no_phi', 'phi_present')),
+	CONSTRAINT "ck_PrivacyReleaseAssessment_release_assessment_status" CHECK (release_assessment_status IN ('not_assessed', 'in_progress', 'assessed')),
+	CONSTRAINT "ck_PrivacyReleaseAssessment_release_decision" CHECK (release_decision IN ('pending', 'denied', 'approved')),
+	CONSTRAINT "ck_PrivacyReleaseAssessment_release_access_level" CHECK (release_access_level IN ('restricted', 'public')),
+	CONSTRAINT "ck_PrivacyReleaseAssessment_released_geography_type" CHECK (released_geography_type IN ('point_location', 'buffered_point', 'census_block_group', 'census_tract', 'zcta', 'county', 'state', 'hydrologic_unit', 'h3_hex', 'grid_cell', 'public_water_system'))
 );
 
 CREATE TABLE "AmbientValueAtLocation" (
@@ -633,6 +718,22 @@ CREATE TABLE "ExtractionRequest_lag_days" (
 	lag_days INTEGER,
 	PRIMARY KEY ("ExtractionRequest_id", lag_days),
 	FOREIGN KEY("ExtractionRequest_id") REFERENCES "ExtractionRequest" (id)
+);
+
+CREATE TABLE "ExtractionRequest_requested_privacy_transformations" (
+	"ExtractionRequest_id" TEXT,
+	requested_privacy_transformations_id TEXT,
+	PRIMARY KEY ("ExtractionRequest_id", requested_privacy_transformations_id),
+	FOREIGN KEY("ExtractionRequest_id") REFERENCES "ExtractionRequest" (id),
+	FOREIGN KEY(requested_privacy_transformations_id) REFERENCES "PrivacyTransformation" (id)
+);
+
+CREATE TABLE "PrivacyReleaseAssessment_performed_privacy_transformations" (
+	"PrivacyReleaseAssessment_id" TEXT,
+	performed_privacy_transformations_id TEXT,
+	PRIMARY KEY ("PrivacyReleaseAssessment_id", performed_privacy_transformations_id),
+	FOREIGN KEY("PrivacyReleaseAssessment_id") REFERENCES "PrivacyReleaseAssessment" (id),
+	FOREIGN KEY(performed_privacy_transformations_id) REFERENCES "PrivacyTransformation" (id)
 );
 
 

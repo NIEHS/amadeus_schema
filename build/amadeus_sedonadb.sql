@@ -1,6 +1,6 @@
 -- AmadeusDB DDL — dialect: sedonadb
 -- Generated from amadeus_schema.yaml via linkml gen-sqltables + scripts/gen_backend_ddl.py
--- 32 tables, 8 geometry views
+-- 38 tables, 8 geometry views
 
 CREATE TABLE "OmopConceptBinding" (
 	id INTEGER NOT NULL,
@@ -28,6 +28,22 @@ CREATE TABLE "DataSource" (
 	citation_apa TEXT,
 	doi TEXT,
 	amadeus_function_suffix TEXT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE "PrivacyProfile" (
+	id TEXT NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	privacy_profile_version TEXT NOT NULL,
+	source_phi_assessment_status VARCHAR(12) NOT NULL,
+	source_phi_status VARCHAR(17),
+	source_phi_status_missing_reason VARCHAR(28),
+	assessment_evidence_reference TEXT,
+	location_identifiability VARCHAR(36) NOT NULL,
+	linkage_risk_assessment_status VARCHAR(12) NOT NULL,
+	linkage_risk_note TEXT,
+	location_linked_review_required BOOLEAN NOT NULL,
 	PRIMARY KEY (id)
 );
 
@@ -70,21 +86,6 @@ CREATE TABLE "CanonicalVariable" (
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE "LocationSet" (
-	id TEXT NOT NULL,
-	name TEXT,
-	description TEXT,
-	locs_id_field TEXT NOT NULL,
-	crs TEXT NOT NULL,
-	srid INTEGER,
-	geometry_type VARCHAR(18),
-	location_count INTEGER,
-	phi_status VARCHAR(17) NOT NULL,
-	provided_by TEXT,
-	created_at TIMESTAMP,
-	PRIMARY KEY (id)
-);
-
 CREATE TABLE "ToolRun" (
 	id TEXT NOT NULL,
 	run_role VARCHAR(9) NOT NULL,
@@ -112,6 +113,31 @@ CREATE TABLE "ToolRun" (
 CREATE TABLE "ProvenanceChain" (
 	id TEXT NOT NULL,
 	terminus_type VARCHAR(28) NOT NULL,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE "LocationSet" (
+	id TEXT NOT NULL,
+	name TEXT,
+	description TEXT,
+	locs_id_field TEXT NOT NULL,
+	crs TEXT NOT NULL,
+	srid INTEGER,
+	geometry_type VARCHAR(18),
+	location_count INTEGER,
+	phi_status VARCHAR(17) NOT NULL,
+	provided_by TEXT,
+	created_at TIMESTAMP,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE "PrivacyTransformation" (
+	id TEXT NOT NULL,
+	privacy_transformation VARCHAR(31) NOT NULL,
+	privacy_transformation_stage VARCHAR(22) NOT NULL,
+	privacy_transformation_specification TEXT NOT NULL,
+	privacy_transformation_note TEXT,
+	processing_run TEXT,
 	PRIMARY KEY (id)
 );
 
@@ -151,6 +177,7 @@ CREATE TABLE "Product" (
 	amadeus_calculate_covariate TEXT,
 	supports_server_side_subset BOOLEAN,
 	stac_collection_id TEXT,
+	privacy_profile TEXT,
 	PRIMARY KEY (id)
 );
 
@@ -164,6 +191,19 @@ CREATE TABLE "Location" (
 	valid_from DATE,
 	valid_to DATE,
 	target_geography_type VARCHAR(19),
+	location_privacy_role VARCHAR(23),
+	location_precision_m FLOAT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE "PrivacyDeclaration" (
+	id TEXT NOT NULL,
+	location_set TEXT NOT NULL,
+	input_phi_assessment_status VARCHAR(12) NOT NULL,
+	input_phi_status VARCHAR(17),
+	location_identifiability VARCHAR(36) NOT NULL,
+	privacy_declaration_note TEXT,
+	assessment_evidence_reference TEXT,
 	PRIMARY KEY (id)
 );
 
@@ -456,6 +496,7 @@ CREATE TABLE "ExtractionRequest" (
 	request_timestamp_utc TIMESTAMP,
 	request_hash TEXT NOT NULL,
 	generated_sql TEXT,
+	privacy_declaration TEXT,
 	PRIMARY KEY (id)
 );
 
@@ -475,6 +516,29 @@ CREATE TABLE "Asset_vertical_levels_present" (
 	"Asset_id" TEXT,
 	vertical_levels_present FLOAT,
 	PRIMARY KEY ("Asset_id", vertical_levels_present)
+);
+
+CREATE TABLE "PrivacyReleaseAssessment" (
+	id TEXT NOT NULL,
+	extraction_request TEXT NOT NULL,
+	privacy_declaration TEXT NOT NULL,
+	privacy_transformation_deviation_note TEXT,
+	output_artifact_reference TEXT NOT NULL,
+	output_artifact_sha256 TEXT,
+	output_phi_status VARCHAR(17),
+	release_assessment_status VARCHAR(12) NOT NULL,
+	release_decision VARCHAR(8) NOT NULL,
+	release_audience TEXT NOT NULL,
+	release_access_level VARCHAR(10) NOT NULL,
+	release_assessment_method TEXT,
+	release_assessment_scope TEXT,
+	assessment_evidence_reference TEXT,
+	assessed_by TEXT,
+	assessed_at TIMESTAMP,
+	released_geography_type VARCHAR(19),
+	released_spatial_resolution_m FLOAT,
+	released_temporal_resolution_iso TEXT,
+	PRIMARY KEY (id)
 );
 
 CREATE TABLE "AmbientValueAtLocation" (
@@ -529,6 +593,18 @@ CREATE TABLE "ExtractionRequest_lag_days" (
 	"ExtractionRequest_id" TEXT,
 	lag_days INTEGER,
 	PRIMARY KEY ("ExtractionRequest_id", lag_days)
+);
+
+CREATE TABLE "ExtractionRequest_requested_privacy_transformations" (
+	"ExtractionRequest_id" TEXT,
+	requested_privacy_transformations_id TEXT,
+	PRIMARY KEY ("ExtractionRequest_id", requested_privacy_transformations_id)
+);
+
+CREATE TABLE "PrivacyReleaseAssessment_performed_privacy_transformations" (
+	"PrivacyReleaseAssessment_id" TEXT,
+	performed_privacy_transformations_id TEXT,
+	PRIMARY KEY ("PrivacyReleaseAssessment_id", performed_privacy_transformations_id)
 );
 
 

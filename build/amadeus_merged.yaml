@@ -476,10 +476,10 @@ enums:
         value: envar:TemporalResolutionEnum
       extension_note:
         tag: extension_note
-        value: Adds `subhourly` (GOES ADP, HRRR sub-cycle), `multi_year_epoch` (NLCD
-          2001/2006/2011/2016/2019/2021 — not a regular series) and `timeless` (GMTED
-          elevation, Köppen-Geiger, gROADS). Without `timeless` a third of the amadeus
-          catalog is unrepresentable.
+        value: Adds `multi_day` (GridMET drought pentads and MOD13A2 composites),
+          `subhourly` (GOES ADP, HRRR sub-cycle), `multi_year_epoch` (NLCD 2001/2006/2011/2016/2019/2021
+          — not a regular series) and `timeless` (GMTED elevation, Köppen-Geiger,
+          gROADS). Without `timeless` a third of the amadeus catalog is unrepresentable.
     title: Temporal Resolution
     from_schema: https://w3id.org/niehs/amadeus
     exact_mappings:
@@ -499,6 +499,16 @@ enums:
         text: three_hourly
       daily:
         text: daily
+      multi_day:
+        text: multi_day
+        description: Observations or composites at a nominal interval longer than
+          one day and shorter than a month. Record the nominal interval separately
+          in temporal_resolution_iso; actual asset times/bounds take precedence at
+          calendar boundaries. Includes GridMET pentads and MOD13A2.
+        annotations:
+          amadeus_extension:
+            tag: amadeus_extension
+            value: 'true'
       monthly:
         text: monthly
       seasonal:
@@ -1091,10 +1101,10 @@ enums:
         description: An EnVar record or analysis-ready table was emitted.
   PhiStatusEnum:
     name: PhiStatusEnum
-    description: 'Whether a location set, and anything derived from it, is protected
-      health information. An enum rather than a boolean for two reasons: it matches
-      EnVar''s `phi_status` exactly, and — see `ValueMaterializationEnum` — a boolean
-      cannot be used as a LinkML rule precondition.'
+    description: Scoped PHI classification for source data, supplied locations or
+      an exact output. The owning slot defines the scope; classifications do not propagate
+      automatically. Preserves EnVar's phi_status value set. An enum rather than a
+      boolean also supports LinkML rule preconditions; see ValueMaterializationEnum.
     title: PHI Status
     from_schema: https://w3id.org/niehs/amadeus
     exact_mappings:
@@ -1106,6 +1116,117 @@ enums:
         text: aggregated_no_phi
       phi_present:
         text: phi_present
+  PrivacyAssessmentStatusEnum:
+    name: PrivacyAssessmentStatusEnum
+    description: Local assessment lifecycle, separate from PHI classification. An
+      absent classification or an unassessed record never means no_phi.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      not_assessed:
+        text: not_assessed
+        description: No assessment is asserted.
+      in_progress:
+        text: in_progress
+        description: Assessment is underway; no completed finding is asserted.
+      assessed:
+        text: assessed
+        description: A finding with supporting evidence has been recorded.
+  LocationIdentifiabilityEnum:
+    name: LocationIdentifiabilityEnum
+    description: Local geographic identifiability finding, independent of legal PHI
+      classification and meaningful only in the documented assessment context.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      not_assessed:
+        text: not_assessed
+        description: Individual or household location identifiability is unknown.
+      potentially_identifiable:
+        text: potentially_identifiable
+        description: Location inference may be possible in the assessed context.
+      not_identifiable_in_assessed_context:
+        text: not_identifiable_in_assessed_context
+        description: No identifiability established within the documented scope.
+  PrivacyTransformationEnum:
+    name: PrivacyTransformationEnum
+    description: Transformation vocabulary from EnVar SPEC section 4.8. A method name
+      records an action, never a guarantee of privacy or de-identification.
+    from_schema: https://w3id.org/niehs/amadeus
+    see_also:
+    - https://github.com/monarch-initiative/linkml-microschemas-envar/blob/main/SPEC.md
+    permissible_values:
+      none:
+        text: none
+        description: Explicitly no transformation; distinct from an absent record.
+      deterministic_geographic_jitter:
+        text: deterministic_geographic_jitter
+        description: Deterministic coordinate displacement.
+      suppression:
+        text: suppression
+        description: Withholding selected locations, values or records.
+      aggregation_to_coarser_unit:
+        text: aggregation_to_coarser_unit
+        description: Spatial or temporal aggregation to a coarser support.
+      stochastic_perturbation:
+        text: stochastic_perturbation
+        description: Random perturbation of geometry or values.
+  PrivacyTransformationStageEnum:
+    name: PrivacyTransformationStageEnum
+    description: Local stage at which a requested or performed action applies.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      before_extraction:
+        text: before_extraction
+        description: Changes the locations used to obtain environmental values.
+      after_extraction:
+        text: after_extraction
+        description: Changes extracted values or their linked locations.
+      release_representation:
+        text: release_representation
+        description: Changes released representation; original values may retain location
+          information.
+  PrivacyReleaseDecisionEnum:
+    name: PrivacyReleaseDecisionEnum
+    description: Local authorization record for one exact output artifact. Approval
+      is recorded governance, not independently verified legal de-identification.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      pending:
+        text: pending
+        description: No release authorization recorded.
+      denied:
+        text: denied
+        description: Release authorization withheld.
+      approved:
+        text: approved
+        description: An assessor authorized the artifact for the recorded audience.
+  PrivacyReleaseAccessEnum:
+    name: PrivacyReleaseAccessEnum
+    description: Access context for an artifact-specific release authorization.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      restricted:
+        text: restricted
+        description: Controlled recipients and access conditions.
+      public:
+        text: public
+        description: Unrestricted recipients; PHI-present outputs cannot be approved.
+  LocationPrivacyRoleEnum:
+    name: LocationPrivacyRoleEnum
+    description: Role of a location, without automatically classifying it as PHI.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      unspecified:
+        text: unspecified
+        description: Location role has not been declared.
+      public_site:
+        text: public_site
+        description: Public monitoring or reference location.
+      individual_or_household:
+        text: individual_or_household
+        description: Location associated with a person or household.
+      synthetic:
+        text: synthetic
+        description: Invented location; not an actual participant location.
   ValueMaterializationEnum:
     name: ValueMaterializationEnum
     description: 'Whether an asset''s values exist as rows in a value table, or the
@@ -1298,6 +1419,44 @@ enums:
       synthetic_data:
         text: synthetic_data
 slots:
+  privacy_profiles:
+    name: privacy_profiles
+    description: Optional public source profiles, never location-specific release
+      findings.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmadeusDatabase
+    range: PrivacyProfile
+    multivalued: true
+    inlined_as_list: true
+  privacy_declarations:
+    name: privacy_declarations
+    description: Restricted input declarations; excluded from public catalog artifacts.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmadeusDatabase
+    range: PrivacyDeclaration
+    multivalued: true
+    inlined_as_list: true
+  privacy_transformations:
+    name: privacy_transformations
+    description: Restricted requested/performed specifications; excluded from public
+      catalogs.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmadeusDatabase
+    range: PrivacyTransformation
+    multivalued: true
+    inlined_as_list: true
+  privacy_release_assessments:
+    name: privacy_release_assessments
+    description: Restricted artifact-specific assessments; excluded from public catalogs.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmadeusDatabase
+    range: PrivacyReleaseAssessment
+    multivalued: true
+    inlined_as_list: true
   data_sources:
     name: data_sources
     from_schema: https://w3id.org/niehs/amadeus
@@ -1441,6 +1600,7 @@ slots:
     identifier: true
     domain_of:
     - DataSource
+    - PrivacyProfile
     - Product
     - GridDefinition
     - CanonicalVariable
@@ -1448,11 +1608,14 @@ slots:
     - Asset
     - AmbientValue
     - VectorFeature
+    - ToolRun
+    - ProvenanceChain
     - LocationSet
     - Location
     - ExtractionRequest
-    - ToolRun
-    - ProvenanceChain
+    - PrivacyDeclaration
+    - PrivacyTransformation
+    - PrivacyReleaseAssessment
     range: uriorcurie
   name:
     name: name
@@ -1460,6 +1623,7 @@ slots:
     from_schema: https://w3id.org/niehs/amadeus
     domain_of:
     - DataSource
+    - PrivacyProfile
     - Product
     - GridDefinition
     - CanonicalVariable
@@ -1483,6 +1647,7 @@ slots:
     slot_uri: dcterms:description
     domain_of:
     - DataSource
+    - PrivacyProfile
     - Product
     - CanonicalVariable
     - LocationSet
@@ -1585,9 +1750,90 @@ slots:
     from_schema: https://w3id.org/niehs/amadeus
     domain_of:
     - Asset
-    - ExtractionRequest
     - ToolRun
+    - ExtractionRequest
     range: MaterializationModeEnum
+  privacy_profile:
+    name: privacy_profile
+    description: Optional reference to public privacy metadata. Omission preserves
+      legacy catalogs and makes no statement about source PHI or downstream safety.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Product
+    range: PrivacyProfile
+  privacy_profile_version:
+    name: privacy_profile_version
+    description: Version of the curated profile definition, not a completed assessment.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    range: string
+  source_phi_assessment_status:
+    name: source_phi_assessment_status
+    description: Assessment lifecycle for PHI classification of the described source
+      only.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    range: PrivacyAssessmentStatusEnum
+  source_phi_status:
+    name: source_phi_status
+    description: Source-scoped PHI finding using the existing vocabulary. Not an assertion
+      about the entire EnVar sidecar or any downstream location-linked output.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    range: PhiStatusEnum
+  source_phi_status_missing_reason:
+    name: source_phi_status_missing_reason
+    description: Reason source classification is unspecified; never substitutes for
+      no_phi.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    range: MissingReasonEnum
+  assessment_evidence_reference:
+    name: assessment_evidence_reference
+    description: Evidence reference for recorded findings. Public profiles must reference
+      public non-identifying evidence; restricted records may use controlled references.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    - PrivacyDeclaration
+    - PrivacyReleaseAssessment
+    range: uri
+  location_identifiability:
+    name: location_identifiability
+    description: Potential individual or household location identifiability within
+      assessment scope.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    - PrivacyDeclaration
+    range: LocationIdentifiabilityEnum
+  linkage_risk_assessment_status:
+    name: linkage_risk_assessment_status
+    description: Assessment lifecycle for geographic inference from linked outputs.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    range: PrivacyAssessmentStatusEnum
+  linkage_risk_note:
+    name: linkage_risk_note
+    description: Context and limitations of potential inference from variables, time
+      series, distances or combined datasets. A caution is not a measured risk score.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    range: string
+  location_linked_review_required:
+    name: location_linked_review_required
+    description: Whether release of location-linked outputs requires a separate contextual
+      review.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyProfile
+    range: boolean
   producer_institution:
     name: producer_institution
     examples:
@@ -2439,6 +2685,7 @@ slots:
     domain_of:
     - AmbientValue
     - VectorFeature
+    - PrivacyTransformation
     range: string
   value:
     name: value
@@ -2771,253 +3018,6 @@ slots:
     name: grid_definition_ref
     from_schema: https://w3id.org/niehs/amadeus
     range: GridDefinition
-  locs_id_field:
-    name: locs_id_field
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - LocationSet
-    range: string
-  location_count:
-    name: location_count
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - LocationSet
-    range: integer
-  phi_status:
-    name: phi_status
-    description: Whether these locations are or derive from protected health information.
-      Gates persistence and export. Same slot name, range and value set as EnVar's
-      required `phi_status`, so an exported record carries it verbatim.
-    from_schema: https://w3id.org/niehs/amadeus
-    exact_mappings:
-    - envar:phi_status
-    ifabsent: string(no_phi)
-    domain_of:
-    - LocationSet
-    range: PhiStatusEnum
-  provided_by:
-    name: provided_by
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - LocationSet
-    range: string
-  created_at:
-    name: created_at
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - LocationSet
-    range: datetime
-  location_set:
-    name: location_set
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - Location
-    - ExtractionRequest
-    range: LocationSet
-  location_key:
-    name: location_key
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - Location
-    range: string
-  location_geom_wkt:
-    name: location_geom_wkt
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - Location
-    range: WktLiteral
-  buffer_radius_m:
-    name: buffer_radius_m
-    description: Buffer radius in metres. Metres, explicitly — amadeus currently interprets
-      `radius` in the units of the *projected* geometry's CRS, which for a geographic
-      CRS means degrees, and the docs describe it as metres. Declaring the unit in
-      the schema removes the ambiguity.
-    from_schema: https://w3id.org/niehs/amadeus
-    exact_mappings:
-    - envar:extraction_buffer_m
-    domain_of:
-    - Location
-    - ExtractionRequest
-    - AmbientValueAtLocation
-    range: float
-    minimum_value: 0.0
-  valid_from:
-    name: valid_from
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - Location
-    range: date
-  valid_to:
-    name: valid_to
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - Location
-    range: date
-  target_geography_type:
-    name: target_geography_type
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - Location
-    - ExtractionRequest
-    range: TargetGeographyTypeEnum
-  requested_canonical_variables:
-    name: requested_canonical_variables
-    description: 'Request by canonical variable to let the planner choose a source.
-      The preferred form: the user asks for daily maximum temperature, not for `gridmet.tmmx`.'
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: CanonicalVariable
-    multivalued: true
-  requested_product_variables:
-    name: requested_product_variables
-    description: Request a specific source delivery, pinning the answer. Required
-      when reproducing a published result, since the planner's choice may change.
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: ProductVariable
-    multivalued: true
-  time_window_start:
-    name: time_window_start
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: datetime
-  time_window_end:
-    name: time_window_end
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: datetime
-  temporal_grouping:
-    name: temporal_grouping
-    description: The `.by_time` argument.
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    - AmbientValueAtLocation
-    range: TemporalGroupingEnum
-  extraction_method:
-    name: extraction_method
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    - AmbientValueAtLocation
-    range: ExtractionMethodEnum
-  weighting_product_variable:
-    name: weighting_product_variable
-    description: The product variable used as weights (a population density grid).
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: ProductVariable
-  lag_days:
-    name: lag_days
-    description: Lags to compute, in days. `calculate_lagged()` already does this;
-      naming them in the request is what lets the result carry which lag it is.
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: integer
-    multivalued: true
-  output_orientation:
-    name: output_orientation
-    from_schema: https://w3id.org/niehs/amadeus
-    ifabsent: string(long)
-    domain_of:
-    - ExtractionRequest
-    range: TableOrientationEnum
-  source_priority_policy:
-    name: source_priority_policy
-    description: Ordered source preference for reconciliation, e.g. `aqs > airnow`.
-      Required whenever `status_mixing_policy` is `allow_with_policy`.
-    examples:
-    - value: aqs>airnow
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: string
-  status_mixing_policy:
-    name: status_mixing_policy
-    description: Whether preliminary and quality-controlled values may appear in one
-      result. Defaults to refusing.
-    from_schema: https://w3id.org/niehs/amadeus
-    ifabsent: string(refuse)
-    domain_of:
-    - ExtractionRequest
-    range: StatusMixingPolicyEnum
-  strict_extensivity_check:
-    name: strict_extensivity_check
-    description: 'Whether to reject a request whose aggregation is illegal for the
-      variable''s extensivity, or whose variable declares `extensivity: unknown`.
-      Defaults to on: an aggregation that cannot be justified should fail loudly at
-      request time, not produce a plausible number.'
-    from_schema: https://w3id.org/niehs/amadeus
-    ifabsent: string(strict)
-    domain_of:
-    - ExtractionRequest
-    range: StrictnessEnum
-  requested_by:
-    name: requested_by
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: string
-  request_timestamp_utc:
-    name: request_timestamp_utc
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: datetime
-  request_hash:
-    name: request_hash
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: Sha256
-  generated_sql:
-    name: generated_sql
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - ExtractionRequest
-    range: string
-  location:
-    name: location
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - AmbientValueAtLocation
-    range: Location
-  extraction_request:
-    name: extraction_request
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - AmbientValueAtLocation
-    range: ExtractionRequest
-  contributing_value_count:
-    name: contributing_value_count
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - AmbientValueAtLocation
-    range: integer
-  distance_to_source_m:
-    name: distance_to_source_m
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - AmbientValueAtLocation
-    range: float
-  lag_days_applied:
-    name: lag_days_applied
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - AmbientValueAtLocation
-    range: integer
-  output_column_name:
-    name: output_column_name
-    from_schema: https://w3id.org/niehs/amadeus
-    domain_of:
-    - AmbientValueAtLocation
-    range: string
   run_role:
     name: run_role
     from_schema: https://w3id.org/niehs/amadeus
@@ -3204,6 +3204,474 @@ slots:
     - ProvenanceChain
     range: string
     multivalued: true
+  privacy_declaration:
+    name: privacy_declaration
+    description: Restricted declaration for the request's actual input locations.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    - PrivacyReleaseAssessment
+    range: PrivacyDeclaration
+  input_phi_assessment_status:
+    name: input_phi_assessment_status
+    description: Assessment lifecycle of input PHI classification; has no safe default.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyDeclaration
+    range: PrivacyAssessmentStatusEnum
+  input_phi_status:
+    name: input_phi_status
+    description: Explicit input classification using the existing PHI enum; never
+      inferred from a Product.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyDeclaration
+    range: PhiStatusEnum
+  privacy_declaration_note:
+    name: privacy_declaration_note
+    description: Restricted context for classification; no clinical data are needed
+      here.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyDeclaration
+    range: string
+  location_privacy_role:
+    name: location_privacy_role
+    description: Optional role of a particular location, independent of PHI classification.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    range: LocationPrivacyRoleEnum
+  location_precision_m:
+    name: location_precision_m
+    description: Declared coordinate precision or uncertainty in metres; not a privacy
+      guarantee.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    range: float
+    minimum_value: 0
+  requested_privacy_transformations:
+    name: requested_privacy_transformations
+    description: Ordered requested action references; absence or an empty list asserts
+      no performed history.
+    from_schema: https://w3id.org/niehs/amadeus
+    list_elements_ordered: true
+    domain_of:
+    - ExtractionRequest
+    range: PrivacyTransformation
+    multivalued: true
+  performed_privacy_transformations:
+    name: performed_privacy_transformations
+    description: Ordered actual action references, each with a successful run; independent
+      of requests.
+    from_schema: https://w3id.org/niehs/amadeus
+    list_elements_ordered: true
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: PrivacyTransformation
+    multivalued: true
+  privacy_transformation:
+    name: privacy_transformation
+    description: Action type; none is an explicit action assertion, not an unknown
+      value.
+    from_schema: https://w3id.org/niehs/amadeus
+    exact_mappings:
+    - envar:privacy_transformation
+    domain_of:
+    - PrivacyTransformation
+    range: PrivacyTransformationEnum
+  privacy_transformation_stage:
+    name: privacy_transformation_stage
+    description: Stage where this specification changes geometry, values or release
+      representation.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyTransformation
+    range: PrivacyTransformationStageEnum
+  privacy_transformation_specification:
+    name: privacy_transformation_specification
+    description: Versioned parameters or controlled configuration reference, without
+      public secrets.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyTransformation
+    range: string
+  privacy_transformation_note:
+    name: privacy_transformation_note
+    description: Restricted trigger, determinism, constraints and limitations of the
+      action.
+    from_schema: https://w3id.org/niehs/amadeus
+    exact_mappings:
+    - envar:privacy_transformation_note
+    domain_of:
+    - PrivacyTransformation
+    range: string
+  privacy_transformation_deviation_note:
+    name: privacy_transformation_deviation_note
+    description: Rationale for any difference between requested and performed action
+      sequences.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: string
+  output_artifact_reference:
+    name: output_artifact_reference
+    description: Opaque controlled output reference, never an inline individual result.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: uri
+  output_artifact_sha256:
+    name: output_artifact_sha256
+    description: Hash binding an assessment to exact output bytes; does not anonymize
+      its contents.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: Sha256
+  output_phi_status:
+    name: output_phi_status
+    description: Output-scoped finding, not automatically copied from input or source
+      status.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: PhiStatusEnum
+  release_assessment_status:
+    name: release_assessment_status
+    description: Assessment lifecycle for the exact proposed release.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: PrivacyAssessmentStatusEnum
+  release_decision:
+    name: release_decision
+    description: Recorded authorization decision; not an executable access-control
+      mechanism.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: PrivacyReleaseDecisionEnum
+  release_audience:
+    name: release_audience
+    description: Intended recipients and access context covered by this decision.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: string
+  release_access_level:
+    name: release_access_level
+    description: Whether authorization is restricted or public; independent of PHI
+      classification.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: PrivacyReleaseAccessEnum
+  release_assessment_method:
+    name: release_assessment_method
+    description: Versioned contextual disclosure-risk method; no universal safe distance
+      is assumed.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: string
+  release_assessment_scope:
+    name: release_assessment_scope
+    description: Joint variables, dates, geography, auxiliary information, threat
+      model and utility limits assessed.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: string
+  assessed_by:
+    name: assessed_by
+    description: Accountable assessor identity or controlled identifier.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: string
+  assessed_at:
+    name: assessed_at
+    description: Time of the recorded assessment.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: datetime
+  released_geography_type:
+    name: released_geography_type
+    description: Actual output geography; separate from native Product support.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: TargetGeographyTypeEnum
+  released_spatial_resolution_m:
+    name: released_spatial_resolution_m
+    description: Actual released spatial detail in metres, where a scalar resolution
+      is meaningful.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: float
+    minimum_value: 0
+  released_temporal_resolution_iso:
+    name: released_temporal_resolution_iso
+    description: Actual released temporal support, separate from native source sampling.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    range: Iso8601Duration
+  locs_id_field:
+    name: locs_id_field
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - LocationSet
+    range: string
+  location_count:
+    name: location_count
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - LocationSet
+    range: integer
+  phi_status:
+    name: phi_status
+    description: Whether these locations are or derive from protected health information.
+      Legacy declaration retained for compatibility, including its no_phi default.
+      It does not prove assessment or enforce persistence/export. Privacy-aware requests
+      require an explicit PrivacyDeclaration; new input/output findings reuse PhiStatusEnum
+      without this default.
+    from_schema: https://w3id.org/niehs/amadeus
+    exact_mappings:
+    - envar:phi_status
+    ifabsent: string(no_phi)
+    domain_of:
+    - LocationSet
+    range: PhiStatusEnum
+  provided_by:
+    name: provided_by
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - LocationSet
+    range: string
+  created_at:
+    name: created_at
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - LocationSet
+    range: datetime
+  location_set:
+    name: location_set
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    - ExtractionRequest
+    - PrivacyDeclaration
+    range: LocationSet
+  location_key:
+    name: location_key
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    range: string
+  location_geom_wkt:
+    name: location_geom_wkt
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    range: WktLiteral
+  buffer_radius_m:
+    name: buffer_radius_m
+    description: Buffer radius in metres. Metres, explicitly — amadeus currently interprets
+      `radius` in the units of the *projected* geometry's CRS, which for a geographic
+      CRS means degrees, and the docs describe it as metres. Declaring the unit in
+      the schema removes the ambiguity.
+    from_schema: https://w3id.org/niehs/amadeus
+    exact_mappings:
+    - envar:extraction_buffer_m
+    domain_of:
+    - Location
+    - ExtractionRequest
+    - AmbientValueAtLocation
+    range: float
+    minimum_value: 0.0
+  valid_from:
+    name: valid_from
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    range: date
+  valid_to:
+    name: valid_to
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    range: date
+  target_geography_type:
+    name: target_geography_type
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Location
+    - ExtractionRequest
+    range: TargetGeographyTypeEnum
+  requested_canonical_variables:
+    name: requested_canonical_variables
+    description: 'Request by canonical variable to let the planner choose a source.
+      The preferred form: the user asks for daily maximum temperature, not for `gridmet.tmmx`.'
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: CanonicalVariable
+    multivalued: true
+  requested_product_variables:
+    name: requested_product_variables
+    description: Request a specific source delivery, pinning the answer. Required
+      when reproducing a published result, since the planner's choice may change.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: ProductVariable
+    multivalued: true
+  time_window_start:
+    name: time_window_start
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: datetime
+  time_window_end:
+    name: time_window_end
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: datetime
+  temporal_grouping:
+    name: temporal_grouping
+    description: The `.by_time` argument.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    - AmbientValueAtLocation
+    range: TemporalGroupingEnum
+  extraction_method:
+    name: extraction_method
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    - AmbientValueAtLocation
+    range: ExtractionMethodEnum
+  weighting_product_variable:
+    name: weighting_product_variable
+    description: The product variable used as weights (a population density grid).
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: ProductVariable
+  lag_days:
+    name: lag_days
+    description: Lags to compute, in days. `calculate_lagged()` already does this;
+      naming them in the request is what lets the result carry which lag it is.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: integer
+    multivalued: true
+  output_orientation:
+    name: output_orientation
+    from_schema: https://w3id.org/niehs/amadeus
+    ifabsent: string(long)
+    domain_of:
+    - ExtractionRequest
+    range: TableOrientationEnum
+  source_priority_policy:
+    name: source_priority_policy
+    description: Ordered source preference for reconciliation, e.g. `aqs > airnow`.
+      Required whenever `status_mixing_policy` is `allow_with_policy`.
+    examples:
+    - value: aqs>airnow
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: string
+  status_mixing_policy:
+    name: status_mixing_policy
+    description: Whether preliminary and quality-controlled values may appear in one
+      result. Defaults to refusing.
+    from_schema: https://w3id.org/niehs/amadeus
+    ifabsent: string(refuse)
+    domain_of:
+    - ExtractionRequest
+    range: StatusMixingPolicyEnum
+  strict_extensivity_check:
+    name: strict_extensivity_check
+    description: 'Whether to reject a request whose aggregation is illegal for the
+      variable''s extensivity, or whose variable declares `extensivity: unknown`.
+      Defaults to on: an aggregation that cannot be justified should fail loudly at
+      request time, not produce a plausible number.'
+    from_schema: https://w3id.org/niehs/amadeus
+    ifabsent: string(strict)
+    domain_of:
+    - ExtractionRequest
+    range: StrictnessEnum
+  requested_by:
+    name: requested_by
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: string
+  request_timestamp_utc:
+    name: request_timestamp_utc
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: datetime
+  request_hash:
+    name: request_hash
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: Sha256
+  generated_sql:
+    name: generated_sql
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - ExtractionRequest
+    range: string
+  location:
+    name: location
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmbientValueAtLocation
+    range: Location
+  extraction_request:
+    name: extraction_request
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - PrivacyReleaseAssessment
+    - AmbientValueAtLocation
+    range: ExtractionRequest
+  contributing_value_count:
+    name: contributing_value_count
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmbientValueAtLocation
+    range: integer
+  distance_to_source_m:
+    name: distance_to_source_m
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmbientValueAtLocation
+    range: float
+  lag_days_applied:
+    name: lag_days_applied
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmbientValueAtLocation
+    range: integer
+  output_column_name:
+    name: output_column_name
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - AmbientValueAtLocation
+    range: string
 classes:
   AmadeusDatabase:
     name: AmadeusDatabase
@@ -3213,7 +3681,12 @@ classes:
       which to reach every table.
 
       All collections are optional: a catalog-only bundle (the normal shape of a curation
-      pull request) is as valid as a full instance.'
+      pull request) is as valid as a full instance.
+
+      PrivacyProfile is public source metadata. PrivacyDeclaration, PrivacyTransformation
+      and PrivacyReleaseAssessment are restricted instance records. The public catalog
+      workflow rejects restricted collections; root-schema validity alone is not publication
+      authorization.'
     title: Amadeus Database
     from_schema: https://w3id.org/niehs/amadeus
     slots:
@@ -3235,6 +3708,10 @@ classes:
     - ambient_values_at_location
     - tool_runs
     - provenance_chains
+    - privacy_profiles
+    - privacy_declarations
+    - privacy_transformations
+    - privacy_release_assessments
     attributes:
       schema_version:
         name: schema_version
@@ -3418,6 +3895,53 @@ classes:
         multivalued: true
         inlined: true
         inlined_as_list: true
+      privacy_profiles:
+        name: privacy_profiles
+        description: Optional public source profiles, never location-specific release
+          findings.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmadeusDatabase
+        domain_of:
+        - AmadeusDatabase
+        range: PrivacyProfile
+        multivalued: true
+        inlined: true
+        inlined_as_list: true
+      privacy_declarations:
+        name: privacy_declarations
+        description: Restricted input declarations; excluded from public catalog artifacts.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmadeusDatabase
+        domain_of:
+        - AmadeusDatabase
+        range: PrivacyDeclaration
+        multivalued: true
+        inlined: true
+        inlined_as_list: true
+      privacy_transformations:
+        name: privacy_transformations
+        description: Restricted requested/performed specifications; excluded from
+          public catalogs.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmadeusDatabase
+        domain_of:
+        - AmadeusDatabase
+        range: PrivacyTransformation
+        multivalued: true
+        inlined: true
+        inlined_as_list: true
+      privacy_release_assessments:
+        name: privacy_release_assessments
+        description: Restricted artifact-specific assessments; excluded from public
+          catalogs.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmadeusDatabase
+        domain_of:
+        - AmadeusDatabase
+        range: PrivacyReleaseAssessment
+        multivalued: true
+        inlined: true
+        inlined_as_list: true
     tree_root: true
   DataSource:
     name: DataSource
@@ -3464,6 +3988,7 @@ classes:
         owner: DataSource
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -3471,11 +3996,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       name:
@@ -3488,6 +4016,7 @@ classes:
         owner: DataSource
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -3514,6 +4043,7 @@ classes:
         owner: DataSource
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - CanonicalVariable
         - LocationSet
@@ -3620,6 +4150,221 @@ classes:
         domain_of:
         - DataSource
         range: string
+  PrivacyProfile:
+    name: PrivacyProfile
+    description: Reusable public metadata about source classification and potential
+      location-linkage concerns. Contains no individual locations, linkage keys, transformation
+      secrets or release records. Product and its grid retain authoritative spatial
+      and temporal resolution; this profile does not duplicate those values. Source
+      PHI status does not propagate to location-linked results. Presence of a profile
+      is not a risk assessment.
+    title: Public Product Privacy Profile
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - id
+    - name
+    - description
+    - privacy_profile_version
+    - source_phi_assessment_status
+    - source_phi_status
+    - source_phi_status_missing_reason
+    - assessment_evidence_reference
+    - location_identifiability
+    - linkage_risk_assessment_status
+    - linkage_risk_note
+    - location_linked_review_required
+    slot_usage:
+      name:
+        name: name
+        required: true
+      privacy_profile_version:
+        name: privacy_profile_version
+        required: true
+      source_phi_assessment_status:
+        name: source_phi_assessment_status
+        required: true
+      location_identifiability:
+        name: location_identifiability
+        required: true
+      linkage_risk_assessment_status:
+        name: linkage_risk_assessment_status
+        required: true
+      location_linked_review_required:
+        name: location_linked_review_required
+        required: true
+    attributes:
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: PrivacyProfile
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      name:
+        name: name
+        description: A short machine-friendly name.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - LocationSet
+        - ExtractionRequest
+        range: string
+        required: true
+      description:
+        name: description
+        from_schema: https://w3id.org/niehs/amadeus
+        slot_uri: dcterms:description
+        owner: PrivacyProfile
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - CanonicalVariable
+        - LocationSet
+        range: string
+      privacy_profile_version:
+        name: privacy_profile_version
+        description: Version of the curated profile definition, not a completed assessment.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        range: string
+        required: true
+      source_phi_assessment_status:
+        name: source_phi_assessment_status
+        description: Assessment lifecycle for PHI classification of the described
+          source only.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        range: PrivacyAssessmentStatusEnum
+        required: true
+      source_phi_status:
+        name: source_phi_status
+        description: Source-scoped PHI finding using the existing vocabulary. Not
+          an assertion about the entire EnVar sidecar or any downstream location-linked
+          output.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        range: PhiStatusEnum
+      source_phi_status_missing_reason:
+        name: source_phi_status_missing_reason
+        description: Reason source classification is unspecified; never substitutes
+          for no_phi.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        range: MissingReasonEnum
+      assessment_evidence_reference:
+        name: assessment_evidence_reference
+        description: Evidence reference for recorded findings. Public profiles must
+          reference public non-identifying evidence; restricted records may use controlled
+          references.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        - PrivacyDeclaration
+        - PrivacyReleaseAssessment
+        range: uri
+      location_identifiability:
+        name: location_identifiability
+        description: Potential individual or household location identifiability within
+          assessment scope.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        - PrivacyDeclaration
+        range: LocationIdentifiabilityEnum
+        required: true
+      linkage_risk_assessment_status:
+        name: linkage_risk_assessment_status
+        description: Assessment lifecycle for geographic inference from linked outputs.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        range: PrivacyAssessmentStatusEnum
+        required: true
+      linkage_risk_note:
+        name: linkage_risk_note
+        description: Context and limitations of potential inference from variables,
+          time series, distances or combined datasets. A caution is not a measured
+          risk score.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        range: string
+      location_linked_review_required:
+        name: location_linked_review_required
+        description: Whether release of location-linked outputs requires a separate
+          contextual review.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyProfile
+        domain_of:
+        - PrivacyProfile
+        range: boolean
+        required: true
+    rules:
+    - preconditions:
+        slot_conditions:
+          source_phi_assessment_status:
+            name: source_phi_assessment_status
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          source_phi_status:
+            name: source_phi_status
+            required: true
+          assessment_evidence_reference:
+            name: assessment_evidence_reference
+            required: true
+      description: A source classification finding must name its status and evidence.
+    - preconditions:
+        slot_conditions:
+          linkage_risk_assessment_status:
+            name: linkage_risk_assessment_status
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          assessment_evidence_reference:
+            name: assessment_evidence_reference
+            required: true
+          linkage_risk_note:
+            name: linkage_risk_note
+            required: true
+      description: A completed linkage-risk assessment needs evidence and context.
   Product:
     name: Product
     description: 'A specific, versioned data product from a source — the unit a user
@@ -3674,6 +4419,7 @@ classes:
     - amadeus_calculate_covariate
     - supports_server_side_subset
     - stac_collection_id
+    - privacy_profile
     slot_usage:
       name:
         name: name
@@ -3702,6 +4448,7 @@ classes:
         owner: Product
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -3709,11 +4456,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       name:
@@ -3723,6 +4473,7 @@ classes:
         owner: Product
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -3749,6 +4500,7 @@ classes:
         owner: Product
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - CanonicalVariable
         - LocationSet
@@ -4093,6 +4845,15 @@ classes:
         - Product
         - Asset
         range: string
+      privacy_profile:
+        name: privacy_profile
+        description: Optional reference to public privacy metadata. Omission preserves
+          legacy catalogs and makes no statement about source PHI or downstream safety.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Product
+        domain_of:
+        - Product
+        range: PrivacyProfile
     rules:
     - preconditions:
         slot_conditions:
@@ -4193,6 +4954,7 @@ classes:
         owner: GridDefinition
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -4200,11 +4962,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       name:
@@ -4214,6 +4979,7 @@ classes:
         owner: GridDefinition
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -4436,6 +5202,7 @@ classes:
         owner: CanonicalVariable
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -4443,11 +5210,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       name:
@@ -4460,6 +5230,7 @@ classes:
         owner: CanonicalVariable
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -4486,6 +5257,7 @@ classes:
         owner: CanonicalVariable
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - CanonicalVariable
         - LocationSet
@@ -4742,6 +5514,7 @@ classes:
         owner: ProductVariable
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -4749,11 +5522,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product:
@@ -5146,6 +5922,7 @@ classes:
         owner: Asset
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -5153,11 +5930,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product:
@@ -5342,8 +6122,8 @@ classes:
         owner: Asset
         domain_of:
         - Asset
-        - ExtractionRequest
         - ToolRun
+        - ExtractionRequest
         range: MaterializationModeEnum
         required: true
       cache_expires_at:
@@ -5480,6 +6260,7 @@ classes:
         owner: AmbientValue
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -5487,11 +6268,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product_variable:
@@ -5539,6 +6323,7 @@ classes:
         domain_of:
         - AmbientValue
         - VectorFeature
+        - PrivacyTransformation
         range: string
       value:
         name: value
@@ -5905,6 +6690,7 @@ classes:
         owner: StationObservation
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -5912,11 +6698,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product_variable:
@@ -5964,6 +6753,7 @@ classes:
         domain_of:
         - AmbientValue
         - VectorFeature
+        - PrivacyTransformation
         range: string
       value:
         name: value
@@ -6235,6 +7025,7 @@ classes:
         owner: GridCellValue
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -6242,11 +7033,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product_variable:
@@ -6294,6 +7088,7 @@ classes:
         domain_of:
         - AmbientValue
         - VectorFeature
+        - PrivacyTransformation
         range: string
       value:
         name: value
@@ -6593,6 +7388,7 @@ classes:
         owner: AreaValue
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -6600,11 +7396,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product_variable:
@@ -6652,6 +7451,7 @@ classes:
         domain_of:
         - AmbientValue
         - VectorFeature
+        - PrivacyTransformation
         range: string
       value:
         name: value
@@ -6939,6 +7739,7 @@ classes:
         owner: HexCellValue
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -6946,11 +7747,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product_variable:
@@ -6998,6 +7802,7 @@ classes:
         domain_of:
         - AmbientValue
         - VectorFeature
+        - PrivacyTransformation
         range: string
       value:
         name: value
@@ -7210,6 +8015,7 @@ classes:
         owner: VectorFeature
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -7217,11 +8023,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       product:
@@ -7326,1062 +8135,7 @@ classes:
         domain_of:
         - AmbientValue
         - VectorFeature
-        range: string
-  LocationSet:
-    name: LocationSet
-    description: 'A user-supplied collection of locations — the `locs` argument, promoted
-      to an entity. Carries the identifier field name (`locs_id`), the CRS the user
-      supplied, and a PHI declaration.
-
-      `phi_status` defaults to `no_phi` and is the gate on everything else: if a location
-      set is flagged, results derived from it must not be written to shared catalog
-      tables or embedded in an exported EnVar record, whose `phi_status` is a required
-      field precisely so this cannot be left implicit.'
-    title: Location Set
-    from_schema: https://w3id.org/niehs/amadeus
-    slots:
-    - id
-    - name
-    - description
-    - locs_id_field
-    - crs
-    - srid
-    - geometry_type
-    - location_count
-    - phi_status
-    - provided_by
-    - created_at
-    slot_usage:
-      locs_id_field:
-        name: locs_id_field
-        description: Name of the user's identifier column. amadeus already takes this
-          as `locs_id`; recording it means the output column names are derivable rather
-          than conventional.
-        examples:
-        - value: site_id
-        required: true
-      phi_status:
-        name: phi_status
-        required: true
-      crs:
-        name: crs
-        description: Declared, never assumed. `calculate_covariates()` currently reprojects
-          `locs` to `crs(from)` silently; an undeclared input CRS is the most common
-          way a spatial join goes quietly wrong.
-        required: true
-    attributes:
-      id:
-        name: id
-        description: Stable identifier for this entity within an AmadeusDB instance.
-        from_schema: https://w3id.org/niehs/amadeus
-        identifier: true
-        owner: LocationSet
-        domain_of:
-        - DataSource
-        - Product
-        - GridDefinition
-        - CanonicalVariable
-        - ProductVariable
-        - Asset
-        - AmbientValue
-        - VectorFeature
-        - LocationSet
-        - Location
-        - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
-        range: uriorcurie
-        required: true
-      name:
-        name: name
-        description: A short machine-friendly name.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: LocationSet
-        domain_of:
-        - DataSource
-        - Product
-        - GridDefinition
-        - CanonicalVariable
-        - LocationSet
-        - ExtractionRequest
-        range: string
-      description:
-        name: description
-        from_schema: https://w3id.org/niehs/amadeus
-        slot_uri: dcterms:description
-        owner: LocationSet
-        domain_of:
-        - DataSource
-        - Product
-        - CanonicalVariable
-        - LocationSet
-        range: string
-      locs_id_field:
-        name: locs_id_field
-        description: Name of the user's identifier column. amadeus already takes this
-          as `locs_id`; recording it means the output column names are derivable rather
-          than conventional.
-        examples:
-        - value: site_id
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: LocationSet
-        domain_of:
-        - LocationSet
-        range: string
-        required: true
-      crs:
-        name: crs
-        description: Declared, never assumed. `calculate_covariates()` currently reprojects
-          `locs` to `crs(from)` silently; an undeclared input CRS is the most common
-          way a spatial join goes quietly wrong.
-        examples:
-        - value: EPSG:4326
-        - value: EPSG:5070
-        from_schema: https://w3id.org/niehs/amadeus
-        exact_mappings:
-        - envar:crs
-        - hew:coordinate_reference_system_uri
-        owner: LocationSet
-        domain_of:
-        - Product
-        - GridDefinition
-        - LocationSet
-        range: string
-        required: true
-        pattern: ^[A-Za-z]+:[0-9]+$
-      srid:
-        name: srid
-        description: Numeric spatial reference identifier, derived from `crs`. Materialised
-          because `ST_SetSRID` takes an integer and the geometry views need it without
-          a lookup.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: LocationSet
-        domain_of:
-        - Product
-        - GridDefinition
-        - Asset
-        - StationObservation
-        - GridCellValue
-        - AreaValue
-        - HexCellValue
-        - VectorFeature
-        - LocationSet
-        - Location
-        range: integer
-      geometry_type:
-        name: geometry_type
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: LocationSet
-        domain_of:
-        - VectorFeature
-        - LocationSet
-        range: GeometryTypeEnum
-      location_count:
-        name: location_count
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: LocationSet
-        domain_of:
-        - LocationSet
-        range: integer
-      phi_status:
-        name: phi_status
-        description: Whether these locations are or derive from protected health information.
-          Gates persistence and export. Same slot name, range and value set as EnVar's
-          required `phi_status`, so an exported record carries it verbatim.
-        from_schema: https://w3id.org/niehs/amadeus
-        exact_mappings:
-        - envar:phi_status
-        ifabsent: string(no_phi)
-        owner: LocationSet
-        domain_of:
-        - LocationSet
-        range: PhiStatusEnum
-        required: true
-      provided_by:
-        name: provided_by
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: LocationSet
-        domain_of:
-        - LocationSet
-        range: string
-      created_at:
-        name: created_at
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: LocationSet
-        domain_of:
-        - LocationSet
-        range: datetime
-  Location:
-    name: Location
-    description: 'One location in a set, with an optional validity interval.
-
-      `valid_from` / `valid_to` exist because a residential address is not timeless.
-      Address histories, known travel intervals and synthetic residence periods all
-      need them, and without them a value is joined to a place the subject may not
-      have occupied on that date. amadeus does not need to model *why* the interval
-      exists — that is the health layer''s business — only to honour it in the join.'
-    title: Location
-    from_schema: https://w3id.org/niehs/amadeus
-    slots:
-    - id
-    - location_set
-    - location_key
-    - location_geom_wkt
-    - srid
-    - buffer_radius_m
-    - valid_from
-    - valid_to
-    - target_geography_type
-    slot_usage:
-      location_set:
-        name: location_set
-        required: true
-      location_key:
-        name: location_key
-        description: The user's own identifier value, preserved verbatim.
-        required: true
-      location_geom_wkt:
-        name: location_geom_wkt
-        required: true
-    attributes:
-      id:
-        name: id
-        description: Stable identifier for this entity within an AmadeusDB instance.
-        from_schema: https://w3id.org/niehs/amadeus
-        identifier: true
-        owner: Location
-        domain_of:
-        - DataSource
-        - Product
-        - GridDefinition
-        - CanonicalVariable
-        - ProductVariable
-        - Asset
-        - AmbientValue
-        - VectorFeature
-        - LocationSet
-        - Location
-        - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
-        range: uriorcurie
-        required: true
-      location_set:
-        name: location_set
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: Location
-        domain_of:
-        - Location
-        - ExtractionRequest
-        range: LocationSet
-        required: true
-      location_key:
-        name: location_key
-        description: The user's own identifier value, preserved verbatim.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: Location
-        domain_of:
-        - Location
-        range: string
-        required: true
-      location_geom_wkt:
-        name: location_geom_wkt
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: Location
-        domain_of:
-        - Location
-        range: WktLiteral
-        required: true
-      srid:
-        name: srid
-        description: Numeric spatial reference identifier, derived from `crs`. Materialised
-          because `ST_SetSRID` takes an integer and the geometry views need it without
-          a lookup.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: Location
-        domain_of:
-        - Product
-        - GridDefinition
-        - Asset
-        - StationObservation
-        - GridCellValue
-        - AreaValue
-        - HexCellValue
-        - VectorFeature
-        - LocationSet
-        - Location
-        range: integer
-      buffer_radius_m:
-        name: buffer_radius_m
-        description: Buffer radius in metres. Metres, explicitly — amadeus currently
-          interprets `radius` in the units of the *projected* geometry's CRS, which
-          for a geographic CRS means degrees, and the docs describe it as metres.
-          Declaring the unit in the schema removes the ambiguity.
-        from_schema: https://w3id.org/niehs/amadeus
-        exact_mappings:
-        - envar:extraction_buffer_m
-        owner: Location
-        domain_of:
-        - Location
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: float
-        minimum_value: 0.0
-      valid_from:
-        name: valid_from
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: Location
-        domain_of:
-        - Location
-        range: date
-      valid_to:
-        name: valid_to
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: Location
-        domain_of:
-        - Location
-        range: date
-      target_geography_type:
-        name: target_geography_type
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: Location
-        domain_of:
-        - Location
-        - ExtractionRequest
-        range: TargetGeographyTypeEnum
-  ExtractionRequest:
-    name: ExtractionRequest
-    description: 'A declarative, reproducible specification of an extraction: which
-      variables, over which locations, for which time window, with which buffer, aggregation,
-      weighting and lags.
-
-      The rules below are the ones that make the request *checkable before it runs*,
-      which is the point. The extensivity rule in particular turns the project lead''s
-      "intensive vs extensive should be explicit" from documentation into a validation
-      error.'
-    title: Extraction Request
-    from_schema: https://w3id.org/niehs/amadeus
-    slots:
-    - id
-    - name
-    - location_set
-    - requested_canonical_variables
-    - requested_product_variables
-    - time_window_start
-    - time_window_end
-    - temporal_grouping
-    - buffer_radius_m
-    - extraction_method
-    - aggregation_method
-    - weighting_product_variable
-    - lag_days
-    - target_geography_type
-    - output_orientation
-    - materialization_mode
-    - source_priority_policy
-    - status_mixing_policy
-    - strict_extensivity_check
-    - requested_by
-    - request_timestamp_utc
-    - request_hash
-    - generated_sql
-    slot_usage:
-      location_set:
-        name: location_set
-        required: true
-      time_window_start:
-        name: time_window_start
-        required: true
-      time_window_end:
-        name: time_window_end
-        required: true
-      extraction_method:
-        name: extraction_method
-        required: true
-      request_hash:
-        name: request_hash
-        description: 'Hash over the normalised request. The idempotency key: the same
-          request re-submitted resolves to the existing result set instead of recomputing
-          it, and a changed request is visibly a different request.'
-        required: true
-      generated_sql:
-        name: generated_sql
-        description: The SQL actually issued. Stored so the result is auditable against
-          the plan the optimiser chose, and so a user can take the query away and
-          run it themselves — which is the "same contract in R, SQL, Python or a container"
-          promise, made concrete.
-    attributes:
-      id:
-        name: id
-        description: Stable identifier for this entity within an AmadeusDB instance.
-        from_schema: https://w3id.org/niehs/amadeus
-        identifier: true
-        owner: ExtractionRequest
-        domain_of:
-        - DataSource
-        - Product
-        - GridDefinition
-        - CanonicalVariable
-        - ProductVariable
-        - Asset
-        - AmbientValue
-        - VectorFeature
-        - LocationSet
-        - Location
-        - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
-        range: uriorcurie
-        required: true
-      name:
-        name: name
-        description: A short machine-friendly name.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - DataSource
-        - Product
-        - GridDefinition
-        - CanonicalVariable
-        - LocationSet
-        - ExtractionRequest
-        range: string
-      location_set:
-        name: location_set
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - Location
-        - ExtractionRequest
-        range: LocationSet
-        required: true
-      requested_canonical_variables:
-        name: requested_canonical_variables
-        description: 'Request by canonical variable to let the planner choose a source.
-          The preferred form: the user asks for daily maximum temperature, not for
-          `gridmet.tmmx`.'
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: CanonicalVariable
-        multivalued: true
-      requested_product_variables:
-        name: requested_product_variables
-        description: Request a specific source delivery, pinning the answer. Required
-          when reproducing a published result, since the planner's choice may change.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: ProductVariable
-        multivalued: true
-      time_window_start:
-        name: time_window_start
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: datetime
-        required: true
-      time_window_end:
-        name: time_window_end
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: datetime
-        required: true
-      temporal_grouping:
-        name: temporal_grouping
-        description: The `.by_time` argument.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: TemporalGroupingEnum
-      buffer_radius_m:
-        name: buffer_radius_m
-        description: Buffer radius in metres. Metres, explicitly — amadeus currently
-          interprets `radius` in the units of the *projected* geometry's CRS, which
-          for a geographic CRS means degrees, and the docs describe it as metres.
-          Declaring the unit in the schema removes the ambiguity.
-        from_schema: https://w3id.org/niehs/amadeus
-        exact_mappings:
-        - envar:extraction_buffer_m
-        owner: ExtractionRequest
-        domain_of:
-        - Location
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: float
-        minimum_value: 0.0
-      extraction_method:
-        name: extraction_method
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: ExtractionMethodEnum
-        required: true
-      aggregation_method:
-        name: aggregation_method
-        from_schema: https://w3id.org/niehs/amadeus
-        exact_mappings:
-        - envar:temporal_aggregation_method
-        - hew:aggregation_method
-        owner: ExtractionRequest
-        domain_of:
-        - ProductVariable
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: AggregationMethodEnum
-      weighting_product_variable:
-        name: weighting_product_variable
-        description: The product variable used as weights (a population density grid).
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: ProductVariable
-      lag_days:
-        name: lag_days
-        description: Lags to compute, in days. `calculate_lagged()` already does this;
-          naming them in the request is what lets the result carry which lag it is.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: integer
-        multivalued: true
-      target_geography_type:
-        name: target_geography_type
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - Location
-        - ExtractionRequest
-        range: TargetGeographyTypeEnum
-      output_orientation:
-        name: output_orientation
-        from_schema: https://w3id.org/niehs/amadeus
-        ifabsent: string(long)
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: TableOrientationEnum
-      materialization_mode:
-        name: materialization_mode
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - Asset
-        - ExtractionRequest
-        - ToolRun
-        range: MaterializationModeEnum
-      source_priority_policy:
-        name: source_priority_policy
-        description: Ordered source preference for reconciliation, e.g. `aqs > airnow`.
-          Required whenever `status_mixing_policy` is `allow_with_policy`.
-        examples:
-        - value: aqs>airnow
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: string
-      status_mixing_policy:
-        name: status_mixing_policy
-        description: Whether preliminary and quality-controlled values may appear
-          in one result. Defaults to refusing.
-        from_schema: https://w3id.org/niehs/amadeus
-        ifabsent: string(refuse)
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: StatusMixingPolicyEnum
-      strict_extensivity_check:
-        name: strict_extensivity_check
-        description: 'Whether to reject a request whose aggregation is illegal for
-          the variable''s extensivity, or whose variable declares `extensivity: unknown`.
-          Defaults to on: an aggregation that cannot be justified should fail loudly
-          at request time, not produce a plausible number.'
-        from_schema: https://w3id.org/niehs/amadeus
-        ifabsent: string(strict)
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: StrictnessEnum
-      requested_by:
-        name: requested_by
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: string
-      request_timestamp_utc:
-        name: request_timestamp_utc
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: datetime
-      request_hash:
-        name: request_hash
-        description: 'Hash over the normalised request. The idempotency key: the same
-          request re-submitted resolves to the existing result set instead of recomputing
-          it, and a changed request is visibly a different request.'
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: Sha256
-        required: true
-      generated_sql:
-        name: generated_sql
-        description: The SQL actually issued. Stored so the result is auditable against
-          the plan the optimiser chose, and so a user can take the query away and
-          run it themselves — which is the "same contract in R, SQL, Python or a container"
-          promise, made concrete.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: ExtractionRequest
-        domain_of:
-        - ExtractionRequest
-        range: string
-    rules:
-    - preconditions:
-        slot_conditions:
-          buffer_radius_m:
-            name: buffer_radius_m
-            minimum_value: 1.0e-06
-      postconditions:
-        slot_conditions:
-          aggregation_method:
-            name: aggregation_method
-            required: true
-      description: A buffer without an aggregation method is ambiguous — there are
-        now many source values per location and nothing says how they combine. amadeus's
-        current default (`fun = "mean"`) is silently wrong for every extensive variable.
-    - preconditions:
-        slot_conditions:
-          aggregation_method:
-            name: aggregation_method
-            any_of:
-            - equals_string: population_weighted_mean
-      postconditions:
-        slot_conditions:
-          weighting_product_variable:
-            name: weighting_product_variable
-            required: true
-      description: Population weighting must name the population product it weighted
-        by. "Population-weighted" with no stated population raster is not reproducible.
-    - preconditions:
-        slot_conditions:
-          status_mixing_policy:
-            name: status_mixing_policy
-            equals_string: allow_with_policy
-      postconditions:
-        slot_conditions:
-          source_priority_policy:
-            name: source_priority_policy
-            required: true
-      description: The AQS/AirNow rule, enforced at request time. Mixing preliminary
-        and quality-controlled values into one result requires the user to have explicitly
-        chosen a reconciliation policy. The default is to refuse.
-  AmbientValueAtLocation:
-    name: AmbientValueAtLocation
-    description: 'The output row: an ambient value assigned to a user location for
-      a time interval, with the extraction that produced it recorded alongside. This
-      is what `calculate_covariates()` returns today, plus the metadata it currently
-      drops.
-
-      Not an exposure. The location may be a person''s address and the row may carry
-      a cohort key, but the value is a property of the place: swap the person, keep
-      the address, and it does not change.
-
-      What today''s output has, that this keeps: location key, time, value. What today''s
-      output lacks, that this adds: which product variable and which canonical variable
-      (today encoded positionally in a column name like `weasd_0`), the extraction
-      method and buffer actually used, how many source values contributed, coverage,
-      distance to the contributing station, the quality and status of the inputs,
-      and the run that produced it.'
-    title: Ambient Value at Location
-    from_schema: https://w3id.org/niehs/amadeus
-    is_a: AmbientValue
-    slots:
-    - location
-    - extraction_request
-    - buffer_radius_m
-    - extraction_method
-    - aggregation_method
-    - contributing_value_count
-    - coverage_fraction
-    - distance_to_source_m
-    - lag_days_applied
-    - temporal_grouping
-    - output_column_name
-    slot_usage:
-      location:
-        name: location
-        required: true
-      extraction_request:
-        name: extraction_request
-        required: true
-      extraction_method:
-        name: extraction_method
-        required: true
-      contributing_value_count:
-        name: contributing_value_count
-        description: How many source values went into this one. A buffer mean over
-          one cell and over four hundred cells are different claims; today both come
-          back as an undistinguished number.
-      distance_to_source_m:
-        name: distance_to_source_m
-        description: Distance to the contributing station, for nearest-station extraction.
-          Paired with the request's max-distance setting, this is what makes a nearest-station
-          assignment defensible.
-      output_column_name:
-        name: output_column_name
-        description: The wide-format column name this value would occupy, for backward
-          compatibility with existing amadeus and beethoven consumers (`weasd_0`,
-          `tmmx_10000`). Generated from the request, not parsed back out of it — the
-          long form is canonical and the wide form is a projection.
-    attributes:
-      location:
-        name: location
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValueAtLocation
-        range: Location
-        required: true
-      extraction_request:
-        name: extraction_request
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValueAtLocation
-        range: ExtractionRequest
-        required: true
-      buffer_radius_m:
-        name: buffer_radius_m
-        description: Buffer radius in metres. Metres, explicitly — amadeus currently
-          interprets `radius` in the units of the *projected* geometry's CRS, which
-          for a geographic CRS means degrees, and the docs describe it as metres.
-          Declaring the unit in the schema removes the ambiguity.
-        from_schema: https://w3id.org/niehs/amadeus
-        exact_mappings:
-        - envar:extraction_buffer_m
-        owner: AmbientValueAtLocation
-        domain_of:
-        - Location
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: float
-        minimum_value: 0.0
-      extraction_method:
-        name: extraction_method
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: ExtractionMethodEnum
-        required: true
-      aggregation_method:
-        name: aggregation_method
-        from_schema: https://w3id.org/niehs/amadeus
-        exact_mappings:
-        - envar:temporal_aggregation_method
-        - hew:aggregation_method
-        owner: AmbientValueAtLocation
-        domain_of:
-        - ProductVariable
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: AggregationMethodEnum
-      contributing_value_count:
-        name: contributing_value_count
-        description: How many source values went into this one. A buffer mean over
-          one cell and over four hundred cells are different claims; today both come
-          back as an undistinguished number.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValueAtLocation
-        range: integer
-      coverage_fraction:
-        name: coverage_fraction
-        description: Fraction of the hex actually covered by contributing source support.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - HexCellValue
-        - AmbientValueAtLocation
-        range: float
-        minimum_value: 0.0
-        maximum_value: 1.0
-      distance_to_source_m:
-        name: distance_to_source_m
-        description: Distance to the contributing station, for nearest-station extraction.
-          Paired with the request's max-distance setting, this is what makes a nearest-station
-          assignment defensible.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValueAtLocation
-        range: float
-      lag_days_applied:
-        name: lag_days_applied
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValueAtLocation
-        range: integer
-      temporal_grouping:
-        name: temporal_grouping
-        description: The `.by_time` argument.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - ExtractionRequest
-        - AmbientValueAtLocation
-        range: TemporalGroupingEnum
-      output_column_name:
-        name: output_column_name
-        description: The wide-format column name this value would occupy, for backward
-          compatibility with existing amadeus and beethoven consumers (`weasd_0`,
-          `tmmx_10000`). Generated from the request, not parsed back out of it — the
-          long form is canonical and the wide form is a projection.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValueAtLocation
-        range: string
-      id:
-        name: id
-        description: Stable identifier for this entity within an AmadeusDB instance.
-        from_schema: https://w3id.org/niehs/amadeus
-        identifier: true
-        owner: AmbientValueAtLocation
-        domain_of:
-        - DataSource
-        - Product
-        - GridDefinition
-        - CanonicalVariable
-        - ProductVariable
-        - Asset
-        - AmbientValue
-        - VectorFeature
-        - LocationSet
-        - Location
-        - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
-        range: uriorcurie
-        required: true
-      product_variable:
-        name: product_variable
-        description: Which source delivery this is. Carries the native units, the
-          CF metadata and the aggregation — so the row does not have to.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: ProductVariable
-        required: true
-      canonical_variable:
-        name: canonical_variable
-        description: Denormalised from `product_variable` on purpose. Cross-source
-          queries ("all daily maximum temperature within this polygon") are the common
-          case, and making them a two-hop join is a performance tax on the query the
-          whole architecture exists to serve.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - ProductVariable
-        - AmbientValue
-        range: CanonicalVariable
-        required: true
-      asset:
-        name: asset
-        description: The byte stream this value came from. Every number resolves to
-          a file and a hash — half of objective O-02's "every derived output resolves
-          to source assets and processing runs".
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        - VectorFeature
-        range: Asset
-      processing_run:
-        name: processing_run
-        description: Identifier of the `ToolRun` that produced this value. The other
-          half of O-02. A plain string rather than an object reference so the value
-          and provenance modules stay independently loadable; the SQL post-processor
-          adds the foreign key.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        - VectorFeature
-        range: string
-      value:
-        name: value
-        description: The value in the canonical variable's units. Null when `null_semantics`
-          explains why.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: float
-      value_unit_ucum:
-        name: value_unit_ucum
-        description: 'Units of `value`, denormalised from the canonical variable.
-          Redundant by design: a value row that travels out of the database as CSV
-          or Parquet must not lose its units on the way.'
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: string
-      native_value:
-        name: native_value
-        description: The value exactly as the source shipped it, before scale, offset
-          and unit conversion. Kept so a conversion bug is discoverable after the
-          fact instead of being baked in irreversibly.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: float
-      native_value_unit_ucum:
-        name: native_value_unit_ucum
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: string
-      valid_time_start:
-        name: valid_time_start
-        description: Inclusive start of the interval the value is valid for. Left-closed,
-          right-open by default (`[start, end)`) — declared here once so no individual
-          dataset has to litigate it.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - Asset
-        - AmbientValue
-        range: datetime
-        required: true
-      valid_time_end:
-        name: valid_time_end
-        description: Exclusive end of the validity interval.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - Asset
-        - AmbientValue
-        range: datetime
-      reference_time:
-        name: reference_time
-        description: 'Model initialisation / cycle time, distinct from valid time.
-          Required for HRRR and any forecast product: "valid versus reference time"
-          is called out explicitly in the P0 subdaily work.'
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - Asset
-        - AmbientValue
-        range: datetime
-      retrieval_time_utc:
-        name: retrieval_time_utc
-        description: 'When amadeus obtained the value. Required by the AQS/AirNow
-          rule: with revisable sources, "when we asked" is part of the value''s identity.'
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: datetime
-      vertical_level:
-        name: vertical_level
-        description: Pressure or height level for multi-level products (NARR, MERRA-2,
-          GEOS-CF). Part of the value's identity, not an attribute of it.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: float
-      vertical_level_unit:
-        name: vertical_level_unit
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - GridDefinition
-        - AmbientValue
-        range: string
-      quality_flag:
-        name: quality_flag
-        description: The source's quality flag, verbatim, interpreted against the
-          `quality_flag_vocabulary` on the product variable. Never normalised on ingest
-          — normalising discards information, and the vocabularies do not align.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: string
-      data_status:
-        name: data_status
-        description: 'Per-row, not per-product. The AQS/AirNow rule requires it: a
-          preliminary AirNow value and a quality-controlled AQS value for the same
-          monitor, parameter and hour must be able to coexist as distinct rows.'
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: DataStatusEnum
-        required: true
-      source_system:
-        name: source_system
-        description: Which system supplied this row (`aqs`, `airnow`). Required on
-          every row by the harmonization rule so preliminary and quality-controlled
-          values for the same monitor-hour coexist rather than overwrite.
-        examples:
-        - value: aqs
-        - value: airnow
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: string
-        required: true
-      source_version:
-        name: source_version
-        description: The source's own version or revision identifier for this value,
-          where it publishes one.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: string
-      null_semantics:
-        name: null_semantics
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
-        range: NullSemanticsEnum
-        required: true
-      superseded_by:
-        name: superseded_by
-        description: Identifier of the row that replaces this one. Revisions append;
-          they do not mutate.
-        from_schema: https://w3id.org/niehs/amadeus
-        owner: AmbientValueAtLocation
-        domain_of:
-        - AmbientValue
+        - PrivacyTransformation
         range: string
   ToolRun:
     name: ToolRun
@@ -8469,6 +8223,7 @@ classes:
         owner: ToolRun
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -8476,11 +8231,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       run_role:
@@ -8671,8 +8429,8 @@ classes:
         owner: ToolRun
         domain_of:
         - Asset
-        - ExtractionRequest
         - ToolRun
+        - ExtractionRequest
         range: MaterializationModeEnum
       bytes_transferred:
         name: bytes_transferred
@@ -8769,6 +8527,7 @@ classes:
         owner: ProvenanceChain
         domain_of:
         - DataSource
+        - PrivacyProfile
         - Product
         - GridDefinition
         - CanonicalVariable
@@ -8776,11 +8535,14 @@ classes:
         - Asset
         - AmbientValue
         - VectorFeature
+        - ToolRun
+        - ProvenanceChain
         - LocationSet
         - Location
         - ExtractionRequest
-        - ToolRun
-        - ProvenanceChain
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
         range: uriorcurie
         required: true
       chain_steps:
@@ -8814,6 +8576,1666 @@ classes:
         - ProvenanceChain
         range: string
         multivalued: true
-metamodel_version: 1.11.0
-source_file: src/amadeus_schema/schema/amadeus_schema.yaml
+  LocationSet:
+    name: LocationSet
+    description: 'A user-supplied collection of locations — the `locs` argument, promoted
+      to an entity. Carries the identifier field name (`locs_id`), the CRS the user
+      supplied, and a PHI declaration.
+
+      The legacy `phi_status` default remains for compatibility; it is not evidence
+      of assessment. New privacy-aware requests use a separate PrivacyDeclaration
+      with explicit assessment status and evidence. These schema records describe
+      handling requirements, not access controls.'
+    title: Location Set
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - id
+    - name
+    - description
+    - locs_id_field
+    - crs
+    - srid
+    - geometry_type
+    - location_count
+    - phi_status
+    - provided_by
+    - created_at
+    slot_usage:
+      locs_id_field:
+        name: locs_id_field
+        description: Name of the user's identifier column. amadeus already takes this
+          as `locs_id`; recording it means the output column names are derivable rather
+          than conventional.
+        examples:
+        - value: site_id
+        required: true
+      phi_status:
+        name: phi_status
+        required: true
+      crs:
+        name: crs
+        description: Declared, never assumed. `calculate_covariates()` currently reprojects
+          `locs` to `crs(from)` silently; an undeclared input CRS is the most common
+          way a spatial join goes quietly wrong.
+        required: true
+    attributes:
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: LocationSet
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      name:
+        name: name
+        description: A short machine-friendly name.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: LocationSet
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - LocationSet
+        - ExtractionRequest
+        range: string
+      description:
+        name: description
+        from_schema: https://w3id.org/niehs/amadeus
+        slot_uri: dcterms:description
+        owner: LocationSet
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - CanonicalVariable
+        - LocationSet
+        range: string
+      locs_id_field:
+        name: locs_id_field
+        description: Name of the user's identifier column. amadeus already takes this
+          as `locs_id`; recording it means the output column names are derivable rather
+          than conventional.
+        examples:
+        - value: site_id
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: LocationSet
+        domain_of:
+        - LocationSet
+        range: string
+        required: true
+      crs:
+        name: crs
+        description: Declared, never assumed. `calculate_covariates()` currently reprojects
+          `locs` to `crs(from)` silently; an undeclared input CRS is the most common
+          way a spatial join goes quietly wrong.
+        examples:
+        - value: EPSG:4326
+        - value: EPSG:5070
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:crs
+        - hew:coordinate_reference_system_uri
+        owner: LocationSet
+        domain_of:
+        - Product
+        - GridDefinition
+        - LocationSet
+        range: string
+        required: true
+        pattern: ^[A-Za-z]+:[0-9]+$
+      srid:
+        name: srid
+        description: Numeric spatial reference identifier, derived from `crs`. Materialised
+          because `ST_SetSRID` takes an integer and the geometry views need it without
+          a lookup.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: LocationSet
+        domain_of:
+        - Product
+        - GridDefinition
+        - Asset
+        - StationObservation
+        - GridCellValue
+        - AreaValue
+        - HexCellValue
+        - VectorFeature
+        - LocationSet
+        - Location
+        range: integer
+      geometry_type:
+        name: geometry_type
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: LocationSet
+        domain_of:
+        - VectorFeature
+        - LocationSet
+        range: GeometryTypeEnum
+      location_count:
+        name: location_count
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: LocationSet
+        domain_of:
+        - LocationSet
+        range: integer
+      phi_status:
+        name: phi_status
+        description: Whether these locations are or derive from protected health information.
+          Legacy declaration retained for compatibility, including its no_phi default.
+          It does not prove assessment or enforce persistence/export. Privacy-aware
+          requests require an explicit PrivacyDeclaration; new input/output findings
+          reuse PhiStatusEnum without this default.
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:phi_status
+        ifabsent: string(no_phi)
+        owner: LocationSet
+        domain_of:
+        - LocationSet
+        range: PhiStatusEnum
+        required: true
+      provided_by:
+        name: provided_by
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: LocationSet
+        domain_of:
+        - LocationSet
+        range: string
+      created_at:
+        name: created_at
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: LocationSet
+        domain_of:
+        - LocationSet
+        range: datetime
+  Location:
+    name: Location
+    description: 'One location in a set, with an optional validity interval.
+
+      `valid_from` / `valid_to` exist because a residential address is not timeless.
+      Address histories, known travel intervals and synthetic residence periods all
+      need them, and without them a value is joined to a place the subject may not
+      have occupied on that date. amadeus does not need to model *why* the interval
+      exists — that is the health layer''s business — only to honour it in the join.'
+    title: Location
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - id
+    - location_set
+    - location_key
+    - location_geom_wkt
+    - srid
+    - buffer_radius_m
+    - valid_from
+    - valid_to
+    - target_geography_type
+    - location_privacy_role
+    - location_precision_m
+    slot_usage:
+      location_set:
+        name: location_set
+        required: true
+      location_key:
+        name: location_key
+        description: The user's own identifier value, preserved verbatim.
+        required: true
+      location_geom_wkt:
+        name: location_geom_wkt
+        required: true
+    attributes:
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: Location
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      location_set:
+        name: location_set
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        range: LocationSet
+        required: true
+      location_key:
+        name: location_key
+        description: The user's own identifier value, preserved verbatim.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        range: string
+        required: true
+      location_geom_wkt:
+        name: location_geom_wkt
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        range: WktLiteral
+        required: true
+      srid:
+        name: srid
+        description: Numeric spatial reference identifier, derived from `crs`. Materialised
+          because `ST_SetSRID` takes an integer and the geometry views need it without
+          a lookup.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Product
+        - GridDefinition
+        - Asset
+        - StationObservation
+        - GridCellValue
+        - AreaValue
+        - HexCellValue
+        - VectorFeature
+        - LocationSet
+        - Location
+        range: integer
+      buffer_radius_m:
+        name: buffer_radius_m
+        description: Buffer radius in metres. Metres, explicitly — amadeus currently
+          interprets `radius` in the units of the *projected* geometry's CRS, which
+          for a geographic CRS means degrees, and the docs describe it as metres.
+          Declaring the unit in the schema removes the ambiguity.
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:extraction_buffer_m
+        owner: Location
+        domain_of:
+        - Location
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: float
+        minimum_value: 0.0
+      valid_from:
+        name: valid_from
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        range: date
+      valid_to:
+        name: valid_to
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        range: date
+      target_geography_type:
+        name: target_geography_type
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        - ExtractionRequest
+        range: TargetGeographyTypeEnum
+      location_privacy_role:
+        name: location_privacy_role
+        description: Optional role of a particular location, independent of PHI classification.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        range: LocationPrivacyRoleEnum
+      location_precision_m:
+        name: location_precision_m
+        description: Declared coordinate precision or uncertainty in metres; not a
+          privacy guarantee.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Location
+        domain_of:
+        - Location
+        range: float
+        minimum_value: 0
+  ExtractionRequest:
+    name: ExtractionRequest
+    description: 'A declarative, reproducible specification of an extraction: which
+      variables, over which locations, for which time window, with which buffer, aggregation,
+      weighting and lags.
+
+      The rules below are the ones that make the request *checkable before it runs*,
+      which is the point. The extensivity rule in particular turns the project lead''s
+      "intensive vs extensive should be explicit" from documentation into a validation
+      error.'
+    title: Extraction Request
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - id
+    - name
+    - location_set
+    - requested_canonical_variables
+    - requested_product_variables
+    - time_window_start
+    - time_window_end
+    - temporal_grouping
+    - buffer_radius_m
+    - extraction_method
+    - aggregation_method
+    - weighting_product_variable
+    - lag_days
+    - target_geography_type
+    - output_orientation
+    - materialization_mode
+    - source_priority_policy
+    - status_mixing_policy
+    - strict_extensivity_check
+    - requested_by
+    - request_timestamp_utc
+    - request_hash
+    - generated_sql
+    - privacy_declaration
+    - requested_privacy_transformations
+    slot_usage:
+      location_set:
+        name: location_set
+        required: true
+      time_window_start:
+        name: time_window_start
+        required: true
+      time_window_end:
+        name: time_window_end
+        required: true
+      extraction_method:
+        name: extraction_method
+        required: true
+      request_hash:
+        name: request_hash
+        description: 'Hash over the normalised request. The idempotency key: the same
+          request re-submitted resolves to the existing result set instead of recomputing
+          it, and a changed request is visibly a different request.'
+        required: true
+      generated_sql:
+        name: generated_sql
+        description: The SQL actually issued. Stored so the result is auditable against
+          the plan the optimiser chose, and so a user can take the query away and
+          run it themselves — which is the "same contract in R, SQL, Python or a container"
+          promise, made concrete.
+    attributes:
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: ExtractionRequest
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      name:
+        name: name
+        description: A short machine-friendly name.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - LocationSet
+        - ExtractionRequest
+        range: string
+      location_set:
+        name: location_set
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        range: LocationSet
+        required: true
+      requested_canonical_variables:
+        name: requested_canonical_variables
+        description: 'Request by canonical variable to let the planner choose a source.
+          The preferred form: the user asks for daily maximum temperature, not for
+          `gridmet.tmmx`.'
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: CanonicalVariable
+        multivalued: true
+      requested_product_variables:
+        name: requested_product_variables
+        description: Request a specific source delivery, pinning the answer. Required
+          when reproducing a published result, since the planner's choice may change.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: ProductVariable
+        multivalued: true
+      time_window_start:
+        name: time_window_start
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: datetime
+        required: true
+      time_window_end:
+        name: time_window_end
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: datetime
+        required: true
+      temporal_grouping:
+        name: temporal_grouping
+        description: The `.by_time` argument.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: TemporalGroupingEnum
+      buffer_radius_m:
+        name: buffer_radius_m
+        description: Buffer radius in metres. Metres, explicitly — amadeus currently
+          interprets `radius` in the units of the *projected* geometry's CRS, which
+          for a geographic CRS means degrees, and the docs describe it as metres.
+          Declaring the unit in the schema removes the ambiguity.
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:extraction_buffer_m
+        owner: ExtractionRequest
+        domain_of:
+        - Location
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: float
+        minimum_value: 0.0
+      extraction_method:
+        name: extraction_method
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: ExtractionMethodEnum
+        required: true
+      aggregation_method:
+        name: aggregation_method
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:temporal_aggregation_method
+        - hew:aggregation_method
+        owner: ExtractionRequest
+        domain_of:
+        - ProductVariable
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: AggregationMethodEnum
+      weighting_product_variable:
+        name: weighting_product_variable
+        description: The product variable used as weights (a population density grid).
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: ProductVariable
+      lag_days:
+        name: lag_days
+        description: Lags to compute, in days. `calculate_lagged()` already does this;
+          naming them in the request is what lets the result carry which lag it is.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: integer
+        multivalued: true
+      target_geography_type:
+        name: target_geography_type
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - Location
+        - ExtractionRequest
+        range: TargetGeographyTypeEnum
+      output_orientation:
+        name: output_orientation
+        from_schema: https://w3id.org/niehs/amadeus
+        ifabsent: string(long)
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: TableOrientationEnum
+      materialization_mode:
+        name: materialization_mode
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - Asset
+        - ToolRun
+        - ExtractionRequest
+        range: MaterializationModeEnum
+      source_priority_policy:
+        name: source_priority_policy
+        description: Ordered source preference for reconciliation, e.g. `aqs > airnow`.
+          Required whenever `status_mixing_policy` is `allow_with_policy`.
+        examples:
+        - value: aqs>airnow
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: string
+      status_mixing_policy:
+        name: status_mixing_policy
+        description: Whether preliminary and quality-controlled values may appear
+          in one result. Defaults to refusing.
+        from_schema: https://w3id.org/niehs/amadeus
+        ifabsent: string(refuse)
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: StatusMixingPolicyEnum
+      strict_extensivity_check:
+        name: strict_extensivity_check
+        description: 'Whether to reject a request whose aggregation is illegal for
+          the variable''s extensivity, or whose variable declares `extensivity: unknown`.
+          Defaults to on: an aggregation that cannot be justified should fail loudly
+          at request time, not produce a plausible number.'
+        from_schema: https://w3id.org/niehs/amadeus
+        ifabsent: string(strict)
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: StrictnessEnum
+      requested_by:
+        name: requested_by
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: string
+      request_timestamp_utc:
+        name: request_timestamp_utc
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: datetime
+      request_hash:
+        name: request_hash
+        description: 'Hash over the normalised request. The idempotency key: the same
+          request re-submitted resolves to the existing result set instead of recomputing
+          it, and a changed request is visibly a different request.'
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: Sha256
+        required: true
+      generated_sql:
+        name: generated_sql
+        description: The SQL actually issued. Stored so the result is auditable against
+          the plan the optimiser chose, and so a user can take the query away and
+          run it themselves — which is the "same contract in R, SQL, Python or a container"
+          promise, made concrete.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: string
+      privacy_declaration:
+        name: privacy_declaration
+        description: Restricted declaration for the request's actual input locations.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        - PrivacyReleaseAssessment
+        range: PrivacyDeclaration
+      requested_privacy_transformations:
+        name: requested_privacy_transformations
+        description: Ordered requested action references; absence or an empty list
+          asserts no performed history.
+        from_schema: https://w3id.org/niehs/amadeus
+        list_elements_ordered: true
+        owner: ExtractionRequest
+        domain_of:
+        - ExtractionRequest
+        range: PrivacyTransformation
+        multivalued: true
+    rules:
+    - preconditions:
+        slot_conditions:
+          buffer_radius_m:
+            name: buffer_radius_m
+            minimum_value: 1.0e-06
+      postconditions:
+        slot_conditions:
+          aggregation_method:
+            name: aggregation_method
+            required: true
+      description: A buffer without an aggregation method is ambiguous — there are
+        now many source values per location and nothing says how they combine. amadeus's
+        current default (`fun = "mean"`) is silently wrong for every extensive variable.
+    - preconditions:
+        slot_conditions:
+          aggregation_method:
+            name: aggregation_method
+            any_of:
+            - equals_string: population_weighted_mean
+      postconditions:
+        slot_conditions:
+          weighting_product_variable:
+            name: weighting_product_variable
+            required: true
+      description: Population weighting must name the population product it weighted
+        by. "Population-weighted" with no stated population raster is not reproducible.
+    - preconditions:
+        slot_conditions:
+          status_mixing_policy:
+            name: status_mixing_policy
+            equals_string: allow_with_policy
+      postconditions:
+        slot_conditions:
+          source_priority_policy:
+            name: source_priority_policy
+            required: true
+      description: The AQS/AirNow rule, enforced at request time. Mixing preliminary
+        and quality-controlled values into one result requires the user to have explicitly
+        chosen a reconciliation policy. The default is to refuse.
+  PrivacyDeclaration:
+    name: PrivacyDeclaration
+    description: Request-specific classification of a supplied LocationSet, kept outside
+      public catalog bundles. Reuses PhiStatusEnum without defaulting an unassessed
+      input to no_phi. References may themselves be sensitive.
+    title: Restricted Input Privacy Declaration
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - id
+    - location_set
+    - input_phi_assessment_status
+    - input_phi_status
+    - location_identifiability
+    - privacy_declaration_note
+    - assessment_evidence_reference
+    slot_usage:
+      location_set:
+        name: location_set
+        required: true
+      input_phi_assessment_status:
+        name: input_phi_assessment_status
+        required: true
+      location_identifiability:
+        name: location_identifiability
+        required: true
+    attributes:
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: PrivacyDeclaration
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      location_set:
+        name: location_set
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyDeclaration
+        domain_of:
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        range: LocationSet
+        required: true
+      input_phi_assessment_status:
+        name: input_phi_assessment_status
+        description: Assessment lifecycle of input PHI classification; has no safe
+          default.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyDeclaration
+        domain_of:
+        - PrivacyDeclaration
+        range: PrivacyAssessmentStatusEnum
+        required: true
+      input_phi_status:
+        name: input_phi_status
+        description: Explicit input classification using the existing PHI enum; never
+          inferred from a Product.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyDeclaration
+        domain_of:
+        - PrivacyDeclaration
+        range: PhiStatusEnum
+      location_identifiability:
+        name: location_identifiability
+        description: Potential individual or household location identifiability within
+          assessment scope.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyDeclaration
+        domain_of:
+        - PrivacyProfile
+        - PrivacyDeclaration
+        range: LocationIdentifiabilityEnum
+        required: true
+      privacy_declaration_note:
+        name: privacy_declaration_note
+        description: Restricted context for classification; no clinical data are needed
+          here.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyDeclaration
+        domain_of:
+        - PrivacyDeclaration
+        range: string
+      assessment_evidence_reference:
+        name: assessment_evidence_reference
+        description: Evidence reference for recorded findings. Public profiles must
+          reference public non-identifying evidence; restricted records may use controlled
+          references.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyDeclaration
+        domain_of:
+        - PrivacyProfile
+        - PrivacyDeclaration
+        - PrivacyReleaseAssessment
+        range: uri
+    rules:
+    - preconditions:
+        slot_conditions:
+          input_phi_assessment_status:
+            name: input_phi_assessment_status
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          input_phi_status:
+            name: input_phi_status
+            required: true
+          assessment_evidence_reference:
+            name: assessment_evidence_reference
+            required: true
+      description: An assessed input declaration requires an explicit classification
+        and evidence.
+  PrivacyTransformation:
+    name: PrivacyTransformation
+    description: One versioned action. ExtractionRequest lists requested actions in
+      order; PrivacyReleaseAssessment independently lists actions actually performed.
+      A performed action must reference a successful ToolRun. Restricted parameters
+      may reference controlled configuration; never publish seeds, displacement vectors,
+      participant keys or reversal mappings.
+    title: Restricted Privacy Transformation Specification
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - id
+    - privacy_transformation
+    - privacy_transformation_stage
+    - privacy_transformation_specification
+    - privacy_transformation_note
+    - processing_run
+    slot_usage:
+      privacy_transformation:
+        name: privacy_transformation
+        required: true
+      privacy_transformation_stage:
+        name: privacy_transformation_stage
+        required: true
+      privacy_transformation_specification:
+        name: privacy_transformation_specification
+        required: true
+    attributes:
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: PrivacyTransformation
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      privacy_transformation:
+        name: privacy_transformation
+        description: Action type; none is an explicit action assertion, not an unknown
+          value.
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:privacy_transformation
+        owner: PrivacyTransformation
+        domain_of:
+        - PrivacyTransformation
+        range: PrivacyTransformationEnum
+        required: true
+      privacy_transformation_stage:
+        name: privacy_transformation_stage
+        description: Stage where this specification changes geometry, values or release
+          representation.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyTransformation
+        domain_of:
+        - PrivacyTransformation
+        range: PrivacyTransformationStageEnum
+        required: true
+      privacy_transformation_specification:
+        name: privacy_transformation_specification
+        description: Versioned parameters or controlled configuration reference, without
+          public secrets.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyTransformation
+        domain_of:
+        - PrivacyTransformation
+        range: string
+        required: true
+      privacy_transformation_note:
+        name: privacy_transformation_note
+        description: Restricted trigger, determinism, constraints and limitations
+          of the action.
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:privacy_transformation_note
+        owner: PrivacyTransformation
+        domain_of:
+        - PrivacyTransformation
+        range: string
+      processing_run:
+        name: processing_run
+        description: Identifier of the `ToolRun` that produced this value. The other
+          half of O-02. A plain string rather than an object reference so the value
+          and provenance modules stay independently loadable; the SQL post-processor
+          adds the foreign key.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyTransformation
+        domain_of:
+        - AmbientValue
+        - VectorFeature
+        - PrivacyTransformation
+        range: string
+  PrivacyReleaseAssessment:
+    name: PrivacyReleaseAssessment
+    description: Assessment and authorization metadata for one exact output artifact,
+      request, input declaration and intended audience. Separate from source classification
+      and performed transformations. Metadata validation checks recorded evidence
+      and relationships, not the scientific sufficiency of a risk analysis, legal
+      compliance or enforcement of access restrictions. Public catalog generation
+      must reject this collection.
+    title: Restricted Location-linked Release Assessment
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - id
+    - extraction_request
+    - privacy_declaration
+    - performed_privacy_transformations
+    - privacy_transformation_deviation_note
+    - output_artifact_reference
+    - output_artifact_sha256
+    - output_phi_status
+    - release_assessment_status
+    - release_decision
+    - release_audience
+    - release_access_level
+    - release_assessment_method
+    - release_assessment_scope
+    - assessment_evidence_reference
+    - assessed_by
+    - assessed_at
+    - released_geography_type
+    - released_spatial_resolution_m
+    - released_temporal_resolution_iso
+    slot_usage:
+      extraction_request:
+        name: extraction_request
+        required: true
+      privacy_declaration:
+        name: privacy_declaration
+        required: true
+      output_artifact_reference:
+        name: output_artifact_reference
+        required: true
+      release_assessment_status:
+        name: release_assessment_status
+        required: true
+      release_decision:
+        name: release_decision
+        required: true
+      release_audience:
+        name: release_audience
+        required: true
+      release_access_level:
+        name: release_access_level
+        required: true
+    attributes:
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      extraction_request:
+        name: extraction_request
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        - AmbientValueAtLocation
+        range: ExtractionRequest
+        required: true
+      privacy_declaration:
+        name: privacy_declaration
+        description: Restricted declaration for the request's actual input locations.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - ExtractionRequest
+        - PrivacyReleaseAssessment
+        range: PrivacyDeclaration
+        required: true
+      performed_privacy_transformations:
+        name: performed_privacy_transformations
+        description: Ordered actual action references, each with a successful run;
+          independent of requests.
+        from_schema: https://w3id.org/niehs/amadeus
+        list_elements_ordered: true
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: PrivacyTransformation
+        multivalued: true
+      privacy_transformation_deviation_note:
+        name: privacy_transformation_deviation_note
+        description: Rationale for any difference between requested and performed
+          action sequences.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: string
+      output_artifact_reference:
+        name: output_artifact_reference
+        description: Opaque controlled output reference, never an inline individual
+          result.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: uri
+        required: true
+      output_artifact_sha256:
+        name: output_artifact_sha256
+        description: Hash binding an assessment to exact output bytes; does not anonymize
+          its contents.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: Sha256
+      output_phi_status:
+        name: output_phi_status
+        description: Output-scoped finding, not automatically copied from input or
+          source status.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: PhiStatusEnum
+      release_assessment_status:
+        name: release_assessment_status
+        description: Assessment lifecycle for the exact proposed release.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: PrivacyAssessmentStatusEnum
+        required: true
+      release_decision:
+        name: release_decision
+        description: Recorded authorization decision; not an executable access-control
+          mechanism.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: PrivacyReleaseDecisionEnum
+        required: true
+      release_audience:
+        name: release_audience
+        description: Intended recipients and access context covered by this decision.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: string
+        required: true
+      release_access_level:
+        name: release_access_level
+        description: Whether authorization is restricted or public; independent of
+          PHI classification.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: PrivacyReleaseAccessEnum
+        required: true
+      release_assessment_method:
+        name: release_assessment_method
+        description: Versioned contextual disclosure-risk method; no universal safe
+          distance is assumed.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: string
+      release_assessment_scope:
+        name: release_assessment_scope
+        description: Joint variables, dates, geography, auxiliary information, threat
+          model and utility limits assessed.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: string
+      assessment_evidence_reference:
+        name: assessment_evidence_reference
+        description: Evidence reference for recorded findings. Public profiles must
+          reference public non-identifying evidence; restricted records may use controlled
+          references.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyProfile
+        - PrivacyDeclaration
+        - PrivacyReleaseAssessment
+        range: uri
+      assessed_by:
+        name: assessed_by
+        description: Accountable assessor identity or controlled identifier.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: string
+      assessed_at:
+        name: assessed_at
+        description: Time of the recorded assessment.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: datetime
+      released_geography_type:
+        name: released_geography_type
+        description: Actual output geography; separate from native Product support.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: TargetGeographyTypeEnum
+      released_spatial_resolution_m:
+        name: released_spatial_resolution_m
+        description: Actual released spatial detail in metres, where a scalar resolution
+          is meaningful.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: float
+        minimum_value: 0
+      released_temporal_resolution_iso:
+        name: released_temporal_resolution_iso
+        description: Actual released temporal support, separate from native source
+          sampling.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: PrivacyReleaseAssessment
+        domain_of:
+        - PrivacyReleaseAssessment
+        range: Iso8601Duration
+    rules:
+    - preconditions:
+        slot_conditions:
+          release_assessment_status:
+            name: release_assessment_status
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          assessed_by:
+            name: assessed_by
+            required: true
+          assessed_at:
+            name: assessed_at
+            required: true
+          assessment_evidence_reference:
+            name: assessment_evidence_reference
+            required: true
+          release_assessment_method:
+            name: release_assessment_method
+            required: true
+          release_assessment_scope:
+            name: release_assessment_scope
+            required: true
+          output_artifact_sha256:
+            name: output_artifact_sha256
+            required: true
+          output_phi_status:
+            name: output_phi_status
+            required: true
+      description: A completed assessment is bound to an artifact and documented evidence.
+    - preconditions:
+        slot_conditions:
+          release_decision:
+            name: release_decision
+            equals_string: approved
+      postconditions:
+        slot_conditions:
+          release_assessment_status:
+            name: release_assessment_status
+            equals_string: assessed
+      description: A pending or in-progress assessment cannot authorize release.
+  AmbientValueAtLocation:
+    name: AmbientValueAtLocation
+    description: 'The output row: an ambient value assigned to a user location for
+      a time interval, with the extraction that produced it recorded alongside. This
+      is what `calculate_covariates()` returns today, plus the metadata it currently
+      drops.
+
+      Not an exposure. The location may be a person''s address and the row may carry
+      a cohort key, but the value is a property of the place: swap the person, keep
+      the address, and it does not change.
+
+      What today''s output has, that this keeps: location key, time, value. What today''s
+      output lacks, that this adds: which product variable and which canonical variable
+      (today encoded positionally in a column name like `weasd_0`), the extraction
+      method and buffer actually used, how many source values contributed, coverage,
+      distance to the contributing station, the quality and status of the inputs,
+      and the run that produced it.'
+    title: Ambient Value at Location
+    from_schema: https://w3id.org/niehs/amadeus
+    is_a: AmbientValue
+    slots:
+    - location
+    - extraction_request
+    - buffer_radius_m
+    - extraction_method
+    - aggregation_method
+    - contributing_value_count
+    - coverage_fraction
+    - distance_to_source_m
+    - lag_days_applied
+    - temporal_grouping
+    - output_column_name
+    slot_usage:
+      location:
+        name: location
+        required: true
+      extraction_request:
+        name: extraction_request
+        required: true
+      extraction_method:
+        name: extraction_method
+        required: true
+      contributing_value_count:
+        name: contributing_value_count
+        description: How many source values went into this one. A buffer mean over
+          one cell and over four hundred cells are different claims; today both come
+          back as an undistinguished number.
+      distance_to_source_m:
+        name: distance_to_source_m
+        description: Distance to the contributing station, for nearest-station extraction.
+          Paired with the request's max-distance setting, this is what makes a nearest-station
+          assignment defensible.
+      output_column_name:
+        name: output_column_name
+        description: The wide-format column name this value would occupy, for backward
+          compatibility with existing amadeus and beethoven consumers (`weasd_0`,
+          `tmmx_10000`). Generated from the request, not parsed back out of it — the
+          long form is canonical and the wide form is a projection.
+    attributes:
+      location:
+        name: location
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValueAtLocation
+        range: Location
+        required: true
+      extraction_request:
+        name: extraction_request
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - PrivacyReleaseAssessment
+        - AmbientValueAtLocation
+        range: ExtractionRequest
+        required: true
+      buffer_radius_m:
+        name: buffer_radius_m
+        description: Buffer radius in metres. Metres, explicitly — amadeus currently
+          interprets `radius` in the units of the *projected* geometry's CRS, which
+          for a geographic CRS means degrees, and the docs describe it as metres.
+          Declaring the unit in the schema removes the ambiguity.
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:extraction_buffer_m
+        owner: AmbientValueAtLocation
+        domain_of:
+        - Location
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: float
+        minimum_value: 0.0
+      extraction_method:
+        name: extraction_method
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: ExtractionMethodEnum
+        required: true
+      aggregation_method:
+        name: aggregation_method
+        from_schema: https://w3id.org/niehs/amadeus
+        exact_mappings:
+        - envar:temporal_aggregation_method
+        - hew:aggregation_method
+        owner: AmbientValueAtLocation
+        domain_of:
+        - ProductVariable
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: AggregationMethodEnum
+      contributing_value_count:
+        name: contributing_value_count
+        description: How many source values went into this one. A buffer mean over
+          one cell and over four hundred cells are different claims; today both come
+          back as an undistinguished number.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValueAtLocation
+        range: integer
+      coverage_fraction:
+        name: coverage_fraction
+        description: Fraction of the hex actually covered by contributing source support.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - HexCellValue
+        - AmbientValueAtLocation
+        range: float
+        minimum_value: 0.0
+        maximum_value: 1.0
+      distance_to_source_m:
+        name: distance_to_source_m
+        description: Distance to the contributing station, for nearest-station extraction.
+          Paired with the request's max-distance setting, this is what makes a nearest-station
+          assignment defensible.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValueAtLocation
+        range: float
+      lag_days_applied:
+        name: lag_days_applied
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValueAtLocation
+        range: integer
+      temporal_grouping:
+        name: temporal_grouping
+        description: The `.by_time` argument.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - ExtractionRequest
+        - AmbientValueAtLocation
+        range: TemporalGroupingEnum
+      output_column_name:
+        name: output_column_name
+        description: The wide-format column name this value would occupy, for backward
+          compatibility with existing amadeus and beethoven consumers (`weasd_0`,
+          `tmmx_10000`). Generated from the request, not parsed back out of it — the
+          long form is canonical and the wide form is a projection.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValueAtLocation
+        range: string
+      id:
+        name: id
+        description: Stable identifier for this entity within an AmadeusDB instance.
+        from_schema: https://w3id.org/niehs/amadeus
+        identifier: true
+        owner: AmbientValueAtLocation
+        domain_of:
+        - DataSource
+        - PrivacyProfile
+        - Product
+        - GridDefinition
+        - CanonicalVariable
+        - ProductVariable
+        - Asset
+        - AmbientValue
+        - VectorFeature
+        - ToolRun
+        - ProvenanceChain
+        - LocationSet
+        - Location
+        - ExtractionRequest
+        - PrivacyDeclaration
+        - PrivacyTransformation
+        - PrivacyReleaseAssessment
+        range: uriorcurie
+        required: true
+      product_variable:
+        name: product_variable
+        description: Which source delivery this is. Carries the native units, the
+          CF metadata and the aggregation — so the row does not have to.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: ProductVariable
+        required: true
+      canonical_variable:
+        name: canonical_variable
+        description: Denormalised from `product_variable` on purpose. Cross-source
+          queries ("all daily maximum temperature within this polygon") are the common
+          case, and making them a two-hop join is a performance tax on the query the
+          whole architecture exists to serve.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - ProductVariable
+        - AmbientValue
+        range: CanonicalVariable
+        required: true
+      asset:
+        name: asset
+        description: The byte stream this value came from. Every number resolves to
+          a file and a hash — half of objective O-02's "every derived output resolves
+          to source assets and processing runs".
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        - VectorFeature
+        range: Asset
+      processing_run:
+        name: processing_run
+        description: Identifier of the `ToolRun` that produced this value. The other
+          half of O-02. A plain string rather than an object reference so the value
+          and provenance modules stay independently loadable; the SQL post-processor
+          adds the foreign key.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        - VectorFeature
+        - PrivacyTransformation
+        range: string
+      value:
+        name: value
+        description: The value in the canonical variable's units. Null when `null_semantics`
+          explains why.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: float
+      value_unit_ucum:
+        name: value_unit_ucum
+        description: 'Units of `value`, denormalised from the canonical variable.
+          Redundant by design: a value row that travels out of the database as CSV
+          or Parquet must not lose its units on the way.'
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: string
+      native_value:
+        name: native_value
+        description: The value exactly as the source shipped it, before scale, offset
+          and unit conversion. Kept so a conversion bug is discoverable after the
+          fact instead of being baked in irreversibly.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: float
+      native_value_unit_ucum:
+        name: native_value_unit_ucum
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: string
+      valid_time_start:
+        name: valid_time_start
+        description: Inclusive start of the interval the value is valid for. Left-closed,
+          right-open by default (`[start, end)`) — declared here once so no individual
+          dataset has to litigate it.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - Asset
+        - AmbientValue
+        range: datetime
+        required: true
+      valid_time_end:
+        name: valid_time_end
+        description: Exclusive end of the validity interval.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - Asset
+        - AmbientValue
+        range: datetime
+      reference_time:
+        name: reference_time
+        description: 'Model initialisation / cycle time, distinct from valid time.
+          Required for HRRR and any forecast product: "valid versus reference time"
+          is called out explicitly in the P0 subdaily work.'
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - Asset
+        - AmbientValue
+        range: datetime
+      retrieval_time_utc:
+        name: retrieval_time_utc
+        description: 'When amadeus obtained the value. Required by the AQS/AirNow
+          rule: with revisable sources, "when we asked" is part of the value''s identity.'
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: datetime
+      vertical_level:
+        name: vertical_level
+        description: Pressure or height level for multi-level products (NARR, MERRA-2,
+          GEOS-CF). Part of the value's identity, not an attribute of it.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: float
+      vertical_level_unit:
+        name: vertical_level_unit
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - GridDefinition
+        - AmbientValue
+        range: string
+      quality_flag:
+        name: quality_flag
+        description: The source's quality flag, verbatim, interpreted against the
+          `quality_flag_vocabulary` on the product variable. Never normalised on ingest
+          — normalising discards information, and the vocabularies do not align.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: string
+      data_status:
+        name: data_status
+        description: 'Per-row, not per-product. The AQS/AirNow rule requires it: a
+          preliminary AirNow value and a quality-controlled AQS value for the same
+          monitor, parameter and hour must be able to coexist as distinct rows.'
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: DataStatusEnum
+        required: true
+      source_system:
+        name: source_system
+        description: Which system supplied this row (`aqs`, `airnow`). Required on
+          every row by the harmonization rule so preliminary and quality-controlled
+          values for the same monitor-hour coexist rather than overwrite.
+        examples:
+        - value: aqs
+        - value: airnow
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: string
+        required: true
+      source_version:
+        name: source_version
+        description: The source's own version or revision identifier for this value,
+          where it publishes one.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: string
+      null_semantics:
+        name: null_semantics
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: NullSemanticsEnum
+        required: true
+      superseded_by:
+        name: superseded_by
+        description: Identifier of the row that replaces this one. Revisions append;
+          they do not mutate.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: AmbientValueAtLocation
+        domain_of:
+        - AmbientValue
+        range: string
+metamodel_version: 1.12.0
+source_file: amadeus_schema/src/amadeus_schema/schema/amadeus_schema.yaml
 

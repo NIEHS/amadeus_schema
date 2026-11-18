@@ -110,6 +110,38 @@ def test_integrity_checks_pass_on_the_sample_data():
     assert "checks clean" in p.stdout
 
 
+@pytest.mark.parametrize("engine", ["duckdb", "sedonadb"])
+def test_privacy_rows_round_trip(engine, sv):
+    """Public profile joins and restricted pending records survive generated DDL."""
+    import importlib.util
+    import yaml
+
+    spec = importlib.util.spec_from_file_location("privacy_engine_loader", ROOT / "scripts/load_and_query.py")
+    loader = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loader)
+    doc = yaml.safe_load((ROOT / "examples/privacy/restricted_pending.yaml").read_text())
+    doc.update(yaml.safe_load((ROOT / "examples/privacy/public_catalog.yaml").read_text()))
+    tables, junctions = loader.build_rows(sv, doc)
+    cls = loader.DuckEngine if engine == "duckdb" else loader.SedonaEngine
+    database = cls(engine, BUILD / f"amadeus_{engine}.sql")
+    database.connect()
+    _, errors = database.create_schema()
+    assert not errors
+    for table, rows in loader.order_tables(tables, BUILD / "amadeus_generic.sql") + list(junctions.items()):
+        inserted, errors = database.insert(table, rows)
+        assert not errors
+        assert inserted == len(rows)
+    _, rows = database.fetch('''
+      SELECT p.source_phi_assessment_status, a.release_assessment_status,
+             a.release_decision, d.input_phi_assessment_status
+      FROM "Product" product JOIN "PrivacyProfile" p ON product.privacy_profile = p.id
+      CROSS JOIN "PrivacyReleaseAssessment" a
+      JOIN "ExtractionRequest" r ON a.extraction_request = r.id
+      JOIN "PrivacyDeclaration" d ON r.privacy_declaration = d.id
+    ''')
+    assert rows == [("not_assessed", "not_assessed", "pending", "not_assessed")]
+
+
 # ── design invariants ────────────────────────────────────────────────────────
 
 

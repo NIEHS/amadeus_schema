@@ -1,7 +1,7 @@
 -- Integrity checks LinkML cannot express: referential integrity,
 -- uniqueness, and enum domains. Generated from the FK graph,
 -- unique_keys and enum ranges. Every query must return n = 0.
--- 102 checks
+-- 127 checks
 
 -- [FK] CanonicalVariable.omop_concept_binding_id -> OmopConceptBinding.id
 SELECT COUNT(*) AS n FROM "CanonicalVariable" c
@@ -18,8 +18,18 @@ SELECT COUNT(*) AS n FROM "Product" c
   LEFT JOIN "GridDefinition" p ON c."grid_definition" = p."id"
   WHERE c."grid_definition" IS NOT NULL AND p."id" IS NULL;
 
+-- [FK] Product.privacy_profile -> PrivacyProfile.id
+SELECT COUNT(*) AS n FROM "Product" c
+  LEFT JOIN "PrivacyProfile" p ON c."privacy_profile" = p."id"
+  WHERE c."privacy_profile" IS NOT NULL AND p."id" IS NULL;
+
 -- [FK] Location.location_set -> LocationSet.id
 SELECT COUNT(*) AS n FROM "Location" c
+  LEFT JOIN "LocationSet" p ON c."location_set" = p."id"
+  WHERE c."location_set" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] PrivacyDeclaration.location_set -> LocationSet.id
+SELECT COUNT(*) AS n FROM "PrivacyDeclaration" c
   LEFT JOIN "LocationSet" p ON c."location_set" = p."id"
   WHERE c."location_set" IS NOT NULL AND p."id" IS NULL;
 
@@ -179,6 +189,11 @@ SELECT COUNT(*) AS n FROM "ExtractionRequest" c
   LEFT JOIN "ProductVariable" p ON c."weighting_product_variable" = p."id"
   WHERE c."weighting_product_variable" IS NOT NULL AND p."id" IS NULL;
 
+-- [FK] ExtractionRequest.privacy_declaration -> PrivacyDeclaration.id
+SELECT COUNT(*) AS n FROM "ExtractionRequest" c
+  LEFT JOIN "PrivacyDeclaration" p ON c."privacy_declaration" = p."id"
+  WHERE c."privacy_declaration" IS NOT NULL AND p."id" IS NULL;
+
 -- [FK] ProductVariable_metadata_gaps.ProductVariable_id -> ProductVariable.id
 SELECT COUNT(*) AS n FROM "ProductVariable_metadata_gaps" c
   LEFT JOIN "ProductVariable" p ON c."ProductVariable_id" = p."id"
@@ -198,6 +213,16 @@ SELECT COUNT(*) AS n FROM "Asset_variables_present" c
 SELECT COUNT(*) AS n FROM "Asset_vertical_levels_present" c
   LEFT JOIN "Asset" p ON c."Asset_id" = p."id"
   WHERE c."Asset_id" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] PrivacyReleaseAssessment.extraction_request -> ExtractionRequest.id
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment" c
+  LEFT JOIN "ExtractionRequest" p ON c."extraction_request" = p."id"
+  WHERE c."extraction_request" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] PrivacyReleaseAssessment.privacy_declaration -> PrivacyDeclaration.id
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment" c
+  LEFT JOIN "PrivacyDeclaration" p ON c."privacy_declaration" = p."id"
+  WHERE c."privacy_declaration" IS NOT NULL AND p."id" IS NULL;
 
 -- [FK] AmbientValueAtLocation.location -> Location.id
 SELECT COUNT(*) AS n FROM "AmbientValueAtLocation" c
@@ -249,9 +274,49 @@ SELECT COUNT(*) AS n FROM "ExtractionRequest_lag_days" c
   LEFT JOIN "ExtractionRequest" p ON c."ExtractionRequest_id" = p."id"
   WHERE c."ExtractionRequest_id" IS NOT NULL AND p."id" IS NULL;
 
+-- [FK] ExtractionRequest_requested_privacy_transformations.ExtractionRequest_id -> ExtractionRequest.id
+SELECT COUNT(*) AS n FROM "ExtractionRequest_requested_privacy_transformations" c
+  LEFT JOIN "ExtractionRequest" p ON c."ExtractionRequest_id" = p."id"
+  WHERE c."ExtractionRequest_id" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] ExtractionRequest_requested_privacy_transformations.requested_privacy_transformations_id -> PrivacyTransformation.id
+SELECT COUNT(*) AS n FROM "ExtractionRequest_requested_privacy_transformations" c
+  LEFT JOIN "PrivacyTransformation" p ON c."requested_privacy_transformations_id" = p."id"
+  WHERE c."requested_privacy_transformations_id" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] PrivacyReleaseAssessment_performed_privacy_transformations.PrivacyReleaseAssessment_id -> PrivacyReleaseAssessment.id
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment_performed_privacy_transformations" c
+  LEFT JOIN "PrivacyReleaseAssessment" p ON c."PrivacyReleaseAssessment_id" = p."id"
+  WHERE c."PrivacyReleaseAssessment_id" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] PrivacyReleaseAssessment_performed_privacy_transformations.performed_privacy_transformations_id -> PrivacyTransformation.id
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment_performed_privacy_transformations" c
+  LEFT JOIN "PrivacyTransformation" p ON c."performed_privacy_transformations_id" = p."id"
+  WHERE c."performed_privacy_transformations_id" IS NOT NULL AND p."id" IS NULL;
+
 -- [ENUM] DataSource.access_protocol in AccessProtocolEnum
 SELECT COUNT(*) AS n FROM "DataSource"
   WHERE "access_protocol" IS NOT NULL AND "access_protocol" NOT IN ('https_bulk_file', 'ftp', 's3_object_store', 'stac_api', 'opendap', 'thredds', 'rest_api', 'harmony', 'arcgis_service');
+
+-- [ENUM] PrivacyProfile.source_phi_assessment_status in PrivacyAssessmentStatusEnum
+SELECT COUNT(*) AS n FROM "PrivacyProfile"
+  WHERE "source_phi_assessment_status" IS NOT NULL AND "source_phi_assessment_status" NOT IN ('not_assessed', 'in_progress', 'assessed');
+
+-- [ENUM] PrivacyProfile.source_phi_status in PhiStatusEnum
+SELECT COUNT(*) AS n FROM "PrivacyProfile"
+  WHERE "source_phi_status" IS NOT NULL AND "source_phi_status" NOT IN ('no_phi', 'aggregated_no_phi', 'phi_present');
+
+-- [ENUM] PrivacyProfile.source_phi_status_missing_reason in MissingReasonEnum
+SELECT COUNT(*) AS n FROM "PrivacyProfile"
+  WHERE "source_phi_status_missing_reason" IS NOT NULL AND "source_phi_status_missing_reason" NOT IN ('not_provided_by_source', 'available_but_not_extracted', 'upstream_data_not_propagated', 'under_investigation', 'not_applicable');
+
+-- [ENUM] PrivacyProfile.location_identifiability in LocationIdentifiabilityEnum
+SELECT COUNT(*) AS n FROM "PrivacyProfile"
+  WHERE "location_identifiability" IS NOT NULL AND "location_identifiability" NOT IN ('not_assessed', 'potentially_identifiable', 'not_identifiable_in_assessed_context');
+
+-- [ENUM] PrivacyProfile.linkage_risk_assessment_status in PrivacyAssessmentStatusEnum
+SELECT COUNT(*) AS n FROM "PrivacyProfile"
+  WHERE "linkage_risk_assessment_status" IS NOT NULL AND "linkage_risk_assessment_status" NOT IN ('not_assessed', 'in_progress', 'assessed');
 
 -- [ENUM] Product.native_format in NativeFormatEnum
 SELECT COUNT(*) AS n FROM "Product"
@@ -263,7 +328,7 @@ SELECT COUNT(*) AS n FROM "Product"
 
 -- [ENUM] Product.temporal_resolution in TemporalResolutionEnum
 SELECT COUNT(*) AS n FROM "Product"
-  WHERE "temporal_resolution" IS NOT NULL AND "temporal_resolution" NOT IN ('instantaneous', 'subhourly', 'hourly', 'three_hourly', 'daily', 'monthly', 'seasonal', 'annual', 'multi_year_epoch', 'timeless');
+  WHERE "temporal_resolution" IS NOT NULL AND "temporal_resolution" NOT IN ('instantaneous', 'subhourly', 'hourly', 'three_hourly', 'daily', 'multi_day', 'monthly', 'seasonal', 'annual', 'multi_year_epoch', 'timeless');
 
 -- [ENUM] Product.temporal_alignment in TemporalAlignmentEnum
 SELECT COUNT(*) AS n FROM "Product"
@@ -381,6 +446,22 @@ SELECT COUNT(*) AS n FROM "HexCellValue"
 SELECT COUNT(*) AS n FROM "VectorFeature"
   WHERE "geometry_type" IS NOT NULL AND "geometry_type" NOT IN ('point', 'multipoint', 'linestring', 'multilinestring', 'polygon', 'multipolygon', 'geometrycollection');
 
+-- [ENUM] ToolRun.run_role in RunRoleEnum
+SELECT COUNT(*) AS n FROM "ToolRun"
+  WHERE "run_role" IS NOT NULL AND "run_role" NOT IN ('download', 'process', 'calculate', 'register', 'harmonize', 'import', 'export');
+
+-- [ENUM] ToolRun.status in RunStatusEnum
+SELECT COUNT(*) AS n FROM "ToolRun"
+  WHERE "status" IS NOT NULL AND "status" NOT IN ('succeeded', 'failed', 'partial', 'cancelled');
+
+-- [ENUM] ToolRun.materialization_mode in MaterializationModeEnum
+SELECT COUNT(*) AS n FROM "ToolRun"
+  WHERE "materialization_mode" IS NOT NULL AND "materialization_mode" NOT IN ('direct_remote_scan', 'server_side_subset', 'bounded_cache', 'full_materialization');
+
+-- [ENUM] ProvenanceChain.terminus_type in ProvenanceChainTerminusEnum
+SELECT COUNT(*) AS n FROM "ProvenanceChain"
+  WHERE "terminus_type" IS NOT NULL AND "terminus_type" NOT IN ('raw_source_download', 'remote_asset_scan', 'pre_existing_curated_dataset', 'externally_imported_dataset', 'synthetic_data');
+
 -- [ENUM] LocationSet.geometry_type in GeometryTypeEnum
 SELECT COUNT(*) AS n FROM "LocationSet"
   WHERE "geometry_type" IS NOT NULL AND "geometry_type" NOT IN ('point', 'multipoint', 'linestring', 'multilinestring', 'polygon', 'multipolygon', 'geometrycollection');
@@ -392,6 +473,10 @@ SELECT COUNT(*) AS n FROM "LocationSet"
 -- [ENUM] Location.target_geography_type in TargetGeographyTypeEnum
 SELECT COUNT(*) AS n FROM "Location"
   WHERE "target_geography_type" IS NOT NULL AND "target_geography_type" NOT IN ('point_location', 'buffered_point', 'census_block_group', 'census_tract', 'zcta', 'county', 'state', 'hydrologic_unit', 'h3_hex', 'grid_cell', 'public_water_system');
+
+-- [ENUM] Location.location_privacy_role in LocationPrivacyRoleEnum
+SELECT COUNT(*) AS n FROM "Location"
+  WHERE "location_privacy_role" IS NOT NULL AND "location_privacy_role" NOT IN ('unspecified', 'public_site', 'individual_or_household', 'synthetic');
 
 -- [ENUM] ExtractionRequest.temporal_grouping in TemporalGroupingEnum
 SELECT COUNT(*) AS n FROM "ExtractionRequest"
@@ -425,6 +510,46 @@ SELECT COUNT(*) AS n FROM "ExtractionRequest"
 SELECT COUNT(*) AS n FROM "ExtractionRequest"
   WHERE "strict_extensivity_check" IS NOT NULL AND "strict_extensivity_check" NOT IN ('strict', 'permissive');
 
+-- [ENUM] PrivacyDeclaration.input_phi_assessment_status in PrivacyAssessmentStatusEnum
+SELECT COUNT(*) AS n FROM "PrivacyDeclaration"
+  WHERE "input_phi_assessment_status" IS NOT NULL AND "input_phi_assessment_status" NOT IN ('not_assessed', 'in_progress', 'assessed');
+
+-- [ENUM] PrivacyDeclaration.input_phi_status in PhiStatusEnum
+SELECT COUNT(*) AS n FROM "PrivacyDeclaration"
+  WHERE "input_phi_status" IS NOT NULL AND "input_phi_status" NOT IN ('no_phi', 'aggregated_no_phi', 'phi_present');
+
+-- [ENUM] PrivacyDeclaration.location_identifiability in LocationIdentifiabilityEnum
+SELECT COUNT(*) AS n FROM "PrivacyDeclaration"
+  WHERE "location_identifiability" IS NOT NULL AND "location_identifiability" NOT IN ('not_assessed', 'potentially_identifiable', 'not_identifiable_in_assessed_context');
+
+-- [ENUM] PrivacyTransformation.privacy_transformation in PrivacyTransformationEnum
+SELECT COUNT(*) AS n FROM "PrivacyTransformation"
+  WHERE "privacy_transformation" IS NOT NULL AND "privacy_transformation" NOT IN ('none', 'deterministic_geographic_jitter', 'suppression', 'aggregation_to_coarser_unit', 'stochastic_perturbation');
+
+-- [ENUM] PrivacyTransformation.privacy_transformation_stage in PrivacyTransformationStageEnum
+SELECT COUNT(*) AS n FROM "PrivacyTransformation"
+  WHERE "privacy_transformation_stage" IS NOT NULL AND "privacy_transformation_stage" NOT IN ('before_extraction', 'after_extraction', 'release_representation');
+
+-- [ENUM] PrivacyReleaseAssessment.output_phi_status in PhiStatusEnum
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment"
+  WHERE "output_phi_status" IS NOT NULL AND "output_phi_status" NOT IN ('no_phi', 'aggregated_no_phi', 'phi_present');
+
+-- [ENUM] PrivacyReleaseAssessment.release_assessment_status in PrivacyAssessmentStatusEnum
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment"
+  WHERE "release_assessment_status" IS NOT NULL AND "release_assessment_status" NOT IN ('not_assessed', 'in_progress', 'assessed');
+
+-- [ENUM] PrivacyReleaseAssessment.release_decision in PrivacyReleaseDecisionEnum
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment"
+  WHERE "release_decision" IS NOT NULL AND "release_decision" NOT IN ('pending', 'denied', 'approved');
+
+-- [ENUM] PrivacyReleaseAssessment.release_access_level in PrivacyReleaseAccessEnum
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment"
+  WHERE "release_access_level" IS NOT NULL AND "release_access_level" NOT IN ('restricted', 'public');
+
+-- [ENUM] PrivacyReleaseAssessment.released_geography_type in TargetGeographyTypeEnum
+SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment"
+  WHERE "released_geography_type" IS NOT NULL AND "released_geography_type" NOT IN ('point_location', 'buffered_point', 'census_block_group', 'census_tract', 'zcta', 'county', 'state', 'hydrologic_unit', 'h3_hex', 'grid_cell', 'public_water_system');
+
 -- [ENUM] AmbientValueAtLocation.extraction_method in ExtractionMethodEnum
 SELECT COUNT(*) AS n FROM "AmbientValueAtLocation"
   WHERE "extraction_method" IS NOT NULL AND "extraction_method" NOT IN ('nearest_cell', 'bilinear', 'inverse_distance_weighted_4_nearest_cells', 'area_weighted_polygon_mean', 'population_weighted_mean', 'point_station_lookup', 'nearest_station', 'intersection_area_proportion', 'raster_zonal_sum', 'feature_density', 'exact_extract');
@@ -444,20 +569,4 @@ SELECT COUNT(*) AS n FROM "AmbientValueAtLocation"
 -- [ENUM] AmbientValueAtLocation.null_semantics in NullSemanticsEnum
 SELECT COUNT(*) AS n FROM "AmbientValueAtLocation"
   WHERE "null_semantics" IS NOT NULL AND "null_semantics" NOT IN ('present', 'structural_null', 'derived_null', 'true_zero');
-
--- [ENUM] ToolRun.run_role in RunRoleEnum
-SELECT COUNT(*) AS n FROM "ToolRun"
-  WHERE "run_role" IS NOT NULL AND "run_role" NOT IN ('download', 'process', 'calculate', 'register', 'harmonize', 'import', 'export');
-
--- [ENUM] ToolRun.status in RunStatusEnum
-SELECT COUNT(*) AS n FROM "ToolRun"
-  WHERE "status" IS NOT NULL AND "status" NOT IN ('succeeded', 'failed', 'partial', 'cancelled');
-
--- [ENUM] ToolRun.materialization_mode in MaterializationModeEnum
-SELECT COUNT(*) AS n FROM "ToolRun"
-  WHERE "materialization_mode" IS NOT NULL AND "materialization_mode" NOT IN ('direct_remote_scan', 'server_side_subset', 'bounded_cache', 'full_materialization');
-
--- [ENUM] ProvenanceChain.terminus_type in ProvenanceChainTerminusEnum
-SELECT COUNT(*) AS n FROM "ProvenanceChain"
-  WHERE "terminus_type" IS NOT NULL AND "terminus_type" NOT IN ('raw_source_download', 'remote_asset_scan', 'pre_existing_curated_dataset', 'externally_imported_dataset', 'synthetic_data');
 

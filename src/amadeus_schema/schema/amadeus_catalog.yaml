@@ -91,6 +91,65 @@ classes:
         - value: "_narr"
         - value: "_aqs"
 
+  PrivacyProfile:
+    title: Public Product Privacy Profile
+    description: >-
+      Reusable public metadata about source classification and potential
+      location-linkage concerns. Contains no individual locations, linkage
+      keys, transformation secrets or release records. Product and its grid
+      retain authoritative spatial and temporal resolution; this profile does
+      not duplicate those values. Source PHI status does not propagate to
+      location-linked results. Presence of a profile is not a risk assessment.
+    slots:
+    - id
+    - name
+    - description
+    - privacy_profile_version
+    - source_phi_assessment_status
+    - source_phi_status
+    - source_phi_status_missing_reason
+    - assessment_evidence_reference
+    - location_identifiability
+    - linkage_risk_assessment_status
+    - linkage_risk_note
+    - location_linked_review_required
+    slot_usage:
+      name:
+        required: true
+      privacy_profile_version:
+        required: true
+      source_phi_assessment_status:
+        required: true
+      location_identifiability:
+        required: true
+      linkage_risk_assessment_status:
+        required: true
+      location_linked_review_required:
+        required: true
+    rules:
+    - preconditions:
+        slot_conditions:
+          source_phi_assessment_status:
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          source_phi_status:
+            required: true
+          assessment_evidence_reference:
+            required: true
+      description: A source classification finding must name its status and evidence.
+    - preconditions:
+        slot_conditions:
+          linkage_risk_assessment_status:
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          assessment_evidence_reference:
+            required: true
+          linkage_risk_note:
+            required: true
+      description: A completed linkage-risk assessment needs evidence and context.
+
   Product:
     title: Product
     description: >-
@@ -145,6 +204,7 @@ classes:
     - amadeus_calculate_covariate
     - supports_server_side_subset
     - stac_collection_id
+    - privacy_profile
     slot_usage:
       name:
         required: true
@@ -528,6 +588,54 @@ classes:
 #────────────────────────────────────────────────────────────────
 
 slots:
+
+  privacy_profile:
+    range: PrivacyProfile
+    description: >-
+      Optional reference to public privacy metadata. Omission preserves legacy
+      catalogs and makes no statement about source PHI or downstream safety.
+
+  privacy_profile_version:
+    range: string
+    description: Version of the curated profile definition, not a completed assessment.
+
+  source_phi_assessment_status:
+    range: PrivacyAssessmentStatusEnum
+    description: Assessment lifecycle for PHI classification of the described source only.
+
+  source_phi_status:
+    range: PhiStatusEnum
+    description: >-
+      Source-scoped PHI finding using the existing vocabulary. Not an assertion
+      about the entire EnVar sidecar or any downstream location-linked output.
+
+  source_phi_status_missing_reason:
+    range: MissingReasonEnum
+    description: Reason source classification is unspecified; never substitutes for no_phi.
+
+  assessment_evidence_reference:
+    range: uri
+    description: >-
+      Evidence reference for recorded findings. Public profiles must reference
+      public non-identifying evidence; restricted records may use controlled references.
+
+  location_identifiability:
+    range: LocationIdentifiabilityEnum
+    description: Potential individual or household location identifiability within assessment scope.
+
+  linkage_risk_assessment_status:
+    range: PrivacyAssessmentStatusEnum
+    description: Assessment lifecycle for geographic inference from linked outputs.
+
+  linkage_risk_note:
+    range: string
+    description: >-
+      Context and limitations of potential inference from variables, time series,
+      distances or combined datasets. A caution is not a measured risk score.
+
+  location_linked_review_required:
+    range: boolean
+    description: Whether release of location-linked outputs requires a separate contextual review.
 
   # ── DataSource ────────────────────────────────────────────────
   producer_institution:

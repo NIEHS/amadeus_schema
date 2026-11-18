@@ -453,3 +453,38 @@ order of magnitude (the literature figure for this comparison is ~1.26 °C) and
 it demonstrates the mechanism, but it is not a measurement. Reproducing it
 against real assets is a genuinely useful next step and needs network access
 and an Earthdata token.
+
+
+## Optional privacy metadata — 2026-11-18
+
+The local maintained schema now includes public `PrivacyProfile` and restricted
+`PrivacyDeclaration`, `PrivacyTransformation`, and `PrivacyReleaseAssessment`
+classes. `Product.privacy_profile` is optional. The existing PHI enum is reused
+for distinct source/input/output scopes without automatically propagating a
+classification. New classifications have no no_phi default; the legacy
+LocationSet default is retained solely for compatibility.
+
+The shared catalog profile is explicitly unassessed across all 23 families and
+241 Products in the current inventory. Public builds reject restricted
+collections before projection. Schema validation checks structure and local
+rules; `scripts/validate_privacy.py` checks cross-record declarations, references,
+performed-run status and evidence-bound authorization metadata. It does not
+verify scientific adequacy, execute geomasking, enforce access permissions or
+certify de-identification. The historical EnVar export demo is not a controlled
+privacy release service; full upstream EnVar validation still requires an
+external checkout.
+
+Verified in this session: **55 Python schema tests pass**, including the
+existing two-engine round trips/integrity checks and new privacy-row round trips;
+**19 generated R-validator checks pass**. Generated schema totals are 24 classes,
+38 enums, 276 slots and 27 conditional rules. The earlier measurements in this
+document remain historical, not current aggregate counts. SedonaDB reports
+optional PROJ/GDAL configuration warnings; these tests do not certify native
+reprojection or raster access.
+
+Complete public and restricted synthetic examples are in
+[`examples/privacy/`](examples/privacy/). Authoritative definitions remain in
+`src/amadeus_schema/schema/`; Python models, JSON Schema, merged schema, backend
+DDL, integrity SQL and R validators were regenerated from those definitions.
+The catalog workflow, registry, all-format outputs and detailed privacy guide
+are maintained in the containing workspace, outside this standalone repository.

@@ -50,6 +50,7 @@ imports:
 - amadeus_common
 - amadeus_catalog
 - amadeus_value
+- amadeus_provenance
 
 #────────────────────────────────────────────────────────────────
 # CLASSES
@@ -64,11 +65,10 @@ classes:
       an entity. Carries the identifier field name (`locs_id`), the CRS the user
       supplied, and a PHI declaration.
 
-      `phi_status` defaults to `no_phi` and is the gate on everything else: if a
-      location set is flagged, results derived from it must not be written to
-      shared catalog tables or embedded in an exported EnVar record, whose
-      `phi_status` is a required field precisely so this cannot be left
-      implicit.
+      The legacy `phi_status` default remains for compatibility; it is not
+      evidence of assessment. New privacy-aware requests use a separate
+      PrivacyDeclaration with explicit assessment status and evidence. These
+      schema records describe handling requirements, not access controls.
     slots:
     - id
     - name
@@ -120,6 +120,8 @@ classes:
     - valid_from
     - valid_to
     - target_geography_type
+    - location_privacy_role
+    - location_precision_m
     slot_usage:
       location_set:
         required: true
@@ -164,6 +166,8 @@ classes:
     - request_timestamp_utc
     - request_hash
     - generated_sql
+    - privacy_declaration
+    - requested_privacy_transformations
     slot_usage:
       location_set:
         required: true
@@ -224,6 +228,140 @@ classes:
         The AQS/AirNow rule, enforced at request time. Mixing preliminary and
         quality-controlled values into one result requires the user to have
         explicitly chosen a reconciliation policy. The default is to refuse.
+
+  PrivacyDeclaration:
+    title: Restricted Input Privacy Declaration
+    description: >-
+      Request-specific classification of a supplied LocationSet, kept outside
+      public catalog bundles. Reuses PhiStatusEnum without defaulting an
+      unassessed input to no_phi. References may themselves be sensitive.
+    slots:
+    - id
+    - location_set
+    - input_phi_assessment_status
+    - input_phi_status
+    - location_identifiability
+    - privacy_declaration_note
+    - assessment_evidence_reference
+    slot_usage:
+      location_set:
+        required: true
+      input_phi_assessment_status:
+        required: true
+      location_identifiability:
+        required: true
+    rules:
+    - preconditions:
+        slot_conditions:
+          input_phi_assessment_status:
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          input_phi_status:
+            required: true
+          assessment_evidence_reference:
+            required: true
+      description: An assessed input declaration requires an explicit classification and evidence.
+
+  PrivacyTransformation:
+    title: Restricted Privacy Transformation Specification
+    description: >-
+      One versioned action. ExtractionRequest lists requested actions in order;
+      PrivacyReleaseAssessment independently lists actions actually performed.
+      A performed action must reference a successful ToolRun. Restricted
+      parameters may reference controlled configuration; never publish seeds,
+      displacement vectors, participant keys or reversal mappings.
+    slots:
+    - id
+    - privacy_transformation
+    - privacy_transformation_stage
+    - privacy_transformation_specification
+    - privacy_transformation_note
+    - processing_run
+    slot_usage:
+      privacy_transformation:
+        required: true
+      privacy_transformation_stage:
+        required: true
+      privacy_transformation_specification:
+        required: true
+
+  PrivacyReleaseAssessment:
+    title: Restricted Location-linked Release Assessment
+    description: >-
+      Assessment and authorization metadata for one exact output artifact,
+      request, input declaration and intended audience. Separate from source
+      classification and performed transformations. Metadata validation checks
+      recorded evidence and relationships, not the scientific sufficiency of
+      a risk analysis, legal compliance or enforcement of access restrictions.
+      Public catalog generation must reject this collection.
+    slots:
+    - id
+    - extraction_request
+    - privacy_declaration
+    - performed_privacy_transformations
+    - privacy_transformation_deviation_note
+    - output_artifact_reference
+    - output_artifact_sha256
+    - output_phi_status
+    - release_assessment_status
+    - release_decision
+    - release_audience
+    - release_access_level
+    - release_assessment_method
+    - release_assessment_scope
+    - assessment_evidence_reference
+    - assessed_by
+    - assessed_at
+    - released_geography_type
+    - released_spatial_resolution_m
+    - released_temporal_resolution_iso
+    slot_usage:
+      extraction_request:
+        required: true
+      privacy_declaration:
+        required: true
+      output_artifact_reference:
+        required: true
+      release_assessment_status:
+        required: true
+      release_decision:
+        required: true
+      release_audience:
+        required: true
+      release_access_level:
+        required: true
+    rules:
+    - preconditions:
+        slot_conditions:
+          release_assessment_status:
+            equals_string: assessed
+      postconditions:
+        slot_conditions:
+          assessed_by:
+            required: true
+          assessed_at:
+            required: true
+          assessment_evidence_reference:
+            required: true
+          release_assessment_method:
+            required: true
+          release_assessment_scope:
+            required: true
+          output_artifact_sha256:
+            required: true
+          output_phi_status:
+            required: true
+      description: A completed assessment is bound to an artifact and documented evidence.
+    - preconditions:
+        slot_conditions:
+          release_decision:
+            equals_string: approved
+      postconditions:
+        slot_conditions:
+          release_assessment_status:
+            equals_string: assessed
+      description: A pending or in-progress assessment cannot authorize release.
 
   AmbientValueAtLocation:
     title: Ambient Value at Location
@@ -287,6 +425,124 @@ classes:
 
 slots:
 
+  privacy_declaration:
+    range: PrivacyDeclaration
+    description: Restricted declaration for the request's actual input locations.
+
+  input_phi_assessment_status:
+    range: PrivacyAssessmentStatusEnum
+    description: Assessment lifecycle of input PHI classification; has no safe default.
+
+  input_phi_status:
+    range: PhiStatusEnum
+    description: Explicit input classification using the existing PHI enum; never inferred from a Product.
+
+  privacy_declaration_note:
+    range: string
+    description: Restricted context for classification; no clinical data are needed here.
+
+  location_privacy_role:
+    range: LocationPrivacyRoleEnum
+    description: Optional role of a particular location, independent of PHI classification.
+
+  location_precision_m:
+    range: float
+    minimum_value: 0
+    description: Declared coordinate precision or uncertainty in metres; not a privacy guarantee.
+
+  requested_privacy_transformations:
+    range: PrivacyTransformation
+    multivalued: true
+    list_elements_ordered: true
+    description: Ordered requested action references; absence or an empty list asserts no performed history.
+
+  performed_privacy_transformations:
+    range: PrivacyTransformation
+    multivalued: true
+    list_elements_ordered: true
+    description: Ordered actual action references, each with a successful run; independent of requests.
+
+  privacy_transformation:
+    range: PrivacyTransformationEnum
+    exact_mappings:
+    - envar:privacy_transformation
+    description: Action type; none is an explicit action assertion, not an unknown value.
+
+  privacy_transformation_stage:
+    range: PrivacyTransformationStageEnum
+    description: Stage where this specification changes geometry, values or release representation.
+
+  privacy_transformation_specification:
+    range: string
+    description: Versioned parameters or controlled configuration reference, without public secrets.
+
+  privacy_transformation_note:
+    range: string
+    exact_mappings:
+    - envar:privacy_transformation_note
+    description: Restricted trigger, determinism, constraints and limitations of the action.
+
+  privacy_transformation_deviation_note:
+    range: string
+    description: Rationale for any difference between requested and performed action sequences.
+
+  output_artifact_reference:
+    range: uri
+    description: Opaque controlled output reference, never an inline individual result.
+
+  output_artifact_sha256:
+    range: Sha256
+    description: Hash binding an assessment to exact output bytes; does not anonymize its contents.
+
+  output_phi_status:
+    range: PhiStatusEnum
+    description: Output-scoped finding, not automatically copied from input or source status.
+
+  release_assessment_status:
+    range: PrivacyAssessmentStatusEnum
+    description: Assessment lifecycle for the exact proposed release.
+
+  release_decision:
+    range: PrivacyReleaseDecisionEnum
+    description: Recorded authorization decision; not an executable access-control mechanism.
+
+  release_audience:
+    range: string
+    description: Intended recipients and access context covered by this decision.
+
+  release_access_level:
+    range: PrivacyReleaseAccessEnum
+    description: Whether authorization is restricted or public; independent of PHI classification.
+
+  release_assessment_method:
+    range: string
+    description: Versioned contextual disclosure-risk method; no universal safe distance is assumed.
+
+  release_assessment_scope:
+    range: string
+    description: Joint variables, dates, geography, auxiliary information, threat model and utility limits assessed.
+
+  assessed_by:
+    range: string
+    description: Accountable assessor identity or controlled identifier.
+
+  assessed_at:
+    range: datetime
+    description: Time of the recorded assessment.
+
+  released_geography_type:
+    range: TargetGeographyTypeEnum
+    description: Actual output geography; separate from native Product support.
+
+  released_spatial_resolution_m:
+    range: float
+    minimum_value: 0
+    description: Actual released spatial detail in metres, where a scalar resolution is meaningful.
+
+  released_temporal_resolution_iso:
+    range: Iso8601Duration
+    description: Actual released temporal support, separate from native source sampling.
+
   # ── LocationSet ───────────────────────────────────────────────
   locs_id_field:
     range: string
@@ -299,8 +555,10 @@ slots:
     ifabsent: string(no_phi)
     description: >-
       Whether these locations are or derive from protected health information.
-      Gates persistence and export. Same slot name, range and value set as
-      EnVar's required `phi_status`, so an exported record carries it verbatim.
+      Legacy declaration retained for compatibility, including its no_phi
+      default. It does not prove assessment or enforce persistence/export.
+      Privacy-aware requests require an explicit PrivacyDeclaration; new
+      input/output findings reuse PhiStatusEnum without this default.
     exact_mappings:
     - envar:phi_status
 

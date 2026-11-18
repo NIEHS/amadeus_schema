@@ -172,7 +172,8 @@ enums:
     annotations:
       extends: envar:TemporalResolutionEnum
       extension_note: >-
-        Adds `subhourly` (GOES ADP, HRRR sub-cycle), `multi_year_epoch` (NLCD
+        Adds `multi_day` (GridMET drought pentads and MOD13A2 composites),
+        `subhourly` (GOES ADP, HRRR sub-cycle), `multi_year_epoch` (NLCD
         2001/2006/2011/2016/2019/2021 — not a regular series) and `timeless`
         (GMTED elevation, Köppen-Geiger, gROADS). Without `timeless` a third of
         the amadeus catalog is unrepresentable.
@@ -184,6 +185,14 @@ enums:
       hourly:
       three_hourly:
       daily:
+      multi_day:
+        description: >-
+          Observations or composites at a nominal interval longer than one day
+          and shorter than a month. Record the nominal interval separately in
+          temporal_resolution_iso; actual asset times/bounds take precedence
+          at calendar boundaries. Includes GridMET pentads and MOD13A2.
+        annotations:
+          amadeus_extension: "true"
       monthly:
       seasonal:
       annual:
@@ -585,16 +594,101 @@ enums:
   PhiStatusEnum:
     title: PHI Status
     description: >-
-      Whether a location set, and anything derived from it, is protected health
-      information. An enum rather than a boolean for two reasons: it matches
-      EnVar's `phi_status` exactly, and — see `ValueMaterializationEnum` — a
-      boolean cannot be used as a LinkML rule precondition.
+      Scoped PHI classification for source data, supplied locations or an exact
+      output. The owning slot defines the scope; classifications do not
+      propagate automatically. Preserves EnVar's phi_status value set. An enum
+      rather than a boolean also supports LinkML rule preconditions; see
+      ValueMaterializationEnum.
     exact_mappings:
     - envar:PhiStatusEnum
     permissible_values:
       no_phi:
       aggregated_no_phi:
       phi_present:
+
+  PrivacyAssessmentStatusEnum:
+    description: >-
+      Local assessment lifecycle, separate from PHI classification. An absent
+      classification or an unassessed record never means no_phi.
+    permissible_values:
+      not_assessed:
+        description: No assessment is asserted.
+      in_progress:
+        description: Assessment is underway; no completed finding is asserted.
+      assessed:
+        description: A finding with supporting evidence has been recorded.
+
+  LocationIdentifiabilityEnum:
+    description: >-
+      Local geographic identifiability finding, independent of legal PHI
+      classification and meaningful only in the documented assessment context.
+    permissible_values:
+      not_assessed:
+        description: Individual or household location identifiability is unknown.
+      potentially_identifiable:
+        description: Location inference may be possible in the assessed context.
+      not_identifiable_in_assessed_context:
+        description: No identifiability established within the documented scope.
+
+  PrivacyTransformationEnum:
+    description: >-
+      Transformation vocabulary from EnVar SPEC section 4.8. A method name
+      records an action, never a guarantee of privacy or de-identification.
+    see_also:
+    - https://github.com/monarch-initiative/linkml-microschemas-envar/blob/main/SPEC.md
+    permissible_values:
+      none:
+        description: Explicitly no transformation; distinct from an absent record.
+      deterministic_geographic_jitter:
+        description: Deterministic coordinate displacement.
+      suppression:
+        description: Withholding selected locations, values or records.
+      aggregation_to_coarser_unit:
+        description: Spatial or temporal aggregation to a coarser support.
+      stochastic_perturbation:
+        description: Random perturbation of geometry or values.
+
+  PrivacyTransformationStageEnum:
+    description: Local stage at which a requested or performed action applies.
+    permissible_values:
+      before_extraction:
+        description: Changes the locations used to obtain environmental values.
+      after_extraction:
+        description: Changes extracted values or their linked locations.
+      release_representation:
+        description: Changes released representation; original values may retain location information.
+
+  PrivacyReleaseDecisionEnum:
+    description: >-
+      Local authorization record for one exact output artifact. Approval is
+      recorded governance, not independently verified legal de-identification.
+    permissible_values:
+      pending:
+        description: No release authorization recorded.
+      denied:
+        description: Release authorization withheld.
+      approved:
+        description: An assessor authorized the artifact for the recorded audience.
+
+  PrivacyReleaseAccessEnum:
+    description: Access context for an artifact-specific release authorization.
+    permissible_values:
+      restricted:
+        description: Controlled recipients and access conditions.
+      public:
+        description: Unrestricted recipients; PHI-present outputs cannot be approved.
+
+  LocationPrivacyRoleEnum:
+    description: Role of a location, without automatically classifying it as PHI.
+    permissible_values:
+      unspecified:
+        description: Location role has not been declared.
+      public_site:
+        description: Public monitoring or reference location.
+      individual_or_household:
+        description: Location associated with a person or household.
+      synthetic:
+        description: Invented location; not an actual participant location.
 
   ValueMaterializationEnum:
     title: Value Materialization

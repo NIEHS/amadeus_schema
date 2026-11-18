@@ -1,6 +1,6 @@
 # Development status
 
-_Last updated: 2026-10-20_
+_Last updated: 2026-11-18_
 
 **At a glance.** The schema is a finished prototype that has been presented and
 is now **waiting on other people**, not on more modelling. It was built for
@@ -27,6 +27,28 @@ its own table, so four value tables cover all of them.
 
 Model: 20 classes (1 abstract), 31 enums, 235 slots, 23 types, 22 conditional
 rules, in five modules (catalog, value, request, provenance, common).
+
+## Privacy metadata extension — 2026-11-18
+
+Implemented at the user's request in the maintained local catalog workflow:
+public `PrivacyProfile`, restricted `PrivacyDeclaration`, `PrivacyTransformation`
+and `PrivacyReleaseAssessment`, plus optional Product/request/location links.
+All three scoped classifications reuse the existing PHI enum. The public
+profile remains unassessed; metadata does not execute masking or enforce access.
+
+Measured in this session: 24 classes, 38 enums, 276 slots, 27 conditional rules;
+55 Python schema tests pass, including both engine suites and new privacy-row
+round trips. Catalog schema/reference/projection checks pass for all 23 families
+and 241 Products, with 24 synchronized YAML/JSON/RDS full catalogs. Original
+scientific metadata is preserved. R generated-validator checks pass (19).
+The separate converter passes its serialization (23) and loader (29) checks.
+
+The legacy LocationSet no_phi default is retained for compatibility; new scoped
+findings have no default and require explicit assessment/evidence. Remaining
+work is runtime policy enforcement, controlled export and scientific disclosure
+assessment, not assertions of de-identification. See the privacy appendix in
+REPORT.md and the catalog workflow documentation. Historical state below is
+retained with its original measurement dates.
 
 ## Verified state
 
@@ -113,6 +135,7 @@ Newest first. One line per change that moved the state above.
 
 | Date | Change |
 |---|---|
+| 2026-11-18 | Added optional public privacy profiles and restricted request/transformation/release metadata; regenerated models and catalog artifacts; verified backward compatibility, original metadata preservation and both database test suites |
 | 2026-10-20 | Added `HACKATHON.md`: 3-hour plan for designing the real data infrastructure (components and per-stage metadata, artefact requirements, schema-repo → amadeus workflow, decision log). Repo reframed as a strawman, not the foundation |
 | 2026-10-09 | Removed machine-local paths and links to uncommitted files from committed files; `AMADEUS_REPO` no longer has a default (stage 4 skips when unset); machine-specific agent context moved to gitignored `CLAUDE.local.md` |
 | 2026-10-09 | CI `lint` job red since `0191dc4`: `tests/test_schema.py` (from `df9a292`) was not ruff-formatted. Reformatted; pre-commit and pytest (13) pass |

@@ -1,0 +1,52 @@
+# Synthetic illustration only. No actual participant, transformation or approval.
+schema_version: 0.1.0
+location_sets:
+- id: example:location_set/synthetic
+  name: synthetic_restricted_example
+  locs_id_field: synthetic_id
+  crs: EPSG:4326
+  phi_status: phi_present
+  description: >-
+    Invented location handled conservatively to illustrate a restricted workflow.
+    This legacy handling label is not an assessed PHI finding.
+locations:
+- id: example:location/synthetic
+  location_set: example:location_set/synthetic
+  location_key: synthetic_001
+  location_geom_wkt: POINT (0 0)
+  location_privacy_role: synthetic
+  location_precision_m: 100
+privacy_declarations:
+- id: example:privacy_declaration/pending
+  location_set: example:location_set/synthetic
+  input_phi_assessment_status: not_assessed
+  location_identifiability: not_assessed
+  privacy_declaration_note: No assessment or input PHI classification is asserted.
+privacy_transformations:
+- id: example:privacy_transformation/requested_aggregation
+  privacy_transformation: aggregation_to_coarser_unit
+  privacy_transformation_stage: before_extraction
+  privacy_transformation_specification: >-
+    Illustrative plan v1: choose a coarser geography only after a contextual
+    disclosure-risk and scientific-utility assessment. No distance is prescribed.
+  privacy_transformation_note: Requested only; no successful run is recorded.
+extraction_requests:
+- id: example:request/pending
+  location_set: example:location_set/synthetic
+  time_window_start: '2020-01-01T00:00:00Z'
+  time_window_end: '2020-01-02T00:00:00Z'
+  extraction_method: nearest_cell
+  request_hash: '0000000000000000000000000000000000000000000000000000000000000000'
+  privacy_declaration: example:privacy_declaration/pending
+  requested_privacy_transformations:
+  - example:privacy_transformation/requested_aggregation
+privacy_release_assessments:
+- id: example:release/pending
+  extraction_request: example:request/pending
+  privacy_declaration: example:privacy_declaration/pending
+  output_artifact_reference: urn:example:proposed-output-not-created
+  performed_privacy_transformations: []
+  release_assessment_status: not_assessed
+  release_decision: pending
+  release_access_level: restricted
+  release_audience: Illustrative controlled research environment; no release authorized.

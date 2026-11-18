@@ -90,6 +90,11 @@ classes:
 
       All collections are optional: a catalog-only bundle (the normal shape of
       a curation pull request) is as valid as a full instance.
+
+      PrivacyProfile is public source metadata. PrivacyDeclaration,
+      PrivacyTransformation and PrivacyReleaseAssessment are restricted
+      instance records. The public catalog workflow rejects restricted
+      collections; root-schema validity alone is not publication authorization.
     slots:
     - schema_version
     - data_sources
@@ -109,8 +114,36 @@ classes:
     - ambient_values_at_location
     - tool_runs
     - provenance_chains
+    - privacy_profiles
+    - privacy_declarations
+    - privacy_transformations
+    - privacy_release_assessments
 
 slots:
+
+  privacy_profiles:
+    range: PrivacyProfile
+    multivalued: true
+    inlined_as_list: true
+    description: Optional public source profiles, never location-specific release findings.
+
+  privacy_declarations:
+    range: PrivacyDeclaration
+    multivalued: true
+    inlined_as_list: true
+    description: Restricted input declarations; excluded from public catalog artifacts.
+
+  privacy_transformations:
+    range: PrivacyTransformation
+    multivalued: true
+    inlined_as_list: true
+    description: Restricted requested/performed specifications; excluded from public catalogs.
+
+  privacy_release_assessments:
+    range: PrivacyReleaseAssessment
+    multivalued: true
+    inlined_as_list: true
+    description: Restricted artifact-specific assessments; excluded from public catalogs.
 
   data_sources:
     range: DataSource

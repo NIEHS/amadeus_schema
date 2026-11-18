@@ -75,7 +75,7 @@ check_DataSource <- function(x) {
     .e <- checkmate::check_string(x[["doi"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("DataSource$doi: ", .e))
   }
-  if (!is.null(x[["doi"]]) && !grepl("^10\\.[0-9]{4,9}/.+$", x[["doi"]]))
+  if (!is.null(x[["doi"]]) && !grepl("^10\\.[0-9]{4,9}/.+$", x[["doi"]], perl = TRUE))
     return("DataSource$doi: does not match required pattern")
   if (!is.null(x[["amadeus_function_suffix"]])) {
     .e <- checkmate::check_string(x[["amadeus_function_suffix"]], na.ok = FALSE)
@@ -86,6 +86,84 @@ check_DataSource <- function(x) {
 
 assert_DataSource <- function(x) {
   res <- check_DataSource(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
+#' Validate one PrivacyProfile record
+#' Reusable public metadata about source classification and potential location-linkage concerns. Contains no individual locations, linkage keys, transfor
+check_PrivacyProfile <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["id"]])) return("PrivacyProfile: required slot `id` is missing")
+  if (!is.null(x[["id"]])) {
+    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$id: ", .e))
+  }
+  if (is.null(x[["name"]])) return("PrivacyProfile: required slot `name` is missing")
+  if (!is.null(x[["name"]])) {
+    .e <- checkmate::check_string(x[["name"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$name: ", .e))
+  }
+  if (!is.null(x[["description"]])) {
+    .e <- checkmate::check_string(x[["description"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$description: ", .e))
+  }
+  if (is.null(x[["privacy_profile_version"]])) return("PrivacyProfile: required slot `privacy_profile_version` is missing")
+  if (!is.null(x[["privacy_profile_version"]])) {
+    .e <- checkmate::check_string(x[["privacy_profile_version"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$privacy_profile_version: ", .e))
+  }
+  if (is.null(x[["source_phi_assessment_status"]])) return("PrivacyProfile: required slot `source_phi_assessment_status` is missing")
+  if (!is.null(x[["source_phi_assessment_status"]])) {
+    .e <- checkmate::check_choice(x[["source_phi_assessment_status"]], c("not_assessed", "in_progress", "assessed"))
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$source_phi_assessment_status: ", .e))
+  }
+  if (!is.null(x[["source_phi_status"]])) {
+    .e <- checkmate::check_choice(x[["source_phi_status"]], c("no_phi", "aggregated_no_phi", "phi_present"))
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$source_phi_status: ", .e))
+  }
+  if (!is.null(x[["source_phi_status_missing_reason"]])) {
+    .e <- checkmate::check_choice(x[["source_phi_status_missing_reason"]], c("not_provided_by_source", "available_but_not_extracted", "upstream_data_not_propagated", "under_investigation", "not_applicable"))
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$source_phi_status_missing_reason: ", .e))
+  }
+  if (!is.null(x[["assessment_evidence_reference"]])) {
+    .e <- checkmate::check_string(x[["assessment_evidence_reference"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$assessment_evidence_reference: ", .e))
+  }
+  if (is.null(x[["location_identifiability"]])) return("PrivacyProfile: required slot `location_identifiability` is missing")
+  if (!is.null(x[["location_identifiability"]])) {
+    .e <- checkmate::check_choice(x[["location_identifiability"]], c("not_assessed", "potentially_identifiable", "not_identifiable_in_assessed_context"))
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$location_identifiability: ", .e))
+  }
+  if (is.null(x[["linkage_risk_assessment_status"]])) return("PrivacyProfile: required slot `linkage_risk_assessment_status` is missing")
+  if (!is.null(x[["linkage_risk_assessment_status"]])) {
+    .e <- checkmate::check_choice(x[["linkage_risk_assessment_status"]], c("not_assessed", "in_progress", "assessed"))
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$linkage_risk_assessment_status: ", .e))
+  }
+  if (!is.null(x[["linkage_risk_note"]])) {
+    .e <- checkmate::check_string(x[["linkage_risk_note"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$linkage_risk_note: ", .e))
+  }
+  if (is.null(x[["location_linked_review_required"]])) return("PrivacyProfile: required slot `location_linked_review_required` is missing")
+  if (!is.null(x[["location_linked_review_required"]])) {
+    .e <- checkmate::check_flag(x[["location_linked_review_required"]])
+    if (!isTRUE(.e)) return(paste0("PrivacyProfile$location_linked_review_required: ", .e))
+  }
+  # rule 1: A source classification finding must name its status and evidence.
+  if ((!is.null(x[["source_phi_assessment_status"]]) && identical(as.character(x[["source_phi_assessment_status"]]), "assessed"))) {
+    if (is.null(x[["source_phi_status"]])) return("PrivacyProfile: rule 1 — `source_phi_status` is required here")
+    if (is.null(x[["assessment_evidence_reference"]])) return("PrivacyProfile: rule 1 — `assessment_evidence_reference` is required here")
+  }
+  # rule 2: A completed linkage-risk assessment needs evidence and context.
+  if ((!is.null(x[["linkage_risk_assessment_status"]]) && identical(as.character(x[["linkage_risk_assessment_status"]]), "assessed"))) {
+    if (is.null(x[["assessment_evidence_reference"]])) return("PrivacyProfile: rule 2 — `assessment_evidence_reference` is required here")
+    if (is.null(x[["linkage_risk_note"]])) return("PrivacyProfile: rule 2 — `linkage_risk_note` is required here")
+  }
+  TRUE
+}
+
+assert_PrivacyProfile <- function(x) {
+  res <- check_PrivacyProfile(x)
   if (!isTRUE(res)) stop(res, call. = FALSE)
   invisible(x)
 }
@@ -138,7 +216,7 @@ check_Product <- function(x) {
     .e <- checkmate::check_string(x[["crs"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Product$crs: ", .e))
   }
-  if (!is.null(x[["crs"]]) && !grepl("^[A-Za-z]+:[0-9]+$", x[["crs"]]))
+  if (!is.null(x[["crs"]]) && !grepl("^[A-Za-z]+:[0-9]+$", x[["crs"]], perl = TRUE))
     return("Product$crs: does not match required pattern")
   if (!is.null(x[["srid"]])) {
     .e <- checkmate::check_int(x[["srid"]])
@@ -162,14 +240,14 @@ check_Product <- function(x) {
   }
   if (is.null(x[["temporal_resolution"]])) return("Product: required slot `temporal_resolution` is missing")
   if (!is.null(x[["temporal_resolution"]])) {
-    .e <- checkmate::check_choice(x[["temporal_resolution"]], c("instantaneous", "subhourly", "hourly", "three_hourly", "daily", "monthly", "seasonal", "annual", "multi_year_epoch", "timeless"))
+    .e <- checkmate::check_choice(x[["temporal_resolution"]], c("instantaneous", "subhourly", "hourly", "three_hourly", "daily", "multi_day", "monthly", "seasonal", "annual", "multi_year_epoch", "timeless"))
     if (!isTRUE(.e)) return(paste0("Product$temporal_resolution: ", .e))
   }
   if (!is.null(x[["temporal_resolution_iso"]])) {
     .e <- checkmate::check_string(x[["temporal_resolution_iso"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Product$temporal_resolution_iso: ", .e))
   }
-  if (!is.null(x[["temporal_resolution_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["temporal_resolution_iso"]]))
+  if (!is.null(x[["temporal_resolution_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["temporal_resolution_iso"]], perl = TRUE))
     return("Product$temporal_resolution_iso: does not match required pattern")
   if (!is.null(x[["temporal_alignment"]])) {
     .e <- checkmate::check_choice(x[["temporal_alignment"]], c("start", "center", "end", "interval", "unknown"))
@@ -195,13 +273,13 @@ check_Product <- function(x) {
     .e <- checkmate::check_string(x[["update_cadence_iso"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Product$update_cadence_iso: ", .e))
   }
-  if (!is.null(x[["update_cadence_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["update_cadence_iso"]]))
+  if (!is.null(x[["update_cadence_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["update_cadence_iso"]], perl = TRUE))
     return("Product$update_cadence_iso: does not match required pattern")
   if (!is.null(x[["typical_latency_iso"]])) {
     .e <- checkmate::check_string(x[["typical_latency_iso"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Product$typical_latency_iso: ", .e))
   }
-  if (!is.null(x[["typical_latency_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["typical_latency_iso"]]))
+  if (!is.null(x[["typical_latency_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["typical_latency_iso"]], perl = TRUE))
     return("Product$typical_latency_iso: does not match required pattern")
   if (!is.null(x[["default_data_status"]])) {
     .e <- checkmate::check_choice(x[["default_data_status"]], c("preliminary", "provisional", "quality_controlled", "final", "forecast", "reanalysis", "superseded", "unknown"))
@@ -215,7 +293,7 @@ check_Product <- function(x) {
     .e <- checkmate::check_string(x[["doi"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Product$doi: ", .e))
   }
-  if (!is.null(x[["doi"]]) && !grepl("^10\\.[0-9]{4,9}/.+$", x[["doi"]]))
+  if (!is.null(x[["doi"]]) && !grepl("^10\\.[0-9]{4,9}/.+$", x[["doi"]], perl = TRUE))
     return("Product$doi: does not match required pattern")
   if (!is.null(x[["license_spdx"]])) {
     .e <- checkmate::check_string(x[["license_spdx"]], na.ok = FALSE)
@@ -248,6 +326,10 @@ check_Product <- function(x) {
   if (!is.null(x[["stac_collection_id"]])) {
     .e <- checkmate::check_string(x[["stac_collection_id"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Product$stac_collection_id: ", .e))
+  }
+  if (!is.null(x[["privacy_profile"]])) {
+    .e <- checkmate::check_string(x[["privacy_profile"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("Product$privacy_profile: ", .e))
   }
   # rule 1: A gridded product must declare its grid. Without this, "1 km" lives in a description string and no query can r
   if ((!is.null(x[["spatial_support_type"]]) && as.character(x[["spatial_support_type"]]) %in% c("raster_grid_cell", "model_grid_cell"))) {
@@ -296,7 +378,7 @@ check_GridDefinition <- function(x) {
     .e <- checkmate::check_string(x[["crs"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("GridDefinition$crs: ", .e))
   }
-  if (!is.null(x[["crs"]]) && !grepl("^[A-Za-z]+:[0-9]+$", x[["crs"]]))
+  if (!is.null(x[["crs"]]) && !grepl("^[A-Za-z]+:[0-9]+$", x[["crs"]], perl = TRUE))
     return("GridDefinition$crs: does not match required pattern")
   if (!is.null(x[["srid"]])) {
     .e <- checkmate::check_int(x[["srid"]])
@@ -450,7 +532,7 @@ assert_CanonicalVariable <- function(x) {
 }
 
 #' Validate one ProductVariable record
-#' One source's delivery of one canonical variable: the native name, the native units and conversion, the CF metadata, the aggregation actually applied, 
+#' One source's delivery of one canonical variable: the native name, the native units and conversion, the CF metadata, the aggregation actually applied,
 check_ProductVariable <- function(x) {
   if (!is.list(x)) return("expected a named list")
   if (is.null(x[["id"]])) return("ProductVariable: required slot `id` is missing")
@@ -509,7 +591,7 @@ check_ProductVariable <- function(x) {
     .e <- checkmate::check_string(x[["aggregation_window_iso"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("ProductVariable$aggregation_window_iso: ", .e))
   }
-  if (!is.null(x[["aggregation_window_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["aggregation_window_iso"]]))
+  if (!is.null(x[["aggregation_window_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["aggregation_window_iso"]], perl = TRUE))
     return("ProductVariable$aggregation_window_iso: does not match required pattern")
   if (!is.null(x[["temporal_alignment"]])) {
     .e <- checkmate::check_choice(x[["temporal_alignment"]], c("start", "center", "end", "interval", "unknown"))
@@ -553,7 +635,7 @@ check_ProductVariable <- function(x) {
   }
   # rule 2: A multi-level variable's layer names must carry the level, or the level cannot be recovered when the raster is
   if ((!is.null(x[["vertical_level_type"]]))) {
-    if (is.null(x[["layer_name_template"]]) || !grepl(".*\\{level\\}.*", x[["layer_name_template"]]))
+    if (is.null(x[["layer_name_template"]]) || !grepl(".*\\{level\\}.*", x[["layer_name_template"]], perl = TRUE))
       return("ProductVariable: rule 2 — `layer_name_template` must match the required pattern here")
   }
   TRUE
@@ -645,7 +727,7 @@ check_Asset <- function(x) {
     .e <- checkmate::check_string(x[["sha256"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Asset$sha256: ", .e))
   }
-  if (!is.null(x[["sha256"]]) && !grepl("^[0-9a-f]{64}$", x[["sha256"]]))
+  if (!is.null(x[["sha256"]]) && !grepl("^[0-9a-f]{64}$", x[["sha256"]], perl = TRUE))
     return("Asset$sha256: does not match required pattern")
   if (!is.null(x[["source_last_modified"]])) {
     .e <- checkmate::check_string(x[["source_last_modified"]], pattern = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$')
@@ -748,7 +830,7 @@ check_StationObservation <- function(x) {
     .e <- checkmate::check_string(x[["sampling_duration_iso"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("StationObservation$sampling_duration_iso: ", .e))
   }
-  if (!is.null(x[["sampling_duration_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["sampling_duration_iso"]]))
+  if (!is.null(x[["sampling_duration_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["sampling_duration_iso"]], perl = TRUE))
     return("StationObservation$sampling_duration_iso: does not match required pattern")
   if (is.null(x[["station_geom_wkt"]])) return("StationObservation: required slot `station_geom_wkt` is missing")
   if (!is.null(x[["station_geom_wkt"]])) {
@@ -1152,7 +1234,7 @@ check_HexCellValue <- function(x) {
     .e <- checkmate::check_string(x[["h3_cell"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("HexCellValue$h3_cell: ", .e))
   }
-  if (!is.null(x[["h3_cell"]]) && !grepl("^[0-9a-f]{15}$", x[["h3_cell"]]))
+  if (!is.null(x[["h3_cell"]]) && !grepl("^[0-9a-f]{15}$", x[["h3_cell"]], perl = TRUE))
     return("HexCellValue$h3_cell: does not match required pattern")
   if (is.null(x[["h3_resolution"]])) return("HexCellValue: required slot `h3_resolution` is missing")
   if (!is.null(x[["h3_resolution"]])) {
@@ -1359,8 +1441,148 @@ assert_VectorFeature <- function(x) {
   invisible(x)
 }
 
+#' Validate one ToolRun record
+#' One execution of one amadeus operation, with everything needed to decide whether it can be trusted and whether it can be skipped. "Whether it can be s
+check_ToolRun <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["id"]])) return("ToolRun: required slot `id` is missing")
+  if (!is.null(x[["id"]])) {
+    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("ToolRun$id: ", .e))
+  }
+  if (is.null(x[["run_role"]])) return("ToolRun: required slot `run_role` is missing")
+  if (!is.null(x[["run_role"]])) {
+    .e <- checkmate::check_choice(x[["run_role"]], c("download", "process", "calculate", "register", "harmonize", "import", "export"))
+    if (!isTRUE(.e)) return(paste0("ToolRun$run_role: ", .e))
+  }
+  if (is.null(x[["tool_name"]])) return("ToolRun: required slot `tool_name` is missing")
+  if (!is.null(x[["tool_name"]])) {
+    .e <- checkmate::check_string(x[["tool_name"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$tool_name: ", .e))
+  }
+  if (is.null(x[["tool_version"]])) return("ToolRun: required slot `tool_version` is missing")
+  if (!is.null(x[["tool_version"]])) {
+    .e <- checkmate::check_string(x[["tool_version"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$tool_version: ", .e))
+  }
+  if (!is.null(x[["function_name"]])) {
+    .e <- checkmate::check_string(x[["function_name"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$function_name: ", .e))
+  }
+  if (!is.null(x[["run_arguments"]])) {
+    .e <- checkmate::check_string(x[["run_arguments"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$run_arguments: ", .e))
+  }
+  if (!is.null(x[["container_image_repository"]])) {
+    .e <- checkmate::check_string(x[["container_image_repository"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$container_image_repository: ", .e))
+  }
+  if (!is.null(x[["container_image_digest"]])) {
+    .e <- checkmate::check_string(x[["container_image_digest"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$container_image_digest: ", .e))
+  }
+  if (!is.null(x[["container_image_digest"]]) && !grepl("^sha256:[0-9a-f]{64}$", x[["container_image_digest"]], perl = TRUE))
+    return("ToolRun$container_image_digest: does not match required pattern")
+  if (is.null(x[["run_timestamp_utc"]])) return("ToolRun: required slot `run_timestamp_utc` is missing")
+  if (!is.null(x[["run_timestamp_utc"]])) {
+    .e <- checkmate::check_string(x[["run_timestamp_utc"]], pattern = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$')
+    if (!isTRUE(.e)) return(paste0("ToolRun$run_timestamp_utc: ", .e))
+  }
+  if (!is.null(x[["run_duration_seconds"]])) {
+    .e <- checkmate::check_number(x[["run_duration_seconds"]])
+    if (!isTRUE(.e)) return(paste0("ToolRun$run_duration_seconds: ", .e))
+  }
+  if (!is.null(x[["run_environment"]])) {
+    .e <- checkmate::check_string(x[["run_environment"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$run_environment: ", .e))
+  }
+  if (!is.null(x[["input_file_sha256"]])) {
+    .e <- checkmate::check_string(x[["input_file_sha256"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$input_file_sha256: ", .e))
+  }
+  if (!is.null(x[["input_file_sha256"]]) && !grepl("^[0-9a-f]{64}$", x[["input_file_sha256"]], perl = TRUE))
+    return("ToolRun$input_file_sha256: does not match required pattern")
+  if (!is.null(x[["input_row_count"]])) {
+    .e <- checkmate::check_int(x[["input_row_count"]])
+    if (!isTRUE(.e)) return(paste0("ToolRun$input_row_count: ", .e))
+  }
+  if (!is.null(x[["output_file_sha256"]])) {
+    .e <- checkmate::check_string(x[["output_file_sha256"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$output_file_sha256: ", .e))
+  }
+  if (!is.null(x[["output_file_sha256"]]) && !grepl("^[0-9a-f]{64}$", x[["output_file_sha256"]], perl = TRUE))
+    return("ToolRun$output_file_sha256: does not match required pattern")
+  if (!is.null(x[["output_row_count"]])) {
+    .e <- checkmate::check_int(x[["output_row_count"]])
+    if (!isTRUE(.e)) return(paste0("ToolRun$output_row_count: ", .e))
+  }
+  if (is.null(x[["status"]])) return("ToolRun: required slot `status` is missing")
+  if (!is.null(x[["status"]])) {
+    .e <- checkmate::check_choice(x[["status"]], c("succeeded", "failed", "partial", "cancelled"))
+    if (!isTRUE(.e)) return(paste0("ToolRun$status: ", .e))
+  }
+  if (!is.null(x[["log_excerpt"]])) {
+    .e <- checkmate::check_string(x[["log_excerpt"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("ToolRun$log_excerpt: ", .e))
+  }
+  if (!is.null(x[["materialization_mode"]])) {
+    .e <- checkmate::check_choice(x[["materialization_mode"]], c("direct_remote_scan", "server_side_subset", "bounded_cache", "full_materialization"))
+    if (!isTRUE(.e)) return(paste0("ToolRun$materialization_mode: ", .e))
+  }
+  if (!is.null(x[["bytes_transferred"]])) {
+    .e <- checkmate::check_int(x[["bytes_transferred"]])
+    if (!isTRUE(.e)) return(paste0("ToolRun$bytes_transferred: ", .e))
+  }
+  if (!is.null(x[["request_count"]])) {
+    .e <- checkmate::check_int(x[["request_count"]])
+    if (!isTRUE(.e)) return(paste0("ToolRun$request_count: ", .e))
+  }
+  # rule 1: A successful processing or calculation run must state how many rows it produced. Row-count parity against a fr
+  if ((!is.null(x[["status"]]) && identical(as.character(x[["status"]]), "succeeded")) && (!is.null(x[["run_role"]]) && as.character(x[["run_role"]]) %in% c("process", "calculate"))) {
+    if (is.null(x[["output_row_count"]])) return("ToolRun: rule 1 — `output_row_count` is required here")
+  }
+  # rule 2: Anything downstream of download must name what it consumed. Without this the chain has a hole and provenance t
+  if ((!is.null(x[["run_role"]]) && as.character(x[["run_role"]]) %in% c("process", "calculate", "harmonize"))) {
+    if (is.null(x[["upstream_runs"]])) return("ToolRun: rule 2 — `upstream_runs` is required here")
+  }
+  # rule 3: A failed run must carry diagnostic output. "A failed run is diagnosable and can resume without corrupting acce
+  if ((!is.null(x[["status"]]) && identical(as.character(x[["status"]]), "failed"))) {
+    if (is.null(x[["log_excerpt"]])) return("ToolRun: rule 3 — `log_excerpt` is required here")
+  }
+  TRUE
+}
+
+assert_ToolRun <- function(x) {
+  res <- check_ToolRun(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
+#' Validate one ProvenanceChain record
+#' A materialised walk of `upstream_runs` from a derived value back to its terminus, plus what the terminus is. Stored rather than always recomputed beca
+check_ProvenanceChain <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["id"]])) return("ProvenanceChain: required slot `id` is missing")
+  if (!is.null(x[["id"]])) {
+    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("ProvenanceChain$id: ", .e))
+  }
+  if (is.null(x[["terminus_type"]])) return("ProvenanceChain: required slot `terminus_type` is missing")
+  if (!is.null(x[["terminus_type"]])) {
+    .e <- checkmate::check_choice(x[["terminus_type"]], c("raw_source_download", "remote_asset_scan", "pre_existing_curated_dataset", "externally_imported_dataset", "synthetic_data"))
+    if (!isTRUE(.e)) return(paste0("ProvenanceChain$terminus_type: ", .e))
+  }
+  TRUE
+}
+
+assert_ProvenanceChain <- function(x) {
+  res <- check_ProvenanceChain(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
 #' Validate one LocationSet record
-#' A user-supplied collection of locations — the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user 
+#' A user-supplied collection of locations — the `locs` argument, promoted to an entity. Carries the identifier field name (`locs_id`), the CRS the user
 check_LocationSet <- function(x) {
   if (!is.list(x)) return("expected a named list")
   if (is.null(x[["id"]])) return("LocationSet: required slot `id` is missing")
@@ -1386,7 +1608,7 @@ check_LocationSet <- function(x) {
     .e <- checkmate::check_string(x[["crs"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("LocationSet$crs: ", .e))
   }
-  if (!is.null(x[["crs"]]) && !grepl("^[A-Za-z]+:[0-9]+$", x[["crs"]]))
+  if (!is.null(x[["crs"]]) && !grepl("^[A-Za-z]+:[0-9]+$", x[["crs"]], perl = TRUE))
     return("LocationSet$crs: does not match required pattern")
   if (!is.null(x[["srid"]])) {
     .e <- checkmate::check_int(x[["srid"]])
@@ -1468,6 +1690,16 @@ check_Location <- function(x) {
     .e <- checkmate::check_choice(x[["target_geography_type"]], c("point_location", "buffered_point", "census_block_group", "census_tract", "zcta", "county", "state", "hydrologic_unit", "h3_hex", "grid_cell", "public_water_system"))
     if (!isTRUE(.e)) return(paste0("Location$target_geography_type: ", .e))
   }
+  if (!is.null(x[["location_privacy_role"]])) {
+    .e <- checkmate::check_choice(x[["location_privacy_role"]], c("unspecified", "public_site", "individual_or_household", "synthetic"))
+    if (!isTRUE(.e)) return(paste0("Location$location_privacy_role: ", .e))
+  }
+  if (!is.null(x[["location_precision_m"]])) {
+    .e <- checkmate::check_number(x[["location_precision_m"]])
+    if (!isTRUE(.e)) return(paste0("Location$location_precision_m: ", .e))
+  }
+  if (!is.null(x[["location_precision_m"]]) && x[["location_precision_m"]] < 0)
+    return("Location$location_precision_m: below minimum 0")
   TRUE
 }
 
@@ -1565,11 +1797,15 @@ check_ExtractionRequest <- function(x) {
     .e <- checkmate::check_string(x[["request_hash"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("ExtractionRequest$request_hash: ", .e))
   }
-  if (!is.null(x[["request_hash"]]) && !grepl("^[0-9a-f]{64}$", x[["request_hash"]]))
+  if (!is.null(x[["request_hash"]]) && !grepl("^[0-9a-f]{64}$", x[["request_hash"]], perl = TRUE))
     return("ExtractionRequest$request_hash: does not match required pattern")
   if (!is.null(x[["generated_sql"]])) {
     .e <- checkmate::check_string(x[["generated_sql"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("ExtractionRequest$generated_sql: ", .e))
+  }
+  if (!is.null(x[["privacy_declaration"]])) {
+    .e <- checkmate::check_string(x[["privacy_declaration"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("ExtractionRequest$privacy_declaration: ", .e))
   }
   # rule 1: A buffer without an aggregation method is ambiguous — there are now many source values per location and nothin
   if ((!is.null(x[["buffer_radius_m"]]) && x[["buffer_radius_m"]] >= 1e-06)) {
@@ -1588,6 +1824,215 @@ check_ExtractionRequest <- function(x) {
 
 assert_ExtractionRequest <- function(x) {
   res <- check_ExtractionRequest(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
+#' Validate one PrivacyDeclaration record
+#' Request-specific classification of a supplied LocationSet, kept outside public catalog bundles. Reuses PhiStatusEnum without defaulting an unassessed
+check_PrivacyDeclaration <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["id"]])) return("PrivacyDeclaration: required slot `id` is missing")
+  if (!is.null(x[["id"]])) {
+    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyDeclaration$id: ", .e))
+  }
+  if (is.null(x[["location_set"]])) return("PrivacyDeclaration: required slot `location_set` is missing")
+  if (!is.null(x[["location_set"]])) {
+    .e <- checkmate::check_string(x[["location_set"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyDeclaration$location_set: ", .e))
+  }
+  if (is.null(x[["input_phi_assessment_status"]])) return("PrivacyDeclaration: required slot `input_phi_assessment_status` is missing")
+  if (!is.null(x[["input_phi_assessment_status"]])) {
+    .e <- checkmate::check_choice(x[["input_phi_assessment_status"]], c("not_assessed", "in_progress", "assessed"))
+    if (!isTRUE(.e)) return(paste0("PrivacyDeclaration$input_phi_assessment_status: ", .e))
+  }
+  if (!is.null(x[["input_phi_status"]])) {
+    .e <- checkmate::check_choice(x[["input_phi_status"]], c("no_phi", "aggregated_no_phi", "phi_present"))
+    if (!isTRUE(.e)) return(paste0("PrivacyDeclaration$input_phi_status: ", .e))
+  }
+  if (is.null(x[["location_identifiability"]])) return("PrivacyDeclaration: required slot `location_identifiability` is missing")
+  if (!is.null(x[["location_identifiability"]])) {
+    .e <- checkmate::check_choice(x[["location_identifiability"]], c("not_assessed", "potentially_identifiable", "not_identifiable_in_assessed_context"))
+    if (!isTRUE(.e)) return(paste0("PrivacyDeclaration$location_identifiability: ", .e))
+  }
+  if (!is.null(x[["privacy_declaration_note"]])) {
+    .e <- checkmate::check_string(x[["privacy_declaration_note"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyDeclaration$privacy_declaration_note: ", .e))
+  }
+  if (!is.null(x[["assessment_evidence_reference"]])) {
+    .e <- checkmate::check_string(x[["assessment_evidence_reference"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyDeclaration$assessment_evidence_reference: ", .e))
+  }
+  # rule 1: An assessed input declaration requires an explicit classification and evidence.
+  if ((!is.null(x[["input_phi_assessment_status"]]) && identical(as.character(x[["input_phi_assessment_status"]]), "assessed"))) {
+    if (is.null(x[["input_phi_status"]])) return("PrivacyDeclaration: rule 1 — `input_phi_status` is required here")
+    if (is.null(x[["assessment_evidence_reference"]])) return("PrivacyDeclaration: rule 1 — `assessment_evidence_reference` is required here")
+  }
+  TRUE
+}
+
+assert_PrivacyDeclaration <- function(x) {
+  res <- check_PrivacyDeclaration(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
+#' Validate one PrivacyTransformation record
+#' One versioned action. ExtractionRequest lists requested actions in order; PrivacyReleaseAssessment independently lists actions actually performed. A p
+check_PrivacyTransformation <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["id"]])) return("PrivacyTransformation: required slot `id` is missing")
+  if (!is.null(x[["id"]])) {
+    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyTransformation$id: ", .e))
+  }
+  if (is.null(x[["privacy_transformation"]])) return("PrivacyTransformation: required slot `privacy_transformation` is missing")
+  if (!is.null(x[["privacy_transformation"]])) {
+    .e <- checkmate::check_choice(x[["privacy_transformation"]], c("none", "deterministic_geographic_jitter", "suppression", "aggregation_to_coarser_unit", "stochastic_perturbation"))
+    if (!isTRUE(.e)) return(paste0("PrivacyTransformation$privacy_transformation: ", .e))
+  }
+  if (is.null(x[["privacy_transformation_stage"]])) return("PrivacyTransformation: required slot `privacy_transformation_stage` is missing")
+  if (!is.null(x[["privacy_transformation_stage"]])) {
+    .e <- checkmate::check_choice(x[["privacy_transformation_stage"]], c("before_extraction", "after_extraction", "release_representation"))
+    if (!isTRUE(.e)) return(paste0("PrivacyTransformation$privacy_transformation_stage: ", .e))
+  }
+  if (is.null(x[["privacy_transformation_specification"]])) return("PrivacyTransformation: required slot `privacy_transformation_specification` is missing")
+  if (!is.null(x[["privacy_transformation_specification"]])) {
+    .e <- checkmate::check_string(x[["privacy_transformation_specification"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyTransformation$privacy_transformation_specification: ", .e))
+  }
+  if (!is.null(x[["privacy_transformation_note"]])) {
+    .e <- checkmate::check_string(x[["privacy_transformation_note"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyTransformation$privacy_transformation_note: ", .e))
+  }
+  if (!is.null(x[["processing_run"]])) {
+    .e <- checkmate::check_string(x[["processing_run"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyTransformation$processing_run: ", .e))
+  }
+  TRUE
+}
+
+assert_PrivacyTransformation <- function(x) {
+  res <- check_PrivacyTransformation(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
+#' Validate one PrivacyReleaseAssessment record
+#' Assessment and authorization metadata for one exact output artifact, request, input declaration and intended audience. Separate from source classifica
+check_PrivacyReleaseAssessment <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["id"]])) return("PrivacyReleaseAssessment: required slot `id` is missing")
+  if (!is.null(x[["id"]])) {
+    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$id: ", .e))
+  }
+  if (is.null(x[["extraction_request"]])) return("PrivacyReleaseAssessment: required slot `extraction_request` is missing")
+  if (!is.null(x[["extraction_request"]])) {
+    .e <- checkmate::check_string(x[["extraction_request"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$extraction_request: ", .e))
+  }
+  if (is.null(x[["privacy_declaration"]])) return("PrivacyReleaseAssessment: required slot `privacy_declaration` is missing")
+  if (!is.null(x[["privacy_declaration"]])) {
+    .e <- checkmate::check_string(x[["privacy_declaration"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$privacy_declaration: ", .e))
+  }
+  if (!is.null(x[["privacy_transformation_deviation_note"]])) {
+    .e <- checkmate::check_string(x[["privacy_transformation_deviation_note"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$privacy_transformation_deviation_note: ", .e))
+  }
+  if (is.null(x[["output_artifact_reference"]])) return("PrivacyReleaseAssessment: required slot `output_artifact_reference` is missing")
+  if (!is.null(x[["output_artifact_reference"]])) {
+    .e <- checkmate::check_string(x[["output_artifact_reference"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$output_artifact_reference: ", .e))
+  }
+  if (!is.null(x[["output_artifact_sha256"]])) {
+    .e <- checkmate::check_string(x[["output_artifact_sha256"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$output_artifact_sha256: ", .e))
+  }
+  if (!is.null(x[["output_artifact_sha256"]]) && !grepl("^[0-9a-f]{64}$", x[["output_artifact_sha256"]], perl = TRUE))
+    return("PrivacyReleaseAssessment$output_artifact_sha256: does not match required pattern")
+  if (!is.null(x[["output_phi_status"]])) {
+    .e <- checkmate::check_choice(x[["output_phi_status"]], c("no_phi", "aggregated_no_phi", "phi_present"))
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$output_phi_status: ", .e))
+  }
+  if (is.null(x[["release_assessment_status"]])) return("PrivacyReleaseAssessment: required slot `release_assessment_status` is missing")
+  if (!is.null(x[["release_assessment_status"]])) {
+    .e <- checkmate::check_choice(x[["release_assessment_status"]], c("not_assessed", "in_progress", "assessed"))
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$release_assessment_status: ", .e))
+  }
+  if (is.null(x[["release_decision"]])) return("PrivacyReleaseAssessment: required slot `release_decision` is missing")
+  if (!is.null(x[["release_decision"]])) {
+    .e <- checkmate::check_choice(x[["release_decision"]], c("pending", "denied", "approved"))
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$release_decision: ", .e))
+  }
+  if (is.null(x[["release_audience"]])) return("PrivacyReleaseAssessment: required slot `release_audience` is missing")
+  if (!is.null(x[["release_audience"]])) {
+    .e <- checkmate::check_string(x[["release_audience"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$release_audience: ", .e))
+  }
+  if (is.null(x[["release_access_level"]])) return("PrivacyReleaseAssessment: required slot `release_access_level` is missing")
+  if (!is.null(x[["release_access_level"]])) {
+    .e <- checkmate::check_choice(x[["release_access_level"]], c("restricted", "public"))
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$release_access_level: ", .e))
+  }
+  if (!is.null(x[["release_assessment_method"]])) {
+    .e <- checkmate::check_string(x[["release_assessment_method"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$release_assessment_method: ", .e))
+  }
+  if (!is.null(x[["release_assessment_scope"]])) {
+    .e <- checkmate::check_string(x[["release_assessment_scope"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$release_assessment_scope: ", .e))
+  }
+  if (!is.null(x[["assessment_evidence_reference"]])) {
+    .e <- checkmate::check_string(x[["assessment_evidence_reference"]], min.chars = 1)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$assessment_evidence_reference: ", .e))
+  }
+  if (!is.null(x[["assessed_by"]])) {
+    .e <- checkmate::check_string(x[["assessed_by"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$assessed_by: ", .e))
+  }
+  if (!is.null(x[["assessed_at"]])) {
+    .e <- checkmate::check_string(x[["assessed_at"]], pattern = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$')
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$assessed_at: ", .e))
+  }
+  if (!is.null(x[["released_geography_type"]])) {
+    .e <- checkmate::check_choice(x[["released_geography_type"]], c("point_location", "buffered_point", "census_block_group", "census_tract", "zcta", "county", "state", "hydrologic_unit", "h3_hex", "grid_cell", "public_water_system"))
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$released_geography_type: ", .e))
+  }
+  if (!is.null(x[["released_spatial_resolution_m"]])) {
+    .e <- checkmate::check_number(x[["released_spatial_resolution_m"]])
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$released_spatial_resolution_m: ", .e))
+  }
+  if (!is.null(x[["released_spatial_resolution_m"]]) && x[["released_spatial_resolution_m"]] < 0)
+    return("PrivacyReleaseAssessment$released_spatial_resolution_m: below minimum 0")
+  if (!is.null(x[["released_temporal_resolution_iso"]])) {
+    .e <- checkmate::check_string(x[["released_temporal_resolution_iso"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("PrivacyReleaseAssessment$released_temporal_resolution_iso: ", .e))
+  }
+  if (!is.null(x[["released_temporal_resolution_iso"]]) && !grepl("^P(?!$)(\\d+Y)?(\\d+M)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$", x[["released_temporal_resolution_iso"]], perl = TRUE))
+    return("PrivacyReleaseAssessment$released_temporal_resolution_iso: does not match required pattern")
+  # rule 1: A completed assessment is bound to an artifact and documented evidence.
+  if ((!is.null(x[["release_assessment_status"]]) && identical(as.character(x[["release_assessment_status"]]), "assessed"))) {
+    if (is.null(x[["assessed_by"]])) return("PrivacyReleaseAssessment: rule 1 — `assessed_by` is required here")
+    if (is.null(x[["assessed_at"]])) return("PrivacyReleaseAssessment: rule 1 — `assessed_at` is required here")
+    if (is.null(x[["assessment_evidence_reference"]])) return("PrivacyReleaseAssessment: rule 1 — `assessment_evidence_reference` is required here")
+    if (is.null(x[["release_assessment_method"]])) return("PrivacyReleaseAssessment: rule 1 — `release_assessment_method` is required here")
+    if (is.null(x[["release_assessment_scope"]])) return("PrivacyReleaseAssessment: rule 1 — `release_assessment_scope` is required here")
+    if (is.null(x[["output_artifact_sha256"]])) return("PrivacyReleaseAssessment: rule 1 — `output_artifact_sha256` is required here")
+    if (is.null(x[["output_phi_status"]])) return("PrivacyReleaseAssessment: rule 1 — `output_phi_status` is required here")
+  }
+  # rule 2: A pending or in-progress assessment cannot authorize release.
+  if ((!is.null(x[["release_decision"]]) && identical(as.character(x[["release_decision"]]), "approved"))) {
+    if (is.null(x[["release_assessment_status"]]) || !identical(as.character(x[["release_assessment_status"]]), "assessed"))
+      return("PrivacyReleaseAssessment: rule 2 — `release_assessment_status` must be 'assessed' here")
+  }
+  TRUE
+}
+
+assert_PrivacyReleaseAssessment <- function(x) {
+  res <- check_PrivacyReleaseAssessment(x)
   if (!isTRUE(res)) stop(res, call. = FALSE)
   invisible(x)
 }
@@ -1749,149 +2194,10 @@ assert_AmbientValueAtLocation <- function(x) {
   invisible(x)
 }
 
-#' Validate one ToolRun record
-#' One execution of one amadeus operation, with everything needed to decide whether it can be trusted and whether it can be skipped. "Whether it can be s
-check_ToolRun <- function(x) {
-  if (!is.list(x)) return("expected a named list")
-  if (is.null(x[["id"]])) return("ToolRun: required slot `id` is missing")
-  if (!is.null(x[["id"]])) {
-    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
-    if (!isTRUE(.e)) return(paste0("ToolRun$id: ", .e))
-  }
-  if (is.null(x[["run_role"]])) return("ToolRun: required slot `run_role` is missing")
-  if (!is.null(x[["run_role"]])) {
-    .e <- checkmate::check_choice(x[["run_role"]], c("download", "process", "calculate", "register", "harmonize", "import", "export"))
-    if (!isTRUE(.e)) return(paste0("ToolRun$run_role: ", .e))
-  }
-  if (is.null(x[["tool_name"]])) return("ToolRun: required slot `tool_name` is missing")
-  if (!is.null(x[["tool_name"]])) {
-    .e <- checkmate::check_string(x[["tool_name"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$tool_name: ", .e))
-  }
-  if (is.null(x[["tool_version"]])) return("ToolRun: required slot `tool_version` is missing")
-  if (!is.null(x[["tool_version"]])) {
-    .e <- checkmate::check_string(x[["tool_version"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$tool_version: ", .e))
-  }
-  if (!is.null(x[["function_name"]])) {
-    .e <- checkmate::check_string(x[["function_name"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$function_name: ", .e))
-  }
-  if (!is.null(x[["run_arguments"]])) {
-    .e <- checkmate::check_string(x[["run_arguments"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$run_arguments: ", .e))
-  }
-  if (!is.null(x[["container_image_repository"]])) {
-    .e <- checkmate::check_string(x[["container_image_repository"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$container_image_repository: ", .e))
-  }
-  if (!is.null(x[["container_image_digest"]])) {
-    .e <- checkmate::check_string(x[["container_image_digest"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$container_image_digest: ", .e))
-  }
-  if (!is.null(x[["container_image_digest"]]) && !grepl("^sha256:[0-9a-f]{64}$", x[["container_image_digest"]]))
-    return("ToolRun$container_image_digest: does not match required pattern")
-  if (is.null(x[["run_timestamp_utc"]])) return("ToolRun: required slot `run_timestamp_utc` is missing")
-  if (!is.null(x[["run_timestamp_utc"]])) {
-    .e <- checkmate::check_string(x[["run_timestamp_utc"]], pattern = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$')
-    if (!isTRUE(.e)) return(paste0("ToolRun$run_timestamp_utc: ", .e))
-  }
-  if (!is.null(x[["run_duration_seconds"]])) {
-    .e <- checkmate::check_number(x[["run_duration_seconds"]])
-    if (!isTRUE(.e)) return(paste0("ToolRun$run_duration_seconds: ", .e))
-  }
-  if (!is.null(x[["run_environment"]])) {
-    .e <- checkmate::check_string(x[["run_environment"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$run_environment: ", .e))
-  }
-  if (!is.null(x[["input_file_sha256"]])) {
-    .e <- checkmate::check_string(x[["input_file_sha256"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$input_file_sha256: ", .e))
-  }
-  if (!is.null(x[["input_file_sha256"]]) && !grepl("^[0-9a-f]{64}$", x[["input_file_sha256"]]))
-    return("ToolRun$input_file_sha256: does not match required pattern")
-  if (!is.null(x[["input_row_count"]])) {
-    .e <- checkmate::check_int(x[["input_row_count"]])
-    if (!isTRUE(.e)) return(paste0("ToolRun$input_row_count: ", .e))
-  }
-  if (!is.null(x[["output_file_sha256"]])) {
-    .e <- checkmate::check_string(x[["output_file_sha256"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$output_file_sha256: ", .e))
-  }
-  if (!is.null(x[["output_file_sha256"]]) && !grepl("^[0-9a-f]{64}$", x[["output_file_sha256"]]))
-    return("ToolRun$output_file_sha256: does not match required pattern")
-  if (!is.null(x[["output_row_count"]])) {
-    .e <- checkmate::check_int(x[["output_row_count"]])
-    if (!isTRUE(.e)) return(paste0("ToolRun$output_row_count: ", .e))
-  }
-  if (is.null(x[["status"]])) return("ToolRun: required slot `status` is missing")
-  if (!is.null(x[["status"]])) {
-    .e <- checkmate::check_choice(x[["status"]], c("succeeded", "failed", "partial", "cancelled"))
-    if (!isTRUE(.e)) return(paste0("ToolRun$status: ", .e))
-  }
-  if (!is.null(x[["log_excerpt"]])) {
-    .e <- checkmate::check_string(x[["log_excerpt"]], na.ok = FALSE)
-    if (!isTRUE(.e)) return(paste0("ToolRun$log_excerpt: ", .e))
-  }
-  if (!is.null(x[["materialization_mode"]])) {
-    .e <- checkmate::check_choice(x[["materialization_mode"]], c("direct_remote_scan", "server_side_subset", "bounded_cache", "full_materialization"))
-    if (!isTRUE(.e)) return(paste0("ToolRun$materialization_mode: ", .e))
-  }
-  if (!is.null(x[["bytes_transferred"]])) {
-    .e <- checkmate::check_int(x[["bytes_transferred"]])
-    if (!isTRUE(.e)) return(paste0("ToolRun$bytes_transferred: ", .e))
-  }
-  if (!is.null(x[["request_count"]])) {
-    .e <- checkmate::check_int(x[["request_count"]])
-    if (!isTRUE(.e)) return(paste0("ToolRun$request_count: ", .e))
-  }
-  # rule 1: A successful processing or calculation run must state how many rows it produced. Row-count parity against a fr
-  if ((!is.null(x[["status"]]) && identical(as.character(x[["status"]]), "succeeded")) && (!is.null(x[["run_role"]]) && as.character(x[["run_role"]]) %in% c("process", "calculate"))) {
-    if (is.null(x[["output_row_count"]])) return("ToolRun: rule 1 — `output_row_count` is required here")
-  }
-  # rule 2: Anything downstream of download must name what it consumed. Without this the chain has a hole and provenance t
-  if ((!is.null(x[["run_role"]]) && as.character(x[["run_role"]]) %in% c("process", "calculate", "harmonize"))) {
-    if (is.null(x[["upstream_runs"]])) return("ToolRun: rule 2 — `upstream_runs` is required here")
-  }
-  # rule 3: A failed run must carry diagnostic output. "A failed run is diagnosable and can resume without corrupting acce
-  if ((!is.null(x[["status"]]) && identical(as.character(x[["status"]]), "failed"))) {
-    if (is.null(x[["log_excerpt"]])) return("ToolRun: rule 3 — `log_excerpt` is required here")
-  }
-  TRUE
-}
-
-assert_ToolRun <- function(x) {
-  res <- check_ToolRun(x)
-  if (!isTRUE(res)) stop(res, call. = FALSE)
-  invisible(x)
-}
-
-#' Validate one ProvenanceChain record
-#' A materialised walk of `upstream_runs` from a derived value back to its terminus, plus what the terminus is. Stored rather than always recomputed beca
-check_ProvenanceChain <- function(x) {
-  if (!is.list(x)) return("expected a named list")
-  if (is.null(x[["id"]])) return("ProvenanceChain: required slot `id` is missing")
-  if (!is.null(x[["id"]])) {
-    .e <- checkmate::check_string(x[["id"]], min.chars = 1)
-    if (!isTRUE(.e)) return(paste0("ProvenanceChain$id: ", .e))
-  }
-  if (is.null(x[["terminus_type"]])) return("ProvenanceChain: required slot `terminus_type` is missing")
-  if (!is.null(x[["terminus_type"]])) {
-    .e <- checkmate::check_choice(x[["terminus_type"]], c("raw_source_download", "remote_asset_scan", "pre_existing_curated_dataset", "externally_imported_dataset", "synthetic_data"))
-    if (!isTRUE(.e)) return(paste0("ProvenanceChain$terminus_type: ", .e))
-  }
-  TRUE
-}
-
-assert_ProvenanceChain <- function(x) {
-  res <- check_ProvenanceChain(x)
-  if (!isTRUE(res)) stop(res, call. = FALSE)
-  invisible(x)
-}
-
 #' Every generated validator, by class name
 amadeus_validators <- list(
   "DataSource" = check_DataSource,
+  "PrivacyProfile" = check_PrivacyProfile,
   "Product" = check_Product,
   "GridDefinition" = check_GridDefinition,
   "CanonicalVariable" = check_CanonicalVariable,
@@ -1903,12 +2209,15 @@ amadeus_validators <- list(
   "AreaValue" = check_AreaValue,
   "HexCellValue" = check_HexCellValue,
   "VectorFeature" = check_VectorFeature,
+  "ToolRun" = check_ToolRun,
+  "ProvenanceChain" = check_ProvenanceChain,
   "LocationSet" = check_LocationSet,
   "Location" = check_Location,
   "ExtractionRequest" = check_ExtractionRequest,
-  "AmbientValueAtLocation" = check_AmbientValueAtLocation,
-  "ToolRun" = check_ToolRun,
-  "ProvenanceChain" = check_ProvenanceChain
+  "PrivacyDeclaration" = check_PrivacyDeclaration,
+  "PrivacyTransformation" = check_PrivacyTransformation,
+  "PrivacyReleaseAssessment" = check_PrivacyReleaseAssessment,
+  "AmbientValueAtLocation" = check_AmbientValueAtLocation
 )
 
 #' Validate a data.frame of records against a class

@@ -1,0 +1,32 @@
+# Synthetic structural illustration; no PHI classification or release approval.
+schema_version: 0.1.0
+privacy_profiles:
+- id: amadeus:privacy_profile/location_linked_environmental_data_v1
+  name: location_linked_environmental_data_v1
+  privacy_profile_version: '1'
+  description: Public metadata placeholder for environmental source Products and future location-linked
+    use. No source PHI finding, completed disclosure assessment, transformation, or release approval is
+    asserted. Native spatial support, grid and temporal resolution remain on each Product and GridDefinition.
+    No participant coordinates, household identifiers or restricted records belong here.
+  source_phi_assessment_status: not_assessed
+  source_phi_status_missing_reason: under_investigation
+  location_identifiability: not_assessed
+  linkage_risk_assessment_status: not_assessed
+  linkage_risk_note: Public environmental information does not automatically constitute PHI. Values, time
+    series, geographic memberships, distances and combinations of datasets may constrain individual or
+    household locations when linked to precise residences or auxiliary information. Assess the actual
+    joint output, audience and threat model; native cell size and masking alone do not establish privacy
+    or de-identification. Classification of source data does not classify a location-linked derivative.
+  location_linked_review_required: true
+data_sources:
+- id: example:source/public
+  name: illustrative_public_environmental_source
+  description: Synthetic catalog example, not participant data.
+products:
+- id: example:product/public
+  name: illustrative_monitor_product
+  data_source: example:source/public
+  spatial_support_type: monitoring_station
+  temporal_resolution: daily
+  day_boundary_convention: utc_midnight
+  privacy_profile: amadeus:privacy_profile/location_linked_environmental_data_v1

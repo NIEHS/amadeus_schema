@@ -1,5 +1,4 @@
 # Auto generated from amadeus_schema.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-10-20T19:24:10
 # Schema: amadeus-schema
 #
 # id: https://w3id.org/niehs/amadeus
@@ -107,7 +106,7 @@ from rdflib import (
 from linkml_runtime.linkml_model.types import Boolean, Date, Datetime, Float, Integer, String, Uri, Uriorcurie
 from linkml_runtime.utils.metamodelcore import Bool, URI, URIorCURIE, XSDDate, XSDDateTime
 
-metamodel_version = "1.11.0"
+metamodel_version = "1.12.0"
 version = "0.1.0"
 
 # Namespaces
@@ -157,6 +156,10 @@ class H3CellIndex(String):
 
 # Class references
 class DataSourceId(URIorCURIE):
+    pass
+
+
+class PrivacyProfileId(URIorCURIE):
     pass
 
 
@@ -216,6 +219,18 @@ class ExtractionRequestId(URIorCURIE):
     pass
 
 
+class PrivacyDeclarationId(URIorCURIE):
+    pass
+
+
+class PrivacyTransformationId(URIorCURIE):
+    pass
+
+
+class PrivacyReleaseAssessmentId(URIorCURIE):
+    pass
+
+
 class AmbientValueAtLocationId(AmbientValueId):
     pass
 
@@ -236,6 +251,9 @@ class AmadeusDatabase(YAMLRoot):
     which to reach every table.
     All collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a
     full instance.
+    PrivacyProfile is public source metadata. PrivacyDeclaration, PrivacyTransformation and PrivacyReleaseAssessment
+    are restricted instance records. The public catalog workflow rejects restricted collections; root-schema validity
+    alone is not publication authorization.
     """
     _inherited_slots: ClassVar[list[str]] = []
 
@@ -262,6 +280,10 @@ class AmadeusDatabase(YAMLRoot):
     ambient_values_at_location: Optional[Union[dict[Union[str, AmbientValueAtLocationId], Union[dict, "AmbientValueAtLocation"]], list[Union[dict, "AmbientValueAtLocation"]]]] = empty_dict()
     tool_runs: Optional[Union[dict[Union[str, ToolRunId], Union[dict, "ToolRun"]], list[Union[dict, "ToolRun"]]]] = empty_dict()
     provenance_chains: Optional[Union[dict[Union[str, ProvenanceChainId], Union[dict, "ProvenanceChain"]], list[Union[dict, "ProvenanceChain"]]]] = empty_dict()
+    privacy_profiles: Optional[Union[dict[Union[str, PrivacyProfileId], Union[dict, "PrivacyProfile"]], list[Union[dict, "PrivacyProfile"]]]] = empty_dict()
+    privacy_declarations: Optional[Union[dict[Union[str, PrivacyDeclarationId], Union[dict, "PrivacyDeclaration"]], list[Union[dict, "PrivacyDeclaration"]]]] = empty_dict()
+    privacy_transformations: Optional[Union[dict[Union[str, PrivacyTransformationId], Union[dict, "PrivacyTransformation"]], list[Union[dict, "PrivacyTransformation"]]]] = empty_dict()
+    privacy_release_assessments: Optional[Union[dict[Union[str, PrivacyReleaseAssessmentId], Union[dict, "PrivacyReleaseAssessment"]], list[Union[dict, "PrivacyReleaseAssessment"]]]] = empty_dict()
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self._is_empty(self.schema_version):
@@ -302,6 +324,14 @@ class AmadeusDatabase(YAMLRoot):
         self._normalize_inlined_as_list(slot_name="tool_runs", slot_type=ToolRun, key_name="id", keyed=True)
 
         self._normalize_inlined_as_list(slot_name="provenance_chains", slot_type=ProvenanceChain, key_name="id", keyed=True)
+
+        self._normalize_inlined_as_list(slot_name="privacy_profiles", slot_type=PrivacyProfile, key_name="id", keyed=True)
+
+        self._normalize_inlined_as_list(slot_name="privacy_declarations", slot_type=PrivacyDeclaration, key_name="id", keyed=True)
+
+        self._normalize_inlined_as_list(slot_name="privacy_transformations", slot_type=PrivacyTransformation, key_name="id", keyed=True)
+
+        self._normalize_inlined_as_list(slot_name="privacy_release_assessments", slot_type=PrivacyReleaseAssessment, key_name="id", keyed=True)
 
         super().__post_init__(**kwargs)
 
@@ -385,6 +415,88 @@ class DataSource(YAMLRoot):
 
 
 @dataclass(repr=False)
+class PrivacyProfile(YAMLRoot):
+    """
+    Reusable public metadata about source classification and potential location-linkage concerns. Contains no
+    individual locations, linkage keys, transformation secrets or release records. Product and its grid retain
+    authoritative spatial and temporal resolution; this profile does not duplicate those values. Source PHI status
+    does not propagate to location-linked results. Presence of a profile is not a risk assessment.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = AMADEUS["PrivacyProfile"]
+    class_class_curie: ClassVar[str] = "amadeus:PrivacyProfile"
+    class_name: ClassVar[str] = "PrivacyProfile"
+    class_model_uri: ClassVar[URIRef] = AMADEUS.PrivacyProfile
+
+    id: Union[str, PrivacyProfileId] = None
+    name: str = None
+    privacy_profile_version: str = None
+    source_phi_assessment_status: Union[str, "PrivacyAssessmentStatusEnum"] = None
+    location_identifiability: Union[str, "LocationIdentifiabilityEnum"] = None
+    linkage_risk_assessment_status: Union[str, "PrivacyAssessmentStatusEnum"] = None
+    location_linked_review_required: Union[bool, Bool] = None
+    description: Optional[str] = None
+    source_phi_status: Optional[Union[str, "PhiStatusEnum"]] = None
+    source_phi_status_missing_reason: Optional[Union[str, "MissingReasonEnum"]] = None
+    assessment_evidence_reference: Optional[Union[str, URI]] = None
+    linkage_risk_note: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, PrivacyProfileId):
+            self.id = PrivacyProfileId(self.id)
+
+        if self._is_empty(self.name):
+            self.MissingRequiredField("name")
+        if not isinstance(self.name, str):
+            self.name = str(self.name)
+
+        if self._is_empty(self.privacy_profile_version):
+            self.MissingRequiredField("privacy_profile_version")
+        if not isinstance(self.privacy_profile_version, str):
+            self.privacy_profile_version = str(self.privacy_profile_version)
+
+        if self._is_empty(self.source_phi_assessment_status):
+            self.MissingRequiredField("source_phi_assessment_status")
+        if not isinstance(self.source_phi_assessment_status, PrivacyAssessmentStatusEnum):
+            self.source_phi_assessment_status = PrivacyAssessmentStatusEnum(self.source_phi_assessment_status)
+
+        if self._is_empty(self.location_identifiability):
+            self.MissingRequiredField("location_identifiability")
+        if not isinstance(self.location_identifiability, LocationIdentifiabilityEnum):
+            self.location_identifiability = LocationIdentifiabilityEnum(self.location_identifiability)
+
+        if self._is_empty(self.linkage_risk_assessment_status):
+            self.MissingRequiredField("linkage_risk_assessment_status")
+        if not isinstance(self.linkage_risk_assessment_status, PrivacyAssessmentStatusEnum):
+            self.linkage_risk_assessment_status = PrivacyAssessmentStatusEnum(self.linkage_risk_assessment_status)
+
+        if self._is_empty(self.location_linked_review_required):
+            self.MissingRequiredField("location_linked_review_required")
+        if not isinstance(self.location_linked_review_required, Bool):
+            self.location_linked_review_required = Bool(self.location_linked_review_required)
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        if self.source_phi_status is not None and not isinstance(self.source_phi_status, PhiStatusEnum):
+            self.source_phi_status = PhiStatusEnum(self.source_phi_status)
+
+        if self.source_phi_status_missing_reason is not None and not isinstance(self.source_phi_status_missing_reason, MissingReasonEnum):
+            self.source_phi_status_missing_reason = MissingReasonEnum(self.source_phi_status_missing_reason)
+
+        if self.assessment_evidence_reference is not None and not isinstance(self.assessment_evidence_reference, URI):
+            self.assessment_evidence_reference = URI(self.assessment_evidence_reference)
+
+        if self.linkage_risk_note is not None and not isinstance(self.linkage_risk_note, str):
+            self.linkage_risk_note = str(self.linkage_risk_note)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
 class Product(YAMLRoot):
     """
     A specific, versioned data product from a source — the unit a user actually requests, and the unit that carries
@@ -438,6 +550,7 @@ class Product(YAMLRoot):
     amadeus_calculate_covariate: Optional[str] = None
     supports_server_side_subset: Optional[Union[bool, Bool]] = None
     stac_collection_id: Optional[str] = None
+    privacy_profile: Optional[Union[str, PrivacyProfileId]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self._is_empty(self.id):
@@ -558,6 +671,9 @@ class Product(YAMLRoot):
 
         if self.stac_collection_id is not None and not isinstance(self.stac_collection_id, str):
             self.stac_collection_id = str(self.stac_collection_id)
+
+        if self.privacy_profile is not None and not isinstance(self.privacy_profile, PrivacyProfileId):
+            self.privacy_profile = PrivacyProfileId(self.privacy_profile)
 
         super().__post_init__(**kwargs)
 
@@ -1543,9 +1659,9 @@ class LocationSet(YAMLRoot):
     """
     A user-supplied collection of locations — the `locs` argument, promoted to an entity. Carries the identifier field
     name (`locs_id`), the CRS the user supplied, and a PHI declaration.
-    `phi_status` defaults to `no_phi` and is the gate on everything else: if a location set is flagged, results
-    derived from it must not be written to shared catalog tables or embedded in an exported EnVar record, whose
-    `phi_status` is a required field precisely so this cannot be left implicit.
+    The legacy `phi_status` default remains for compatibility; it is not evidence of assessment. New privacy-aware
+    requests use a separate PrivacyDeclaration with explicit assessment status and evidence. These schema records
+    describe handling requirements, not access controls.
     """
     _inherited_slots: ClassVar[list[str]] = []
 
@@ -1636,6 +1752,8 @@ class Location(YAMLRoot):
     valid_from: Optional[Union[str, XSDDate]] = None
     valid_to: Optional[Union[str, XSDDate]] = None
     target_geography_type: Optional[Union[str, "TargetGeographyTypeEnum"]] = None
+    location_privacy_role: Optional[Union[str, "LocationPrivacyRoleEnum"]] = None
+    location_precision_m: Optional[float] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self._is_empty(self.id):
@@ -1672,6 +1790,12 @@ class Location(YAMLRoot):
 
         if self.target_geography_type is not None and not isinstance(self.target_geography_type, TargetGeographyTypeEnum):
             self.target_geography_type = TargetGeographyTypeEnum(self.target_geography_type)
+
+        if self.location_privacy_role is not None and not isinstance(self.location_privacy_role, LocationPrivacyRoleEnum):
+            self.location_privacy_role = LocationPrivacyRoleEnum(self.location_privacy_role)
+
+        if self.location_precision_m is not None and not isinstance(self.location_precision_m, float):
+            self.location_precision_m = float(self.location_precision_m)
 
         super().__post_init__(**kwargs)
 
@@ -1715,6 +1839,8 @@ class ExtractionRequest(YAMLRoot):
     requested_by: Optional[str] = None
     request_timestamp_utc: Optional[Union[str, XSDDateTime]] = None
     generated_sql: Optional[str] = None
+    privacy_declaration: Optional[Union[str, PrivacyDeclarationId]] = None
+    requested_privacy_transformations: Optional[Union[Union[str, PrivacyTransformationId], list[Union[str, PrivacyTransformationId]]]] = empty_list()
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self._is_empty(self.id):
@@ -1800,6 +1926,236 @@ class ExtractionRequest(YAMLRoot):
 
         if self.generated_sql is not None and not isinstance(self.generated_sql, str):
             self.generated_sql = str(self.generated_sql)
+
+        if self.privacy_declaration is not None and not isinstance(self.privacy_declaration, PrivacyDeclarationId):
+            self.privacy_declaration = PrivacyDeclarationId(self.privacy_declaration)
+
+        if not isinstance(self.requested_privacy_transformations, list):
+            self.requested_privacy_transformations = [self.requested_privacy_transformations] if self.requested_privacy_transformations is not None else []
+        self.requested_privacy_transformations = [v if isinstance(v, PrivacyTransformationId) else PrivacyTransformationId(v) for v in self.requested_privacy_transformations]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class PrivacyDeclaration(YAMLRoot):
+    """
+    Request-specific classification of a supplied LocationSet, kept outside public catalog bundles. Reuses
+    PhiStatusEnum without defaulting an unassessed input to no_phi. References may themselves be sensitive.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = AMADEUS["PrivacyDeclaration"]
+    class_class_curie: ClassVar[str] = "amadeus:PrivacyDeclaration"
+    class_name: ClassVar[str] = "PrivacyDeclaration"
+    class_model_uri: ClassVar[URIRef] = AMADEUS.PrivacyDeclaration
+
+    id: Union[str, PrivacyDeclarationId] = None
+    location_set: Union[str, LocationSetId] = None
+    input_phi_assessment_status: Union[str, "PrivacyAssessmentStatusEnum"] = None
+    location_identifiability: Union[str, "LocationIdentifiabilityEnum"] = None
+    input_phi_status: Optional[Union[str, "PhiStatusEnum"]] = None
+    privacy_declaration_note: Optional[str] = None
+    assessment_evidence_reference: Optional[Union[str, URI]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, PrivacyDeclarationId):
+            self.id = PrivacyDeclarationId(self.id)
+
+        if self._is_empty(self.location_set):
+            self.MissingRequiredField("location_set")
+        if not isinstance(self.location_set, LocationSetId):
+            self.location_set = LocationSetId(self.location_set)
+
+        if self._is_empty(self.input_phi_assessment_status):
+            self.MissingRequiredField("input_phi_assessment_status")
+        if not isinstance(self.input_phi_assessment_status, PrivacyAssessmentStatusEnum):
+            self.input_phi_assessment_status = PrivacyAssessmentStatusEnum(self.input_phi_assessment_status)
+
+        if self._is_empty(self.location_identifiability):
+            self.MissingRequiredField("location_identifiability")
+        if not isinstance(self.location_identifiability, LocationIdentifiabilityEnum):
+            self.location_identifiability = LocationIdentifiabilityEnum(self.location_identifiability)
+
+        if self.input_phi_status is not None and not isinstance(self.input_phi_status, PhiStatusEnum):
+            self.input_phi_status = PhiStatusEnum(self.input_phi_status)
+
+        if self.privacy_declaration_note is not None and not isinstance(self.privacy_declaration_note, str):
+            self.privacy_declaration_note = str(self.privacy_declaration_note)
+
+        if self.assessment_evidence_reference is not None and not isinstance(self.assessment_evidence_reference, URI):
+            self.assessment_evidence_reference = URI(self.assessment_evidence_reference)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class PrivacyTransformation(YAMLRoot):
+    """
+    One versioned action. ExtractionRequest lists requested actions in order; PrivacyReleaseAssessment independently
+    lists actions actually performed. A performed action must reference a successful ToolRun. Restricted parameters
+    may reference controlled configuration; never publish seeds, displacement vectors, participant keys or reversal
+    mappings.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = AMADEUS["PrivacyTransformation"]
+    class_class_curie: ClassVar[str] = "amadeus:PrivacyTransformation"
+    class_name: ClassVar[str] = "PrivacyTransformation"
+    class_model_uri: ClassVar[URIRef] = AMADEUS.PrivacyTransformation
+
+    id: Union[str, PrivacyTransformationId] = None
+    privacy_transformation: Union[str, "PrivacyTransformationEnum"] = None
+    privacy_transformation_stage: Union[str, "PrivacyTransformationStageEnum"] = None
+    privacy_transformation_specification: str = None
+    privacy_transformation_note: Optional[str] = None
+    processing_run: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, PrivacyTransformationId):
+            self.id = PrivacyTransformationId(self.id)
+
+        if self._is_empty(self.privacy_transformation):
+            self.MissingRequiredField("privacy_transformation")
+        if not isinstance(self.privacy_transformation, PrivacyTransformationEnum):
+            self.privacy_transformation = PrivacyTransformationEnum(self.privacy_transformation)
+
+        if self._is_empty(self.privacy_transformation_stage):
+            self.MissingRequiredField("privacy_transformation_stage")
+        if not isinstance(self.privacy_transformation_stage, PrivacyTransformationStageEnum):
+            self.privacy_transformation_stage = PrivacyTransformationStageEnum(self.privacy_transformation_stage)
+
+        if self._is_empty(self.privacy_transformation_specification):
+            self.MissingRequiredField("privacy_transformation_specification")
+        if not isinstance(self.privacy_transformation_specification, str):
+            self.privacy_transformation_specification = str(self.privacy_transformation_specification)
+
+        if self.privacy_transformation_note is not None and not isinstance(self.privacy_transformation_note, str):
+            self.privacy_transformation_note = str(self.privacy_transformation_note)
+
+        if self.processing_run is not None and not isinstance(self.processing_run, str):
+            self.processing_run = str(self.processing_run)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class PrivacyReleaseAssessment(YAMLRoot):
+    """
+    Assessment and authorization metadata for one exact output artifact, request, input declaration and intended
+    audience. Separate from source classification and performed transformations. Metadata validation checks recorded
+    evidence and relationships, not the scientific sufficiency of a risk analysis, legal compliance or enforcement of
+    access restrictions. Public catalog generation must reject this collection.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = AMADEUS["PrivacyReleaseAssessment"]
+    class_class_curie: ClassVar[str] = "amadeus:PrivacyReleaseAssessment"
+    class_name: ClassVar[str] = "PrivacyReleaseAssessment"
+    class_model_uri: ClassVar[URIRef] = AMADEUS.PrivacyReleaseAssessment
+
+    id: Union[str, PrivacyReleaseAssessmentId] = None
+    extraction_request: Union[str, ExtractionRequestId] = None
+    privacy_declaration: Union[str, PrivacyDeclarationId] = None
+    output_artifact_reference: Union[str, URI] = None
+    release_assessment_status: Union[str, "PrivacyAssessmentStatusEnum"] = None
+    release_decision: Union[str, "PrivacyReleaseDecisionEnum"] = None
+    release_audience: str = None
+    release_access_level: Union[str, "PrivacyReleaseAccessEnum"] = None
+    performed_privacy_transformations: Optional[Union[Union[str, PrivacyTransformationId], list[Union[str, PrivacyTransformationId]]]] = empty_list()
+    privacy_transformation_deviation_note: Optional[str] = None
+    output_artifact_sha256: Optional[Union[str, Sha256]] = None
+    output_phi_status: Optional[Union[str, "PhiStatusEnum"]] = None
+    release_assessment_method: Optional[str] = None
+    release_assessment_scope: Optional[str] = None
+    assessment_evidence_reference: Optional[Union[str, URI]] = None
+    assessed_by: Optional[str] = None
+    assessed_at: Optional[Union[str, XSDDateTime]] = None
+    released_geography_type: Optional[Union[str, "TargetGeographyTypeEnum"]] = None
+    released_spatial_resolution_m: Optional[float] = None
+    released_temporal_resolution_iso: Optional[Union[str, Iso8601Duration]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, PrivacyReleaseAssessmentId):
+            self.id = PrivacyReleaseAssessmentId(self.id)
+
+        if self._is_empty(self.extraction_request):
+            self.MissingRequiredField("extraction_request")
+        if not isinstance(self.extraction_request, ExtractionRequestId):
+            self.extraction_request = ExtractionRequestId(self.extraction_request)
+
+        if self._is_empty(self.privacy_declaration):
+            self.MissingRequiredField("privacy_declaration")
+        if not isinstance(self.privacy_declaration, PrivacyDeclarationId):
+            self.privacy_declaration = PrivacyDeclarationId(self.privacy_declaration)
+
+        if self._is_empty(self.output_artifact_reference):
+            self.MissingRequiredField("output_artifact_reference")
+        if not isinstance(self.output_artifact_reference, URI):
+            self.output_artifact_reference = URI(self.output_artifact_reference)
+
+        if self._is_empty(self.release_assessment_status):
+            self.MissingRequiredField("release_assessment_status")
+        if not isinstance(self.release_assessment_status, PrivacyAssessmentStatusEnum):
+            self.release_assessment_status = PrivacyAssessmentStatusEnum(self.release_assessment_status)
+
+        if self._is_empty(self.release_decision):
+            self.MissingRequiredField("release_decision")
+        if not isinstance(self.release_decision, PrivacyReleaseDecisionEnum):
+            self.release_decision = PrivacyReleaseDecisionEnum(self.release_decision)
+
+        if self._is_empty(self.release_audience):
+            self.MissingRequiredField("release_audience")
+        if not isinstance(self.release_audience, str):
+            self.release_audience = str(self.release_audience)
+
+        if self._is_empty(self.release_access_level):
+            self.MissingRequiredField("release_access_level")
+        if not isinstance(self.release_access_level, PrivacyReleaseAccessEnum):
+            self.release_access_level = PrivacyReleaseAccessEnum(self.release_access_level)
+
+        if not isinstance(self.performed_privacy_transformations, list):
+            self.performed_privacy_transformations = [self.performed_privacy_transformations] if self.performed_privacy_transformations is not None else []
+        self.performed_privacy_transformations = [v if isinstance(v, PrivacyTransformationId) else PrivacyTransformationId(v) for v in self.performed_privacy_transformations]
+
+        if self.privacy_transformation_deviation_note is not None and not isinstance(self.privacy_transformation_deviation_note, str):
+            self.privacy_transformation_deviation_note = str(self.privacy_transformation_deviation_note)
+
+        if self.output_artifact_sha256 is not None and not isinstance(self.output_artifact_sha256, Sha256):
+            self.output_artifact_sha256 = Sha256(self.output_artifact_sha256)
+
+        if self.output_phi_status is not None and not isinstance(self.output_phi_status, PhiStatusEnum):
+            self.output_phi_status = PhiStatusEnum(self.output_phi_status)
+
+        if self.release_assessment_method is not None and not isinstance(self.release_assessment_method, str):
+            self.release_assessment_method = str(self.release_assessment_method)
+
+        if self.release_assessment_scope is not None and not isinstance(self.release_assessment_scope, str):
+            self.release_assessment_scope = str(self.release_assessment_scope)
+
+        if self.assessment_evidence_reference is not None and not isinstance(self.assessment_evidence_reference, URI):
+            self.assessment_evidence_reference = URI(self.assessment_evidence_reference)
+
+        if self.assessed_by is not None and not isinstance(self.assessed_by, str):
+            self.assessed_by = str(self.assessed_by)
+
+        if self.assessed_at is not None and not isinstance(self.assessed_at, XSDDateTime):
+            self.assessed_at = XSDDateTime(self.assessed_at)
+
+        if self.released_geography_type is not None and not isinstance(self.released_geography_type, TargetGeographyTypeEnum):
+            self.released_geography_type = TargetGeographyTypeEnum(self.released_geography_type)
+
+        if self.released_spatial_resolution_m is not None and not isinstance(self.released_spatial_resolution_m, float):
+            self.released_spatial_resolution_m = float(self.released_spatial_resolution_m)
+
+        if self.released_temporal_resolution_iso is not None and not isinstance(self.released_temporal_resolution_iso, Iso8601Duration):
+            self.released_temporal_resolution_iso = Iso8601Duration(self.released_temporal_resolution_iso)
 
         super().__post_init__(**kwargs)
 
@@ -2125,6 +2481,9 @@ class TemporalResolutionEnum(EnumDefinitionImpl):
     hourly = PermissibleValue(text="hourly")
     three_hourly = PermissibleValue(text="three_hourly")
     daily = PermissibleValue(text="daily")
+    multi_day = PermissibleValue(
+        text="multi_day",
+        description="""Observations or composites at a nominal interval longer than one day and shorter than a month. Record the nominal interval separately in temporal_resolution_iso; actual asset times/bounds take precedence at calendar boundaries. Includes GridMET pentads and MOD13A2.""")
     monthly = PermissibleValue(text="monthly")
     seasonal = PermissibleValue(text="seasonal")
     annual = PermissibleValue(text="annual")
@@ -2515,9 +2874,9 @@ class RunRoleEnum(EnumDefinitionImpl):
 
 class PhiStatusEnum(EnumDefinitionImpl):
     """
-    Whether a location set, and anything derived from it, is protected health information. An enum rather than a
-    boolean for two reasons: it matches EnVar's `phi_status` exactly, and — see `ValueMaterializationEnum` — a boolean
-    cannot be used as a LinkML rule precondition.
+    Scoped PHI classification for source data, supplied locations or an exact output. The owning slot defines the
+    scope; classifications do not propagate automatically. Preserves EnVar's phi_status value set. An enum rather than
+    a boolean also supports LinkML rule preconditions; see ValueMaterializationEnum.
     """
     no_phi = PermissibleValue(text="no_phi")
     aggregated_no_phi = PermissibleValue(text="aggregated_no_phi")
@@ -2525,7 +2884,150 @@ class PhiStatusEnum(EnumDefinitionImpl):
 
     _defn = EnumDefinition(
         name="PhiStatusEnum",
-        description="""Whether a location set, and anything derived from it, is protected health information. An enum rather than a boolean for two reasons: it matches EnVar's `phi_status` exactly, and — see `ValueMaterializationEnum` — a boolean cannot be used as a LinkML rule precondition.""",
+        description="""Scoped PHI classification for source data, supplied locations or an exact output. The owning slot defines the scope; classifications do not propagate automatically. Preserves EnVar's phi_status value set. An enum rather than a boolean also supports LinkML rule preconditions; see ValueMaterializationEnum.""",
+    )
+
+class PrivacyAssessmentStatusEnum(EnumDefinitionImpl):
+    """
+    Local assessment lifecycle, separate from PHI classification. An absent classification or an unassessed record
+    never means no_phi.
+    """
+    not_assessed = PermissibleValue(
+        text="not_assessed",
+        description="No assessment is asserted.")
+    in_progress = PermissibleValue(
+        text="in_progress",
+        description="Assessment is underway; no completed finding is asserted.")
+    assessed = PermissibleValue(
+        text="assessed",
+        description="A finding with supporting evidence has been recorded.")
+
+    _defn = EnumDefinition(
+        name="PrivacyAssessmentStatusEnum",
+        description="""Local assessment lifecycle, separate from PHI classification. An absent classification or an unassessed record never means no_phi.""",
+    )
+
+class LocationIdentifiabilityEnum(EnumDefinitionImpl):
+    """
+    Local geographic identifiability finding, independent of legal PHI classification and meaningful only in the
+    documented assessment context.
+    """
+    not_assessed = PermissibleValue(
+        text="not_assessed",
+        description="Individual or household location identifiability is unknown.")
+    potentially_identifiable = PermissibleValue(
+        text="potentially_identifiable",
+        description="Location inference may be possible in the assessed context.")
+    not_identifiable_in_assessed_context = PermissibleValue(
+        text="not_identifiable_in_assessed_context",
+        description="No identifiability established within the documented scope.")
+
+    _defn = EnumDefinition(
+        name="LocationIdentifiabilityEnum",
+        description="""Local geographic identifiability finding, independent of legal PHI classification and meaningful only in the documented assessment context.""",
+    )
+
+class PrivacyTransformationEnum(EnumDefinitionImpl):
+    """
+    Transformation vocabulary from EnVar SPEC section 4.8. A method name records an action, never a guarantee of
+    privacy or de-identification.
+    """
+    none = PermissibleValue(
+        text="none",
+        description="Explicitly no transformation; distinct from an absent record.")
+    deterministic_geographic_jitter = PermissibleValue(
+        text="deterministic_geographic_jitter",
+        description="Deterministic coordinate displacement.")
+    suppression = PermissibleValue(
+        text="suppression",
+        description="Withholding selected locations, values or records.")
+    aggregation_to_coarser_unit = PermissibleValue(
+        text="aggregation_to_coarser_unit",
+        description="Spatial or temporal aggregation to a coarser support.")
+    stochastic_perturbation = PermissibleValue(
+        text="stochastic_perturbation",
+        description="Random perturbation of geometry or values.")
+
+    _defn = EnumDefinition(
+        name="PrivacyTransformationEnum",
+        description="""Transformation vocabulary from EnVar SPEC section 4.8. A method name records an action, never a guarantee of privacy or de-identification.""",
+    )
+
+class PrivacyTransformationStageEnum(EnumDefinitionImpl):
+    """
+    Local stage at which a requested or performed action applies.
+    """
+    before_extraction = PermissibleValue(
+        text="before_extraction",
+        description="Changes the locations used to obtain environmental values.")
+    after_extraction = PermissibleValue(
+        text="after_extraction",
+        description="Changes extracted values or their linked locations.")
+    release_representation = PermissibleValue(
+        text="release_representation",
+        description="Changes released representation; original values may retain location information.")
+
+    _defn = EnumDefinition(
+        name="PrivacyTransformationStageEnum",
+        description="Local stage at which a requested or performed action applies.",
+    )
+
+class PrivacyReleaseDecisionEnum(EnumDefinitionImpl):
+    """
+    Local authorization record for one exact output artifact. Approval is recorded governance, not independently
+    verified legal de-identification.
+    """
+    pending = PermissibleValue(
+        text="pending",
+        description="No release authorization recorded.")
+    denied = PermissibleValue(
+        text="denied",
+        description="Release authorization withheld.")
+    approved = PermissibleValue(
+        text="approved",
+        description="An assessor authorized the artifact for the recorded audience.")
+
+    _defn = EnumDefinition(
+        name="PrivacyReleaseDecisionEnum",
+        description="""Local authorization record for one exact output artifact. Approval is recorded governance, not independently verified legal de-identification.""",
+    )
+
+class PrivacyReleaseAccessEnum(EnumDefinitionImpl):
+    """
+    Access context for an artifact-specific release authorization.
+    """
+    restricted = PermissibleValue(
+        text="restricted",
+        description="Controlled recipients and access conditions.")
+    public = PermissibleValue(
+        text="public",
+        description="Unrestricted recipients; PHI-present outputs cannot be approved.")
+
+    _defn = EnumDefinition(
+        name="PrivacyReleaseAccessEnum",
+        description="Access context for an artifact-specific release authorization.",
+    )
+
+class LocationPrivacyRoleEnum(EnumDefinitionImpl):
+    """
+    Role of a location, without automatically classifying it as PHI.
+    """
+    unspecified = PermissibleValue(
+        text="unspecified",
+        description="Location role has not been declared.")
+    public_site = PermissibleValue(
+        text="public_site",
+        description="Public monitoring or reference location.")
+    individual_or_household = PermissibleValue(
+        text="individual_or_household",
+        description="Location associated with a person or household.")
+    synthetic = PermissibleValue(
+        text="synthetic",
+        description="Invented location; not an actual participant location.")
+
+    _defn = EnumDefinition(
+        name="LocationPrivacyRoleEnum",
+        description="Role of a location, without automatically classifying it as PHI.",
     )
 
 class ValueMaterializationEnum(EnumDefinitionImpl):
@@ -2694,6 +3196,18 @@ class ProvenanceChainTerminusEnum(EnumDefinitionImpl):
 class slots:
     pass
 
+slots.privacy_profiles = Slot(uri=AMADEUS.privacy_profiles, name="privacy_profiles", curie=AMADEUS.curie('privacy_profiles'),
+                   model_uri=AMADEUS.privacy_profiles, domain=None, range=Optional[Union[dict[Union[str, PrivacyProfileId], Union[dict, PrivacyProfile]], list[Union[dict, PrivacyProfile]]]])
+
+slots.privacy_declarations = Slot(uri=AMADEUS.privacy_declarations, name="privacy_declarations", curie=AMADEUS.curie('privacy_declarations'),
+                   model_uri=AMADEUS.privacy_declarations, domain=None, range=Optional[Union[dict[Union[str, PrivacyDeclarationId], Union[dict, PrivacyDeclaration]], list[Union[dict, PrivacyDeclaration]]]])
+
+slots.privacy_transformations = Slot(uri=AMADEUS.privacy_transformations, name="privacy_transformations", curie=AMADEUS.curie('privacy_transformations'),
+                   model_uri=AMADEUS.privacy_transformations, domain=None, range=Optional[Union[dict[Union[str, PrivacyTransformationId], Union[dict, PrivacyTransformation]], list[Union[dict, PrivacyTransformation]]]])
+
+slots.privacy_release_assessments = Slot(uri=AMADEUS.privacy_release_assessments, name="privacy_release_assessments", curie=AMADEUS.curie('privacy_release_assessments'),
+                   model_uri=AMADEUS.privacy_release_assessments, domain=None, range=Optional[Union[dict[Union[str, PrivacyReleaseAssessmentId], Union[dict, PrivacyReleaseAssessment]], list[Union[dict, PrivacyReleaseAssessment]]]])
+
 slots.data_sources = Slot(uri=AMADEUS.data_sources, name="data_sources", curie=AMADEUS.curie('data_sources'),
                    model_uri=AMADEUS.data_sources, domain=None, range=Optional[Union[dict[Union[str, DataSourceId], Union[dict, DataSource]], list[Union[dict, DataSource]]]])
 
@@ -2787,6 +3301,36 @@ slots.missing_reason = Slot(uri=AMADEUS.missing_reason, name="missing_reason", c
 
 slots.materialization_mode = Slot(uri=AMADEUS.materialization_mode, name="materialization_mode", curie=AMADEUS.curie('materialization_mode'),
                    model_uri=AMADEUS.materialization_mode, domain=None, range=Optional[Union[str, "MaterializationModeEnum"]])
+
+slots.privacy_profile = Slot(uri=AMADEUS.privacy_profile, name="privacy_profile", curie=AMADEUS.curie('privacy_profile'),
+                   model_uri=AMADEUS.privacy_profile, domain=None, range=Optional[Union[str, PrivacyProfileId]])
+
+slots.privacy_profile_version = Slot(uri=AMADEUS.privacy_profile_version, name="privacy_profile_version", curie=AMADEUS.curie('privacy_profile_version'),
+                   model_uri=AMADEUS.privacy_profile_version, domain=None, range=Optional[str])
+
+slots.source_phi_assessment_status = Slot(uri=AMADEUS.source_phi_assessment_status, name="source_phi_assessment_status", curie=AMADEUS.curie('source_phi_assessment_status'),
+                   model_uri=AMADEUS.source_phi_assessment_status, domain=None, range=Optional[Union[str, "PrivacyAssessmentStatusEnum"]])
+
+slots.source_phi_status = Slot(uri=AMADEUS.source_phi_status, name="source_phi_status", curie=AMADEUS.curie('source_phi_status'),
+                   model_uri=AMADEUS.source_phi_status, domain=None, range=Optional[Union[str, "PhiStatusEnum"]])
+
+slots.source_phi_status_missing_reason = Slot(uri=AMADEUS.source_phi_status_missing_reason, name="source_phi_status_missing_reason", curie=AMADEUS.curie('source_phi_status_missing_reason'),
+                   model_uri=AMADEUS.source_phi_status_missing_reason, domain=None, range=Optional[Union[str, "MissingReasonEnum"]])
+
+slots.assessment_evidence_reference = Slot(uri=AMADEUS.assessment_evidence_reference, name="assessment_evidence_reference", curie=AMADEUS.curie('assessment_evidence_reference'),
+                   model_uri=AMADEUS.assessment_evidence_reference, domain=None, range=Optional[Union[str, URI]])
+
+slots.location_identifiability = Slot(uri=AMADEUS.location_identifiability, name="location_identifiability", curie=AMADEUS.curie('location_identifiability'),
+                   model_uri=AMADEUS.location_identifiability, domain=None, range=Optional[Union[str, "LocationIdentifiabilityEnum"]])
+
+slots.linkage_risk_assessment_status = Slot(uri=AMADEUS.linkage_risk_assessment_status, name="linkage_risk_assessment_status", curie=AMADEUS.curie('linkage_risk_assessment_status'),
+                   model_uri=AMADEUS.linkage_risk_assessment_status, domain=None, range=Optional[Union[str, "PrivacyAssessmentStatusEnum"]])
+
+slots.linkage_risk_note = Slot(uri=AMADEUS.linkage_risk_note, name="linkage_risk_note", curie=AMADEUS.curie('linkage_risk_note'),
+                   model_uri=AMADEUS.linkage_risk_note, domain=None, range=Optional[str])
+
+slots.location_linked_review_required = Slot(uri=AMADEUS.location_linked_review_required, name="location_linked_review_required", curie=AMADEUS.curie('location_linked_review_required'),
+                   model_uri=AMADEUS.location_linked_review_required, domain=None, range=Optional[Union[bool, Bool]])
 
 slots.producer_institution = Slot(uri=AMADEUS.producer_institution, name="producer_institution", curie=AMADEUS.curie('producer_institution'),
                    model_uri=AMADEUS.producer_institution, domain=None, range=Optional[str])
@@ -3230,6 +3774,87 @@ slots.length_m = Slot(uri=AMADEUS.length_m, name="length_m", curie=AMADEUS.curie
 slots.grid_definition_ref = Slot(uri=AMADEUS.grid_definition_ref, name="grid_definition_ref", curie=AMADEUS.curie('grid_definition_ref'),
                    model_uri=AMADEUS.grid_definition_ref, domain=None, range=Optional[Union[str, GridDefinitionId]])
 
+slots.privacy_declaration = Slot(uri=AMADEUS.privacy_declaration, name="privacy_declaration", curie=AMADEUS.curie('privacy_declaration'),
+                   model_uri=AMADEUS.privacy_declaration, domain=None, range=Optional[Union[str, PrivacyDeclarationId]])
+
+slots.input_phi_assessment_status = Slot(uri=AMADEUS.input_phi_assessment_status, name="input_phi_assessment_status", curie=AMADEUS.curie('input_phi_assessment_status'),
+                   model_uri=AMADEUS.input_phi_assessment_status, domain=None, range=Optional[Union[str, "PrivacyAssessmentStatusEnum"]])
+
+slots.input_phi_status = Slot(uri=AMADEUS.input_phi_status, name="input_phi_status", curie=AMADEUS.curie('input_phi_status'),
+                   model_uri=AMADEUS.input_phi_status, domain=None, range=Optional[Union[str, "PhiStatusEnum"]])
+
+slots.privacy_declaration_note = Slot(uri=AMADEUS.privacy_declaration_note, name="privacy_declaration_note", curie=AMADEUS.curie('privacy_declaration_note'),
+                   model_uri=AMADEUS.privacy_declaration_note, domain=None, range=Optional[str])
+
+slots.location_privacy_role = Slot(uri=AMADEUS.location_privacy_role, name="location_privacy_role", curie=AMADEUS.curie('location_privacy_role'),
+                   model_uri=AMADEUS.location_privacy_role, domain=None, range=Optional[Union[str, "LocationPrivacyRoleEnum"]])
+
+slots.location_precision_m = Slot(uri=AMADEUS.location_precision_m, name="location_precision_m", curie=AMADEUS.curie('location_precision_m'),
+                   model_uri=AMADEUS.location_precision_m, domain=None, range=Optional[float])
+
+slots.requested_privacy_transformations = Slot(uri=AMADEUS.requested_privacy_transformations, name="requested_privacy_transformations", curie=AMADEUS.curie('requested_privacy_transformations'),
+                   model_uri=AMADEUS.requested_privacy_transformations, domain=None, range=Optional[Union[Union[str, PrivacyTransformationId], list[Union[str, PrivacyTransformationId]]]])
+
+slots.performed_privacy_transformations = Slot(uri=AMADEUS.performed_privacy_transformations, name="performed_privacy_transformations", curie=AMADEUS.curie('performed_privacy_transformations'),
+                   model_uri=AMADEUS.performed_privacy_transformations, domain=None, range=Optional[Union[Union[str, PrivacyTransformationId], list[Union[str, PrivacyTransformationId]]]])
+
+slots.privacy_transformation = Slot(uri=AMADEUS.privacy_transformation, name="privacy_transformation", curie=AMADEUS.curie('privacy_transformation'),
+                   model_uri=AMADEUS.privacy_transformation, domain=None, range=Optional[Union[str, "PrivacyTransformationEnum"]])
+
+slots.privacy_transformation_stage = Slot(uri=AMADEUS.privacy_transformation_stage, name="privacy_transformation_stage", curie=AMADEUS.curie('privacy_transformation_stage'),
+                   model_uri=AMADEUS.privacy_transformation_stage, domain=None, range=Optional[Union[str, "PrivacyTransformationStageEnum"]])
+
+slots.privacy_transformation_specification = Slot(uri=AMADEUS.privacy_transformation_specification, name="privacy_transformation_specification", curie=AMADEUS.curie('privacy_transformation_specification'),
+                   model_uri=AMADEUS.privacy_transformation_specification, domain=None, range=Optional[str])
+
+slots.privacy_transformation_note = Slot(uri=AMADEUS.privacy_transformation_note, name="privacy_transformation_note", curie=AMADEUS.curie('privacy_transformation_note'),
+                   model_uri=AMADEUS.privacy_transformation_note, domain=None, range=Optional[str])
+
+slots.privacy_transformation_deviation_note = Slot(uri=AMADEUS.privacy_transformation_deviation_note, name="privacy_transformation_deviation_note", curie=AMADEUS.curie('privacy_transformation_deviation_note'),
+                   model_uri=AMADEUS.privacy_transformation_deviation_note, domain=None, range=Optional[str])
+
+slots.output_artifact_reference = Slot(uri=AMADEUS.output_artifact_reference, name="output_artifact_reference", curie=AMADEUS.curie('output_artifact_reference'),
+                   model_uri=AMADEUS.output_artifact_reference, domain=None, range=Optional[Union[str, URI]])
+
+slots.output_artifact_sha256 = Slot(uri=AMADEUS.output_artifact_sha256, name="output_artifact_sha256", curie=AMADEUS.curie('output_artifact_sha256'),
+                   model_uri=AMADEUS.output_artifact_sha256, domain=None, range=Optional[Union[str, Sha256]])
+
+slots.output_phi_status = Slot(uri=AMADEUS.output_phi_status, name="output_phi_status", curie=AMADEUS.curie('output_phi_status'),
+                   model_uri=AMADEUS.output_phi_status, domain=None, range=Optional[Union[str, "PhiStatusEnum"]])
+
+slots.release_assessment_status = Slot(uri=AMADEUS.release_assessment_status, name="release_assessment_status", curie=AMADEUS.curie('release_assessment_status'),
+                   model_uri=AMADEUS.release_assessment_status, domain=None, range=Optional[Union[str, "PrivacyAssessmentStatusEnum"]])
+
+slots.release_decision = Slot(uri=AMADEUS.release_decision, name="release_decision", curie=AMADEUS.curie('release_decision'),
+                   model_uri=AMADEUS.release_decision, domain=None, range=Optional[Union[str, "PrivacyReleaseDecisionEnum"]])
+
+slots.release_audience = Slot(uri=AMADEUS.release_audience, name="release_audience", curie=AMADEUS.curie('release_audience'),
+                   model_uri=AMADEUS.release_audience, domain=None, range=Optional[str])
+
+slots.release_access_level = Slot(uri=AMADEUS.release_access_level, name="release_access_level", curie=AMADEUS.curie('release_access_level'),
+                   model_uri=AMADEUS.release_access_level, domain=None, range=Optional[Union[str, "PrivacyReleaseAccessEnum"]])
+
+slots.release_assessment_method = Slot(uri=AMADEUS.release_assessment_method, name="release_assessment_method", curie=AMADEUS.curie('release_assessment_method'),
+                   model_uri=AMADEUS.release_assessment_method, domain=None, range=Optional[str])
+
+slots.release_assessment_scope = Slot(uri=AMADEUS.release_assessment_scope, name="release_assessment_scope", curie=AMADEUS.curie('release_assessment_scope'),
+                   model_uri=AMADEUS.release_assessment_scope, domain=None, range=Optional[str])
+
+slots.assessed_by = Slot(uri=AMADEUS.assessed_by, name="assessed_by", curie=AMADEUS.curie('assessed_by'),
+                   model_uri=AMADEUS.assessed_by, domain=None, range=Optional[str])
+
+slots.assessed_at = Slot(uri=AMADEUS.assessed_at, name="assessed_at", curie=AMADEUS.curie('assessed_at'),
+                   model_uri=AMADEUS.assessed_at, domain=None, range=Optional[Union[str, XSDDateTime]])
+
+slots.released_geography_type = Slot(uri=AMADEUS.released_geography_type, name="released_geography_type", curie=AMADEUS.curie('released_geography_type'),
+                   model_uri=AMADEUS.released_geography_type, domain=None, range=Optional[Union[str, "TargetGeographyTypeEnum"]])
+
+slots.released_spatial_resolution_m = Slot(uri=AMADEUS.released_spatial_resolution_m, name="released_spatial_resolution_m", curie=AMADEUS.curie('released_spatial_resolution_m'),
+                   model_uri=AMADEUS.released_spatial_resolution_m, domain=None, range=Optional[float])
+
+slots.released_temporal_resolution_iso = Slot(uri=AMADEUS.released_temporal_resolution_iso, name="released_temporal_resolution_iso", curie=AMADEUS.curie('released_temporal_resolution_iso'),
+                   model_uri=AMADEUS.released_temporal_resolution_iso, domain=None, range=Optional[Union[str, Iso8601Duration]])
+
 slots.locs_id_field = Slot(uri=AMADEUS.locs_id_field, name="locs_id_field", curie=AMADEUS.curie('locs_id_field'),
                    model_uri=AMADEUS.locs_id_field, domain=None, range=Optional[str])
 
@@ -3407,6 +4032,24 @@ slots.DataSource_name = Slot(uri=AMADEUS.name, name="DataSource_name", curie=AMA
 
 slots.DataSource_amadeus_function_suffix = Slot(uri=AMADEUS.amadeus_function_suffix, name="DataSource_amadeus_function_suffix", curie=AMADEUS.curie('amadeus_function_suffix'),
                    model_uri=AMADEUS.DataSource_amadeus_function_suffix, domain=DataSource, range=Optional[str])
+
+slots.PrivacyProfile_name = Slot(uri=AMADEUS.name, name="PrivacyProfile_name", curie=AMADEUS.curie('name'),
+                   model_uri=AMADEUS.PrivacyProfile_name, domain=PrivacyProfile, range=str)
+
+slots.PrivacyProfile_privacy_profile_version = Slot(uri=AMADEUS.privacy_profile_version, name="PrivacyProfile_privacy_profile_version", curie=AMADEUS.curie('privacy_profile_version'),
+                   model_uri=AMADEUS.PrivacyProfile_privacy_profile_version, domain=PrivacyProfile, range=str)
+
+slots.PrivacyProfile_source_phi_assessment_status = Slot(uri=AMADEUS.source_phi_assessment_status, name="PrivacyProfile_source_phi_assessment_status", curie=AMADEUS.curie('source_phi_assessment_status'),
+                   model_uri=AMADEUS.PrivacyProfile_source_phi_assessment_status, domain=PrivacyProfile, range=Union[str, "PrivacyAssessmentStatusEnum"])
+
+slots.PrivacyProfile_location_identifiability = Slot(uri=AMADEUS.location_identifiability, name="PrivacyProfile_location_identifiability", curie=AMADEUS.curie('location_identifiability'),
+                   model_uri=AMADEUS.PrivacyProfile_location_identifiability, domain=PrivacyProfile, range=Union[str, "LocationIdentifiabilityEnum"])
+
+slots.PrivacyProfile_linkage_risk_assessment_status = Slot(uri=AMADEUS.linkage_risk_assessment_status, name="PrivacyProfile_linkage_risk_assessment_status", curie=AMADEUS.curie('linkage_risk_assessment_status'),
+                   model_uri=AMADEUS.PrivacyProfile_linkage_risk_assessment_status, domain=PrivacyProfile, range=Union[str, "PrivacyAssessmentStatusEnum"])
+
+slots.PrivacyProfile_location_linked_review_required = Slot(uri=AMADEUS.location_linked_review_required, name="PrivacyProfile_location_linked_review_required", curie=AMADEUS.curie('location_linked_review_required'),
+                   model_uri=AMADEUS.PrivacyProfile_location_linked_review_required, domain=PrivacyProfile, range=Union[bool, Bool])
 
 slots.Product_name = Slot(uri=AMADEUS.name, name="Product_name", curie=AMADEUS.curie('name'),
                    model_uri=AMADEUS.Product_name, domain=Product, range=str)
@@ -3610,6 +4253,45 @@ slots.ExtractionRequest_request_hash = Slot(uri=AMADEUS.request_hash, name="Extr
 
 slots.ExtractionRequest_generated_sql = Slot(uri=AMADEUS.generated_sql, name="ExtractionRequest_generated_sql", curie=AMADEUS.curie('generated_sql'),
                    model_uri=AMADEUS.ExtractionRequest_generated_sql, domain=ExtractionRequest, range=Optional[str])
+
+slots.PrivacyDeclaration_location_set = Slot(uri=AMADEUS.location_set, name="PrivacyDeclaration_location_set", curie=AMADEUS.curie('location_set'),
+                   model_uri=AMADEUS.PrivacyDeclaration_location_set, domain=PrivacyDeclaration, range=Union[str, LocationSetId])
+
+slots.PrivacyDeclaration_input_phi_assessment_status = Slot(uri=AMADEUS.input_phi_assessment_status, name="PrivacyDeclaration_input_phi_assessment_status", curie=AMADEUS.curie('input_phi_assessment_status'),
+                   model_uri=AMADEUS.PrivacyDeclaration_input_phi_assessment_status, domain=PrivacyDeclaration, range=Union[str, "PrivacyAssessmentStatusEnum"])
+
+slots.PrivacyDeclaration_location_identifiability = Slot(uri=AMADEUS.location_identifiability, name="PrivacyDeclaration_location_identifiability", curie=AMADEUS.curie('location_identifiability'),
+                   model_uri=AMADEUS.PrivacyDeclaration_location_identifiability, domain=PrivacyDeclaration, range=Union[str, "LocationIdentifiabilityEnum"])
+
+slots.PrivacyTransformation_privacy_transformation = Slot(uri=AMADEUS.privacy_transformation, name="PrivacyTransformation_privacy_transformation", curie=AMADEUS.curie('privacy_transformation'),
+                   model_uri=AMADEUS.PrivacyTransformation_privacy_transformation, domain=PrivacyTransformation, range=Union[str, "PrivacyTransformationEnum"])
+
+slots.PrivacyTransformation_privacy_transformation_stage = Slot(uri=AMADEUS.privacy_transformation_stage, name="PrivacyTransformation_privacy_transformation_stage", curie=AMADEUS.curie('privacy_transformation_stage'),
+                   model_uri=AMADEUS.PrivacyTransformation_privacy_transformation_stage, domain=PrivacyTransformation, range=Union[str, "PrivacyTransformationStageEnum"])
+
+slots.PrivacyTransformation_privacy_transformation_specification = Slot(uri=AMADEUS.privacy_transformation_specification, name="PrivacyTransformation_privacy_transformation_specification", curie=AMADEUS.curie('privacy_transformation_specification'),
+                   model_uri=AMADEUS.PrivacyTransformation_privacy_transformation_specification, domain=PrivacyTransformation, range=str)
+
+slots.PrivacyReleaseAssessment_extraction_request = Slot(uri=AMADEUS.extraction_request, name="PrivacyReleaseAssessment_extraction_request", curie=AMADEUS.curie('extraction_request'),
+                   model_uri=AMADEUS.PrivacyReleaseAssessment_extraction_request, domain=PrivacyReleaseAssessment, range=Union[str, ExtractionRequestId])
+
+slots.PrivacyReleaseAssessment_privacy_declaration = Slot(uri=AMADEUS.privacy_declaration, name="PrivacyReleaseAssessment_privacy_declaration", curie=AMADEUS.curie('privacy_declaration'),
+                   model_uri=AMADEUS.PrivacyReleaseAssessment_privacy_declaration, domain=PrivacyReleaseAssessment, range=Union[str, PrivacyDeclarationId])
+
+slots.PrivacyReleaseAssessment_output_artifact_reference = Slot(uri=AMADEUS.output_artifact_reference, name="PrivacyReleaseAssessment_output_artifact_reference", curie=AMADEUS.curie('output_artifact_reference'),
+                   model_uri=AMADEUS.PrivacyReleaseAssessment_output_artifact_reference, domain=PrivacyReleaseAssessment, range=Union[str, URI])
+
+slots.PrivacyReleaseAssessment_release_assessment_status = Slot(uri=AMADEUS.release_assessment_status, name="PrivacyReleaseAssessment_release_assessment_status", curie=AMADEUS.curie('release_assessment_status'),
+                   model_uri=AMADEUS.PrivacyReleaseAssessment_release_assessment_status, domain=PrivacyReleaseAssessment, range=Union[str, "PrivacyAssessmentStatusEnum"])
+
+slots.PrivacyReleaseAssessment_release_decision = Slot(uri=AMADEUS.release_decision, name="PrivacyReleaseAssessment_release_decision", curie=AMADEUS.curie('release_decision'),
+                   model_uri=AMADEUS.PrivacyReleaseAssessment_release_decision, domain=PrivacyReleaseAssessment, range=Union[str, "PrivacyReleaseDecisionEnum"])
+
+slots.PrivacyReleaseAssessment_release_audience = Slot(uri=AMADEUS.release_audience, name="PrivacyReleaseAssessment_release_audience", curie=AMADEUS.curie('release_audience'),
+                   model_uri=AMADEUS.PrivacyReleaseAssessment_release_audience, domain=PrivacyReleaseAssessment, range=str)
+
+slots.PrivacyReleaseAssessment_release_access_level = Slot(uri=AMADEUS.release_access_level, name="PrivacyReleaseAssessment_release_access_level", curie=AMADEUS.curie('release_access_level'),
+                   model_uri=AMADEUS.PrivacyReleaseAssessment_release_access_level, domain=PrivacyReleaseAssessment, range=Union[str, "PrivacyReleaseAccessEnum"])
 
 slots.AmbientValueAtLocation_location = Slot(uri=AMADEUS.location, name="AmbientValueAtLocation_location", curie=AMADEUS.curie('location'),
                    model_uri=AMADEUS.AmbientValueAtLocation_location, domain=AmbientValueAtLocation, range=Union[str, LocationId])

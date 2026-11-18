@@ -68,5 +68,32 @@ t("datetime without a UTC offset", FALSE, check_ToolRun(list(
   id="x", run_role="download", tool_name="amadeus", tool_version="1.0",
   run_timestamp_utc="2026-07-16T04:00:02", status="succeeded")))
 
+cat("\nPRIVACY metadata: structure and local rules, not cross-object certification\n")
+profile <- list(id = "example:profile", name = "pending", privacy_profile_version = "1",
+  source_phi_assessment_status = "not_assessed", location_identifiability = "not_assessed",
+  linkage_risk_assessment_status = "not_assessed", location_linked_review_required = TRUE)
+t("check_PrivacyProfile(status=not_assessed): accepts unspecified PHI", TRUE,
+  check_PrivacyProfile(profile))
+profile$source_phi_assessment_status <- "assessed"
+t("check_PrivacyProfile(status=assessed): requires classification and evidence", FALSE,
+  check_PrivacyProfile(profile))
+profile$source_phi_status <- "no_phi"
+profile$assessment_evidence_reference <- "urn:example:synthetic-evidence"
+t("check_PrivacyProfile(status=assessed): accepts explicit evidence metadata", TRUE,
+  check_PrivacyProfile(profile))
+t("check_PrivacyTransformation(method=guaranteed_anonymous): rejects unsupported method", FALSE,
+  check_PrivacyTransformation(list(id = "example:action",
+    privacy_transformation = "guaranteed_anonymous", privacy_transformation_stage = "before_extraction",
+    privacy_transformation_specification = "Synthetic test only")))
+release <- list(id = "example:pending", extraction_request = "example:request",
+  privacy_declaration = "example:declaration", output_artifact_reference = "urn:example:output",
+  release_assessment_status = "not_assessed", release_decision = "pending",
+  release_access_level = "restricted", release_audience = "Synthetic test only")
+t("check_PrivacyReleaseAssessment(decision=pending): accepts no completed finding", TRUE,
+  check_PrivacyReleaseAssessment(release))
+release$release_decision <- "approved"
+t("check_PrivacyReleaseAssessment(decision=approved): rejects unassessed authorization", FALSE,
+  check_PrivacyReleaseAssessment(release))
+
 cat(sprintf("\n%d passed, %d failed\n", pass, fail))
 quit(status = if (fail > 0) 1 else 0)

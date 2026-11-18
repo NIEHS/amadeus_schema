@@ -159,7 +159,7 @@ def slot_checks(sv: SchemaView, slot, cls_name: str) -> list[str]:
             )
         if pattern:
             lines.append(
-                f'  if ({present} && !grepl("{escape_r_regex(pattern)}", {v}))\n'
+                f'  if ({present} && !grepl("{escape_r_regex(pattern)}", {v}, perl = TRUE))\n'
                 f"    return({r_str(f'{cls_name}${name}: does not match required pattern')})"
             )
 
@@ -167,7 +167,7 @@ def slot_checks(sv: SchemaView, slot, cls_name: str) -> list[str]:
     # emit it anyway rather than silently dropping a declared constraint
     if getattr(slot, "pattern", None) and not any("grepl(" in ln for ln in lines):
         lines.append(
-            f'  if ({present} && !grepl("{escape_r_regex(slot.pattern)}", {v}))\n'
+            f'  if ({present} && !grepl("{escape_r_regex(slot.pattern)}", {v}, perl = TRUE))\n'
             f"    return({r_str(f'{cls_name}${name}: does not match required pattern')})"
         )
 
@@ -288,7 +288,7 @@ def rule_checks(sv: SchemaView, cls_name: str, cls) -> list[str]:
                 )
             elif getattr(c, "pattern", None):
                 thens.append(
-                    f'    if (is.null({v}) || !grepl("{escape_r_regex(c.pattern)}", {v}))\n'
+                    f'    if (is.null({v}) || !grepl("{escape_r_regex(c.pattern)}", {v}, perl = TRUE))\n'
                     f"      return({r_str(f'{cls_name}: rule {i + 1} — `{sname}` must match the required pattern here')})"
                 )
             else:
@@ -304,7 +304,7 @@ def rule_checks(sv: SchemaView, cls_name: str, cls) -> list[str]:
         if not thens:
             continue
 
-        desc = " ".join((rule.description or "").split())[:110]
+        desc = " ".join((rule.description or "").split())[:110].rstrip()
         out.append(f"  # rule {i + 1}: {desc}")
         out.append(f"  if ({' && '.join(conds)}) {{")
         out.extend(thens)
@@ -353,7 +353,7 @@ def main() -> int:
     ]
 
     for name, cls in classes:
-        desc = " ".join((cls.description or "").split())[:150]
+        desc = " ".join((cls.description or "").split())[:150].rstrip()
         L.append(f"#' Validate one {name} record")
         if desc:
             L.append(f"#' {desc}")
