@@ -95,5 +95,21 @@ release$release_decision <- "approved"
 t("check_PrivacyReleaseAssessment(decision=approved): rejects unassessed authorization", FALSE,
   check_PrivacyReleaseAssessment(release))
 
+format <- list(format_family = "netcdf", data_model = "classic",
+  expected_filename_extensions = c(".nc4", ".nc"),
+  identification = list(basis = "provider_documentation", evidence_reference = "https://example.org/format"))
+t("check_FormatDetails(extensions=c(.nc4,.nc)): accepts array", TRUE, check_FormatDetails(format))
+format$expected_filename_extensions <- c(".nc4", "nc")
+t("check_FormatDetails(extension=nc): rejects missing dot", FALSE, check_FormatDetails(format))
+format$expected_filename_extensions <- c(".nc4", ".nc")
+format$identification$basis <- "unverified_guess"
+t("check_FormatDetails(identification): validates nested evidence", FALSE, check_FormatDetails(format))
+format$identification$basis <- "provider_documentation"
+product <- list(id="example:product", name="sample", data_source="example:source",
+  spatial_support_type="other", temporal_resolution="monthly", format_details=format)
+t("check_Product(format_details): accepts inline object", TRUE, check_Product(product))
+product$format_details$identification$evidence_reference <- NULL
+t("check_Product(format_details): rejects missing nested evidence", FALSE, check_Product(product))
+
 cat(sprintf("\n%d passed, %d failed\n", pass, fail))
 quit(status = if (fail > 0) 1 else 0)

@@ -106,6 +106,79 @@ types:
 
 enums:
 
+  FormatFamilyEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      netcdf: null
+      hdf: null
+      tiff: null
+      grib: null
+      esri_ascii_grid: null
+      arcinfo_binary_grid: null
+      bil: null
+      shapefile: null
+      file_geodatabase: null
+      kml: null
+      csv: null
+      delimited_text: null
+      fixed_width_text: null
+      zarr: null
+      parquet: null
+  NetcdfDataModelEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      classic: null
+      enhanced: null
+  PhysicalContainerEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      cdf: null
+      hdf4: null
+      hdf5: null
+      tiff: null
+      grib: null
+      text: null
+      binary: null
+      sqlite: null
+      parquet: null
+      directory: null
+  ExtensionScopeEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      product: null
+      catalog_family: null
+  FormatConformanceStatusEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      not_assessed: null
+      conformant: null
+      nonconformant: null
+      not_applicable: null
+  FormatIdentificationBasisEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      existing_catalog: null
+      provider_documentation: null
+      native_header: null
+      signature: null
+      validator_report: null
+  DeliveryStructureEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      single_file: null
+      multifile_dataset: null
+      directory_store: null
+  PackagingEnum:
+    description: Orthogonal format metadata classification; unknown values remain absent.
+    permissible_values:
+      none: null
+      zip: null
+      gzip: null
+      tar: null
+      tar_gzip: null
+      seven_zip: null
+      other: null
+
   SpatialSupportTypeEnum:
     title: Spatial Support Type
     description: >-
@@ -237,6 +310,8 @@ enums:
       ending_1200_gmt:
       solar_noon_centered:
       observation_dependent:
+      not_established:
+        description: Daily boundary is unresolved; not an assertion of midnight or not applicable.
       not_applicable:
 
   CalendarEnum:
@@ -459,11 +534,15 @@ enums:
     annotations:
       extends: envar:SourceNativeFormatEnum
       extension_note: >-
-        EnVar's enum covers eight formats; the amadeus catalog ships fifteen.
+        EnVar's enum covers eight formats; the catalog extends these for scientific and vector deliveries.
         Every addition here is a format some current `download_*` function
         already handles.
     permissible_values:
       netcdf4_cf:
+      csv:
+        description: Generic comma-separated tabular data, without a station-observation assertion.
+      arcinfo_binary_grid:
+        description: Arc/Info binary Grid multifile directory, often delivered inside ZIP.
       netcdf3:
       hdf4:
         description: MODIS. Not in EnVar's enum; amadeus reads it today.
@@ -475,7 +554,7 @@ enums:
         annotations:
           amadeus_extension: "true"
       ascii_grid:
-        description: GMTED2010, PRISM `.asc`.
+        description: Textual ESRI ASCII raster, distinct from Arc/Info binary Grid.
         annotations:
           amadeus_extension: "true"
       grib1:

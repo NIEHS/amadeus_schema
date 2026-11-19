@@ -118,6 +118,13 @@ def slot_checks(sv: SchemaView, slot, cls_name: str) -> list[str]:
             f"    if (!isTRUE(.e)) return(paste0({r_str(f'{cls_name}${name}: ')}, .e))\n"
             f"  }}"
         )
+    elif rng in sv.all_classes() and slot.inlined:
+        lines.append(
+            f"  if ({present}) {{\n"
+            f"    .e <- check_{rng}({v})\n"
+            f"    if (!isTRUE(.e)) return(paste0({r_str(f'{cls_name}${name}: ')}, .e))\n"
+            f"  }}"
+        )
     elif rng in sv.all_classes():
         # an object reference: identifier string in the flattened relational form
         lines.append(
@@ -361,6 +368,17 @@ def main() -> int:
         L.append('  if (!is.list(x)) return("expected a named list")')
         for slot in sv.class_induced_slots(name):
             if slot.multivalued:
+                if name == "FormatDetails":
+                    field = slot.alias or slot.name
+                    v = f'x[["{field}"]]'
+                    L.append(f'  if (!is.null({v})) {{')
+                    L.append(f'    if (!is.character({v}) && !is.list({v})) return("{name}${field}: expected string array")')
+                    L.append(f'    for (.item in {v}) {{')
+                    L.append('      if (!is.character(.item) || length(.item) != 1L || is.na(.item)) return("expected string array item")')
+                    if slot.pattern:
+                        L.append(f'      if (!grepl("{escape_r_regex(slot.pattern)}", .item, perl = TRUE)) return("invalid filename extension")')
+                    L.append('    }')
+                    L.append('  }')
                 continue
             L.extend(slot_checks(sv, slot, name))
         L.extend(rule_checks(sv, name, cls))

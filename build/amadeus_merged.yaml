@@ -381,6 +381,150 @@ types:
     uri: xsd:string
     pattern: ^[0-9a-f]{15}$
 enums:
+  FormatFamilyEnum:
+    name: FormatFamilyEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      netcdf:
+        text: netcdf
+      hdf:
+        text: hdf
+      tiff:
+        text: tiff
+      grib:
+        text: grib
+      esri_ascii_grid:
+        text: esri_ascii_grid
+      arcinfo_binary_grid:
+        text: arcinfo_binary_grid
+      bil:
+        text: bil
+      shapefile:
+        text: shapefile
+      file_geodatabase:
+        text: file_geodatabase
+      kml:
+        text: kml
+      csv:
+        text: csv
+      delimited_text:
+        text: delimited_text
+      fixed_width_text:
+        text: fixed_width_text
+      zarr:
+        text: zarr
+      parquet:
+        text: parquet
+  NetcdfDataModelEnum:
+    name: NetcdfDataModelEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      classic:
+        text: classic
+      enhanced:
+        text: enhanced
+  PhysicalContainerEnum:
+    name: PhysicalContainerEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      cdf:
+        text: cdf
+      hdf4:
+        text: hdf4
+      hdf5:
+        text: hdf5
+      tiff:
+        text: tiff
+      grib:
+        text: grib
+      text:
+        text: text
+      binary:
+        text: binary
+      sqlite:
+        text: sqlite
+      parquet:
+        text: parquet
+      directory:
+        text: directory
+  ExtensionScopeEnum:
+    name: ExtensionScopeEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      product:
+        text: product
+      catalog_family:
+        text: catalog_family
+  FormatConformanceStatusEnum:
+    name: FormatConformanceStatusEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      not_assessed:
+        text: not_assessed
+      conformant:
+        text: conformant
+      nonconformant:
+        text: nonconformant
+      not_applicable:
+        text: not_applicable
+  FormatIdentificationBasisEnum:
+    name: FormatIdentificationBasisEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      existing_catalog:
+        text: existing_catalog
+      provider_documentation:
+        text: provider_documentation
+      native_header:
+        text: native_header
+      signature:
+        text: signature
+      validator_report:
+        text: validator_report
+  DeliveryStructureEnum:
+    name: DeliveryStructureEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      single_file:
+        text: single_file
+      multifile_dataset:
+        text: multifile_dataset
+      directory_store:
+        text: directory_store
+  PackagingEnum:
+    name: PackagingEnum
+    description: Orthogonal format metadata classification; unknown values remain
+      absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    permissible_values:
+      none:
+        text: none
+      zip:
+        text: zip
+      gzip:
+        text: gzip
+      tar:
+        text: tar
+      tar_gzip:
+        text: tar_gzip
+      seven_zip:
+        text: seven_zip
+      other:
+        text: other
   SpatialSupportTypeEnum:
     name: SpatialSupportTypeEnum
     annotations:
@@ -570,6 +714,10 @@ enums:
         text: solar_noon_centered
       observation_dependent:
         text: observation_dependent
+      not_established:
+        text: not_established
+        description: Daily boundary is unresolved; not an assertion of midnight or
+          not applicable.
       not_applicable:
         text: not_applicable
   CalendarEnum:
@@ -884,9 +1032,9 @@ enums:
         value: envar:SourceNativeFormatEnum
       extension_note:
         tag: extension_note
-        value: EnVar's enum covers eight formats; the amadeus catalog ships fifteen.
-          Every addition here is a format some current `download_*` function already
-          handles.
+        value: EnVar's enum covers eight formats; the catalog extends these for scientific
+          and vector deliveries. Every addition here is a format some current `download_*`
+          function already handles.
     description: The format the source actually ships.
     title: Native Format
     from_schema: https://w3id.org/niehs/amadeus
@@ -895,6 +1043,14 @@ enums:
     permissible_values:
       netcdf4_cf:
         text: netcdf4_cf
+      csv:
+        text: csv
+        description: Generic comma-separated tabular data, without a station-observation
+          assertion.
+      arcinfo_binary_grid:
+        text: arcinfo_binary_grid
+        description: Arc/Info binary Grid multifile directory, often delivered inside
+          ZIP.
       netcdf3:
         text: netcdf3
       hdf4:
@@ -916,7 +1072,7 @@ enums:
             value: 'true'
       ascii_grid:
         text: ascii_grid
-        description: GMTED2010, PRISM `.asc`.
+        description: Textual ESRI ASCII raster, distinct from Arc/Info binary Grid.
         annotations:
           amadeus_extension:
             tag: amadeus_extension
@@ -2659,6 +2815,192 @@ slots:
     domain_of:
     - Asset
     range: string
+  format_details:
+    name: format_details
+    description: Optional inline format metadata on Product expectations or concrete
+      Asset bytes.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Product
+    - Asset
+    range: FormatDetails
+    inlined: true
+  identification:
+    name: identification
+    description: Evidence scoped to these format assertions.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: FormatIdentification
+    inlined: true
+  filename:
+    name: filename
+    description: Actual Asset basename, excluding URL query and fragment; not a Product
+      filename pattern.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Asset
+    range: string
+  filename_extension:
+    name: filename_extension
+    description: Actual lower-case Asset suffix, including leading dot; outer archive
+      suffix for packaged Assets.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - Asset
+    range: string
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+  format_family:
+    name: format_family
+    description: Underlying payload family; not inferred from suffix alone.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: FormatFamilyEnum
+  format_variant:
+    name: format_variant
+    description: Extensible exact serialization variant, e.g. netcdf3_classic, netcdf3_64bit_offset,
+      netcdf3_64bit_data, netcdf4, hdf4_eos2, hdf5_eos5, zarr_v2 or zarr_v3. Unknown
+      when absent.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+  data_model:
+    name: data_model
+    description: 'NetCDF logical model only: classic or enhanced, independently of
+      CDF/HDF5 encoding.'
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: NetcdfDataModelEnum
+  physical_container:
+    name: physical_container
+    description: Underlying payload container, distinct from outer archive packaging.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: PhysicalContainerEnum
+  format_profile:
+    name: format_profile
+    description: Declared profile such as cloud_optimized_geotiff; does not itself
+      certify conformance.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+  profile_conformance_status:
+    name: profile_conformance_status
+    description: Whether the declared format profile was assessed.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: FormatConformanceStatusEnum
+  expected_filename_extensions_scope:
+    name: expected_filename_extensions_scope
+    description: Product scope by default; catalog_family explicitly describes a broader
+      discovery union, never decoder selection.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: ExtensionScopeEnum
+  catalog_family:
+    name: catalog_family
+    description: Catalog family owning an explicitly family-scoped extension union.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+  filename_pattern:
+    name: filename_pattern
+    description: Case-sensitive shell-style glob narrowing this Product payload naming,
+      not a validator of bytes.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+  delivery_structure:
+    name: delivery_structure
+    description: Single payload, multifile dataset or directory store; independent
+      of outer compression.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: DeliveryStructureEnum
+  packaging:
+    name: packaging
+    description: Outer delivery compression/archive, independent of the payload container.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: PackagingEnum
+  conventions_attribute:
+    name: conventions_attribute
+    description: Literal observed Conventions attribute; preserve spelling and version.
+      Missing means unknown or unrecorded, not nonconforming.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+  cf_conformance_status:
+    name: cf_conformance_status
+    description: Assessment status, independent of a NetCDF suffix or legacy netcdf4_cf
+      label.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: FormatConformanceStatusEnum
+  basis:
+    name: basis
+    description: How the format assertions were established.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatIdentification
+    range: FormatIdentificationBasisEnum
+  evidence_reference:
+    name: evidence_reference
+    description: Provider URL or repository-relative retained evidence reference.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatIdentification
+    range: string
+  identification_note:
+    name: identification_note
+    description: Assertion scope, limitations and unresolved details; no claim of
+      byte inspection unless performed.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatIdentification
+    range: string
+  expected_filename_extensions:
+    name: expected_filename_extensions
+    description: Expected payload suffixes, including leading dot; discovery hints
+      rather than proof of format.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+    multivalued: true
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+  package_filename_extensions:
+    name: package_filename_extensions
+    description: Expected outer delivery suffixes, e.g. .zip or .7z; not payload format.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+    multivalued: true
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+  companion_filename_extensions:
+    name: companion_filename_extensions
+    description: Companion metadata or multifile component suffixes, e.g. .shx, .dbf
+      or .nc4.xml.
+    from_schema: https://w3id.org/niehs/amadeus
+    domain_of:
+    - FormatDetails
+    range: string
+    multivalued: true
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
   product_variable:
     name: product_variable
     from_schema: https://w3id.org/niehs/amadeus
@@ -3943,6 +4285,241 @@ classes:
         inlined: true
         inlined_as_list: true
     tree_root: true
+  FormatDetails:
+    name: FormatDetails
+    description: Optional format identification, independent of filename suffix and
+      scientific metadata. Missing values mean unknown. Product expectations describe
+      payloads; Asset identification describes actual delivered bytes. Legacy native_format
+      is retained without implying assessed CF or COG conformance.
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - format_family
+    - format_variant
+    - data_model
+    - physical_container
+    - format_profile
+    - profile_conformance_status
+    - expected_filename_extensions
+    - expected_filename_extensions_scope
+    - catalog_family
+    - filename_pattern
+    - delivery_structure
+    - packaging
+    - package_filename_extensions
+    - companion_filename_extensions
+    - conventions_attribute
+    - cf_conformance_status
+    - identification
+    slot_usage:
+      format_family:
+        name: format_family
+        required: true
+      identification:
+        name: identification
+        required: true
+    attributes:
+      format_family:
+        name: format_family
+        description: Underlying payload family; not inferred from suffix alone.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: FormatFamilyEnum
+        required: true
+      format_variant:
+        name: format_variant
+        description: Extensible exact serialization variant, e.g. netcdf3_classic,
+          netcdf3_64bit_offset, netcdf3_64bit_data, netcdf4, hdf4_eos2, hdf5_eos5,
+          zarr_v2 or zarr_v3. Unknown when absent.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+      data_model:
+        name: data_model
+        description: 'NetCDF logical model only: classic or enhanced, independently
+          of CDF/HDF5 encoding.'
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: NetcdfDataModelEnum
+      physical_container:
+        name: physical_container
+        description: Underlying payload container, distinct from outer archive packaging.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: PhysicalContainerEnum
+      format_profile:
+        name: format_profile
+        description: Declared profile such as cloud_optimized_geotiff; does not itself
+          certify conformance.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+      profile_conformance_status:
+        name: profile_conformance_status
+        description: Whether the declared format profile was assessed.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: FormatConformanceStatusEnum
+      expected_filename_extensions:
+        name: expected_filename_extensions
+        description: Expected payload suffixes, including leading dot; discovery hints
+          rather than proof of format.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+        multivalued: true
+        pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+      expected_filename_extensions_scope:
+        name: expected_filename_extensions_scope
+        description: Product scope by default; catalog_family explicitly describes
+          a broader discovery union, never decoder selection.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: ExtensionScopeEnum
+      catalog_family:
+        name: catalog_family
+        description: Catalog family owning an explicitly family-scoped extension union.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+      filename_pattern:
+        name: filename_pattern
+        description: Case-sensitive shell-style glob narrowing this Product payload
+          naming, not a validator of bytes.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+      delivery_structure:
+        name: delivery_structure
+        description: Single payload, multifile dataset or directory store; independent
+          of outer compression.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: DeliveryStructureEnum
+      packaging:
+        name: packaging
+        description: Outer delivery compression/archive, independent of the payload
+          container.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: PackagingEnum
+      package_filename_extensions:
+        name: package_filename_extensions
+        description: Expected outer delivery suffixes, e.g. .zip or .7z; not payload
+          format.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+        multivalued: true
+        pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+      companion_filename_extensions:
+        name: companion_filename_extensions
+        description: Companion metadata or multifile component suffixes, e.g. .shx,
+          .dbf or .nc4.xml.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+        multivalued: true
+        pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+      conventions_attribute:
+        name: conventions_attribute
+        description: Literal observed Conventions attribute; preserve spelling and
+          version. Missing means unknown or unrecorded, not nonconforming.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: string
+      cf_conformance_status:
+        name: cf_conformance_status
+        description: Assessment status, independent of a NetCDF suffix or legacy netcdf4_cf
+          label.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: FormatConformanceStatusEnum
+      identification:
+        name: identification
+        description: Evidence scoped to these format assertions.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatDetails
+        domain_of:
+        - FormatDetails
+        range: FormatIdentification
+        required: true
+        inlined: true
+  FormatIdentification:
+    name: FormatIdentification
+    description: Evidence for only the format assertions actually established. A catalog
+      declaration is not a native-file inspection or conformance test.
+    from_schema: https://w3id.org/niehs/amadeus
+    slots:
+    - basis
+    - evidence_reference
+    - identification_note
+    slot_usage:
+      basis:
+        name: basis
+        required: true
+      evidence_reference:
+        name: evidence_reference
+        required: true
+    attributes:
+      basis:
+        name: basis
+        description: How the format assertions were established.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatIdentification
+        domain_of:
+        - FormatIdentification
+        range: FormatIdentificationBasisEnum
+        required: true
+      evidence_reference:
+        name: evidence_reference
+        description: Provider URL or repository-relative retained evidence reference.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatIdentification
+        domain_of:
+        - FormatIdentification
+        range: string
+        required: true
+      identification_note:
+        name: identification_note
+        description: Assertion scope, limitations and unresolved details; no claim
+          of byte inspection unless performed.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: FormatIdentification
+        domain_of:
+        - FormatIdentification
+        range: string
   DataSource:
     name: DataSource
     description: 'A provider programme that publishes one or more products: EPA AQS,
@@ -4391,6 +4968,7 @@ classes:
     - product_version
     - data_genre
     - native_format
+    - format_details
     - spatial_support_type
     - grid_definition
     - crs
@@ -4546,6 +5124,17 @@ classes:
         - Product
         - Asset
         range: NativeFormatEnum
+      format_details:
+        name: format_details
+        description: Optional inline format metadata on Product expectations or concrete
+          Asset bytes.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Product
+        domain_of:
+        - Product
+        - Asset
+        range: FormatDetails
+        inlined: true
       spatial_support_type:
         name: spatial_support_type
         from_schema: https://w3id.org/niehs/amadeus
@@ -5874,10 +6463,13 @@ classes:
     - id
     - product
     - asset_key
+    - filename
+    - filename_extension
     - url
     - local_path
     - media_type
     - native_format
+    - format_details
     - size_bytes
     - sha256
     - source_last_modified
@@ -5958,6 +6550,25 @@ classes:
         domain_of:
         - Asset
         range: string
+      filename:
+        name: filename
+        description: Actual Asset basename, excluding URL query and fragment; not
+          a Product filename pattern.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Asset
+        domain_of:
+        - Asset
+        range: string
+      filename_extension:
+        name: filename_extension
+        description: Actual lower-case Asset suffix, including leading dot; outer
+          archive suffix for packaged Assets.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Asset
+        domain_of:
+        - Asset
+        range: string
+        pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
       url:
         name: url
         description: Where the bytes live upstream. Retained even after local caching
@@ -5995,6 +6606,17 @@ classes:
         - Product
         - Asset
         range: NativeFormatEnum
+      format_details:
+        name: format_details
+        description: Optional inline format metadata on Product expectations or concrete
+          Asset bytes.
+        from_schema: https://w3id.org/niehs/amadeus
+        owner: Asset
+        domain_of:
+        - Product
+        - Asset
+        range: FormatDetails
+        inlined: true
       size_bytes:
         name: size_bytes
         from_schema: https://w3id.org/niehs/amadeus
@@ -10237,5 +10859,5 @@ classes:
         - AmbientValue
         range: string
 metamodel_version: 1.12.0
-source_file: amadeus_schema/src/amadeus_schema/schema/amadeus_schema.yaml
+source_file: src/amadeus_schema/schema/amadeus_schema.yaml
 

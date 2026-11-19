@@ -1198,6 +1198,32 @@
                         "null"
                     ]
                 },
+                "filename": {
+                    "description": "Actual Asset basename, excluding URL query and fragment; not a Product filename pattern.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "filename_extension": {
+                    "description": "Actual lower-case Asset suffix, including leading dot; outer archive suffix for packaged Assets.",
+                    "pattern": "^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "format_details": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FormatDetails"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Optional inline format metadata on Product expectations or concrete Asset bytes."
+                },
                 "id": {
                     "description": "Stable identifier for this entity within an AmadeusDB instance.",
                     "type": "string"
@@ -1745,9 +1771,29 @@
                 "ending_1200_gmt",
                 "solar_noon_centered",
                 "observation_dependent",
+                "not_established",
                 "not_applicable"
             ],
             "title": "DayBoundaryConventionEnum",
+            "type": "string"
+        },
+        "DeliveryStructureEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "single_file",
+                "multifile_dataset",
+                "directory_store"
+            ],
+            "title": "DeliveryStructureEnum",
+            "type": "string"
+        },
+        "ExtensionScopeEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "product",
+                "catalog_family"
+            ],
+            "title": "ExtensionScopeEnum",
             "type": "string"
         },
         "ExtractionMethodEnum": {
@@ -2044,6 +2090,243 @@
             ],
             "title": "ExtractionRequest",
             "type": "object"
+        },
+        "FormatConformanceStatusEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "not_assessed",
+                "conformant",
+                "nonconformant",
+                "not_applicable"
+            ],
+            "title": "FormatConformanceStatusEnum",
+            "type": "string"
+        },
+        "FormatDetails": {
+            "additionalProperties": false,
+            "description": "Optional format identification, independent of filename suffix and scientific metadata. Missing values mean unknown. Product expectations describe payloads; Asset identification describes actual delivered bytes. Legacy native_format is retained without implying assessed CF or COG conformance.",
+            "properties": {
+                "catalog_family": {
+                    "description": "Catalog family owning an explicitly family-scoped extension union.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "cf_conformance_status": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FormatConformanceStatusEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Assessment status, independent of a NetCDF suffix or legacy netcdf4_cf label."
+                },
+                "companion_filename_extensions": {
+                    "description": "Companion metadata or multifile component suffixes, e.g. .shx, .dbf or .nc4.xml.",
+                    "items": {
+                        "pattern": "^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$",
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "conventions_attribute": {
+                    "description": "Literal observed Conventions attribute; preserve spelling and version. Missing means unknown or unrecorded, not nonconforming.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "data_model": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/NetcdfDataModelEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "NetCDF logical model only: classic or enhanced, independently of CDF/HDF5 encoding."
+                },
+                "delivery_structure": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DeliveryStructureEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Single payload, multifile dataset or directory store; independent of outer compression."
+                },
+                "expected_filename_extensions": {
+                    "description": "Expected payload suffixes, including leading dot; discovery hints rather than proof of format.",
+                    "items": {
+                        "pattern": "^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$",
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "expected_filename_extensions_scope": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ExtensionScopeEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Product scope by default; catalog_family explicitly describes a broader discovery union, never decoder selection."
+                },
+                "filename_pattern": {
+                    "description": "Case-sensitive shell-style glob narrowing this Product payload naming, not a validator of bytes.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "format_family": {
+                    "$ref": "#/$defs/FormatFamilyEnum",
+                    "description": "Underlying payload family; not inferred from suffix alone."
+                },
+                "format_profile": {
+                    "description": "Declared profile such as cloud_optimized_geotiff; does not itself certify conformance.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "format_variant": {
+                    "description": "Extensible exact serialization variant, e.g. netcdf3_classic, netcdf3_64bit_offset, netcdf3_64bit_data, netcdf4, hdf4_eos2, hdf5_eos5, zarr_v2 or zarr_v3. Unknown when absent.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "identification": {
+                    "$ref": "#/$defs/FormatIdentification",
+                    "description": "Evidence scoped to these format assertions."
+                },
+                "package_filename_extensions": {
+                    "description": "Expected outer delivery suffixes, e.g. .zip or .7z; not payload format.",
+                    "items": {
+                        "pattern": "^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$",
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "packaging": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PackagingEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Outer delivery compression/archive, independent of the payload container."
+                },
+                "physical_container": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PhysicalContainerEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Underlying payload container, distinct from outer archive packaging."
+                },
+                "profile_conformance_status": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FormatConformanceStatusEnum"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Whether the declared format profile was assessed."
+                }
+            },
+            "required": [
+                "format_family",
+                "identification"
+            ],
+            "title": "FormatDetails",
+            "type": "object"
+        },
+        "FormatFamilyEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "netcdf",
+                "hdf",
+                "tiff",
+                "grib",
+                "esri_ascii_grid",
+                "arcinfo_binary_grid",
+                "bil",
+                "shapefile",
+                "file_geodatabase",
+                "kml",
+                "csv",
+                "delimited_text",
+                "fixed_width_text",
+                "zarr",
+                "parquet"
+            ],
+            "title": "FormatFamilyEnum",
+            "type": "string"
+        },
+        "FormatIdentification": {
+            "additionalProperties": false,
+            "description": "Evidence for only the format assertions actually established. A catalog declaration is not a native-file inspection or conformance test.",
+            "properties": {
+                "basis": {
+                    "$ref": "#/$defs/FormatIdentificationBasisEnum",
+                    "description": "How the format assertions were established."
+                },
+                "evidence_reference": {
+                    "description": "Provider URL or repository-relative retained evidence reference.",
+                    "type": "string"
+                },
+                "identification_note": {
+                    "description": "Assertion scope, limitations and unresolved details; no claim of byte inspection unless performed.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "basis",
+                "evidence_reference"
+            ],
+            "title": "FormatIdentification",
+            "type": "object"
+        },
+        "FormatIdentificationBasisEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "existing_catalog",
+                "provider_documentation",
+                "native_header",
+                "signature",
+                "validator_report"
+            ],
+            "title": "FormatIdentificationBasisEnum",
+            "type": "string"
         },
         "GeometryTypeEnum": {
             "description": "",
@@ -2999,6 +3282,8 @@
             "description": "The format the source actually ships.",
             "enum": [
                 "netcdf4_cf",
+                "csv",
+                "arcinfo_binary_grid",
                 "netcdf3",
                 "hdf4",
                 "hdf5",
@@ -3019,6 +3304,15 @@
                 "geoparquet"
             ],
             "title": "NativeFormatEnum",
+            "type": "string"
+        },
+        "NetcdfDataModelEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "classic",
+                "enhanced"
+            ],
+            "title": "NetcdfDataModelEnum",
             "type": "string"
         },
         "NullSemanticsEnum": {
@@ -3076,6 +3370,20 @@
             "title": "OmopConceptBinding",
             "type": "object"
         },
+        "PackagingEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "none",
+                "zip",
+                "gzip",
+                "tar",
+                "tar_gzip",
+                "seven_zip",
+                "other"
+            ],
+            "title": "PackagingEnum",
+            "type": "string"
+        },
         "PhiStatusEnum": {
             "description": "Scoped PHI classification for source data, supplied locations or an exact output. The owning slot defines the scope; classifications do not propagate automatically. Preserves EnVar's phi_status value set. An enum rather than a boolean also supports LinkML rule preconditions; see ValueMaterializationEnum.",
             "enum": [
@@ -3084,6 +3392,23 @@
                 "phi_present"
             ],
             "title": "PhiStatusEnum",
+            "type": "string"
+        },
+        "PhysicalContainerEnum": {
+            "description": "Orthogonal format metadata classification; unknown values remain absent.",
+            "enum": [
+                "cdf",
+                "hdf4",
+                "hdf5",
+                "tiff",
+                "grib",
+                "text",
+                "binary",
+                "sqlite",
+                "parquet",
+                "directory"
+            ],
+            "title": "PhysicalContainerEnum",
             "type": "string"
         },
         "PrivacyAssessmentStatusEnum": {
@@ -3800,6 +4125,17 @@
                         "string",
                         "null"
                     ]
+                },
+                "format_details": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FormatDetails"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Optional inline format metadata on Product expectations or concrete Asset bytes."
                 },
                 "grid_definition": {
                     "description": "Required when `spatial_support_type` is a grid cell type, forbidden otherwise. Enforced by the rules below rather than by two separate classes \u2014 the project lead's \"grid size is a dataset-level property\" becomes a foreign key, not a copied field.",

@@ -48,54 +48,40 @@ def build_rows(sv: SchemaView, doc: dict) -> tuple[dict, dict]:
     tables: dict[str, list[dict]] = {}
     junctions: dict[str, list[dict]] = {}
 
-    container_slots = {s.name: s for s in sv.class_induced_slots(CONTAINER)}
+    classes = sv.all_classes()
 
-    for coll_name, payload in doc.items():
-        slot = container_slots.get(coll_name)
-        if slot is None or not slot.multivalued:
-            continue  # schema_version and friends
-        cls = slot.range
-        if cls not in sv.all_classes():
-            continue
+    def add_record(cls, obj):
         induced = {s.alias or s.name: s for s in sv.class_induced_slots(cls)}
-        rows, jrows = [], {}
+        row = {}
+        identifier = next((s.alias or s.name for s in induced.values() if s.identifier), None)
+        identity = obj.get(identifier) if identifier else len(tables.setdefault(cls, [])) + 1
+        if not identifier:
+            row["id"] = identity
+        # Reserve a row before recursion so synthetic identifiers stay unique.
+        tables.setdefault(cls, []).append(row)
+        for key, val in obj.items():
+            slot = induced.get(key)
+            if slot is None or val is None:
+                continue
+            is_class = slot.range in classes
+            if slot.multivalued:
+                jt = f"{cls}_{key}"
+                suffix = "_id" if is_class else ""
+                values = [add_record(slot.range, v) if is_class and slot.inlined else v for v in val]
+                junctions.setdefault(jt, []).extend(
+                    {f"{cls}_id": identity, f"{key}{suffix}": v} for v in values)
+            elif is_class and slot.inlined:
+                row[f"{key}_id"] = add_record(slot.range, val)
+            else:
+                row[key] = val
+        return identity
 
-        for obj in payload:
-            row, inline = {}, {}
-            for key, val in obj.items():
-                s = induced.get(key)
-                if s is None:
-                    continue
-                if s.multivalued:
-                    # LinkML's junction convention: <Class>_<slot>, with a
-                    # backref column <Class>_id and a value column named after
-                    # the slot (+ "_id" when the range is another class).
-                    jt = f"{cls}_{key}"
-                    suffix = "_id" if s.range in sv.all_classes() else ""
-                    jrows.setdefault(jt, []).extend(
-                        {f"{cls}_id": obj["id"], f"{key}{suffix}": v} for v in val
-                    )
-                elif s.range in sv.all_classes() and s.inlined:
-                    # An inlined object (OmopConceptBinding) becomes its own row
-                    # with a synthetic integer key, which is what the generator's
-                    # DDL expects.
-                    inline[key] = (s.range, val)
-                else:
-                    row[key] = val
-
-            for key, (rng, val) in inline.items():
-                sub = dict(val)
-                sub["id"] = len(tables.setdefault(rng, [])) + 1
-                tables[rng].append(sub)
-                # The generator names the FK column for an inlined object
-                # `<slot>_id`, not `<slot>`.
-                row[f"{key}_id"] = sub["id"]
-
-            rows.append(row)
-
-        tables.setdefault(cls, []).extend(rows)
-        for jt, jr in jrows.items():
-            junctions.setdefault(jt, []).extend(jr)
+    container_slots = {s.name: s for s in sv.class_induced_slots(CONTAINER)}
+    for collection, payload in doc.items():
+        slot = container_slots.get(collection)
+        if slot and slot.multivalued and slot.range in classes:
+            for obj in payload or []:
+                add_record(slot.range, obj)
 
     return tables, junctions
 

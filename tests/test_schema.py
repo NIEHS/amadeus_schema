@@ -237,3 +237,37 @@ def test_ambient_value_requires_status_and_source(sv: SchemaView):
     assert slots["data_status"].required
     assert slots["source_system"].required
     assert slots["null_semantics"].required
+
+
+@pytest.mark.parametrize('engine', ['duckdb', 'sedonadb'])
+def test_nested_format_metadata_round_trip(engine, sv):
+    """Inline evidence and extension arrays survive relational flattening."""
+    import importlib.util
+    import yaml
+    spec = importlib.util.spec_from_file_location('format_engine_loader', ROOT / 'scripts/load_and_query.py')
+    loader = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loader)
+    doc = yaml.safe_load(
+        (ROOT / 'tests/data/valid/AmadeusDatabase-durham_heat_aq_slice.yaml').read_text())
+    doc['products'][0]['format_details'] = {
+        'format_family':'netcdf', 'format_variant':'netcdf4', 'data_model':'classic',
+        'physical_container':'hdf5', 'expected_filename_extensions':['.nc4','.nc'],
+        'cf_conformance_status':'not_assessed',
+        'identification':{'basis':'provider_documentation','evidence_reference':'https://example.org/format'}}
+    tables, junctions = loader.build_rows(sv, doc)
+    database = (loader.DuckEngine if engine == 'duckdb' else loader.SedonaEngine)(
+        engine, BUILD / f'amadeus_{engine}.sql')
+    database.connect()
+    _, errors = database.create_schema()
+    assert not errors
+    for table, rows in loader.order_tables(tables, BUILD / 'amadeus_generic.sql') + list(junctions.items()):
+        inserted, errors = database.insert(table, rows)
+        assert not errors
+        assert inserted == len(rows)
+    _, rows = database.fetch('''
+      SELECT f.data_model, i.basis, e.expected_filename_extensions
+      FROM "Product" p JOIN "FormatDetails" f ON p.format_details_id=f.id
+      JOIN "FormatIdentification" i ON f.identification_id=i.id
+      JOIN "FormatDetails_expected_filename_extensions" e ON e."FormatDetails_id"=f.id
+      ORDER BY e.expected_filename_extensions''')
+    assert rows == [('classic','provider_documentation','.nc'),('classic','provider_documentation','.nc4')]

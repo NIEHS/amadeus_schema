@@ -488,3 +488,35 @@ Complete public and restricted synthetic examples are in
 DDL, integrity SQL and R validators were regenerated from those definitions.
 The catalog workflow, registry, all-format outputs and detailed privacy guide
 are maintained in the containing workspace, outside this standalone repository.
+
+
+## Scientific-format metadata extension — 2026-11-18
+
+Optional inline `FormatDetails` and `FormatIdentification` on Product/Asset
+separate format family/variant, NetCDF logical model, physical container, payload
+suffixes, delivery packaging, raw convention attributes and assessed conformance.
+Asset filename/suffix fields are explicit. Legacy `native_format` values remain
+valid; `csv` and `arcinfo_binary_grid` fill previously unclassified deliveries.
+`not_established` expresses an unresolved daily boundary without asserting UTC.
+The root collection structure is unchanged. The supplemental format checker
+requires consistent family/model/container and evidence for conformance findings.
+These semantic checks accompany structural validation in the catalog workflow
+and both JSON bridges; schema validation alone is not a conformance assessment.
+
+Measured: 26 classes, 46 enums, 299 slots, 23 types and 27 conditional rules;
+44 tables per generated backend. Python schema checks: 57 passed, including
+nested format/evidence/extension round trips on DuckDB and SedonaDB. Generated
+R validators: 24 checks passed. Existing sample queries and integrity checks
+continue to pass. The EnVar projection rejects unsupported formats rather than
+inventing a conversion; the existing sample projection still passes.
+
+The surrounding maintained catalogs contain 23 families, 26 sources and 243
+Products, including daily/monthly GlobalFWI discovery entries. There are still
+39 grids, 1,799 canonical variables, 1,957 bindings, 124 Assets and one public
+privacy profile. GlobalFWI sample `.nc` headers are NetCDF-3/CDF-2; native MERRA-2
+profiles use NetCDF-4 classic/HDF5. The family suffix union includes both `.nc4`
+and `.nc`, with source-specific patterns; it is not decoder selection.
+Existing scientific metadata and protected historical files were compared to
+pre-migration snapshots. No R package source or packaged catalog snapshot changes
+are part of this extension. Missing model/conventions/conformance findings remain
+unknown rather than inferred from a suffix or a legacy label.

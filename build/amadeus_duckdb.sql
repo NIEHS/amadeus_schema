@@ -1,9 +1,18 @@
 -- AmadeusDB DDL — dialect: duckdb
 -- Generated from amadeus_schema.yaml via linkml gen-sqltables + scripts/gen_backend_ddl.py
--- 38 tables, 8 geometry views
+-- 43 tables, 8 geometry views
 
 INSTALL spatial;
 LOAD spatial;
+
+CREATE TABLE "FormatIdentification" (
+	id INTEGER NOT NULL,
+	basis VARCHAR(22) NOT NULL,
+	evidence_reference TEXT NOT NULL,
+	identification_note TEXT,
+	PRIMARY KEY (id),
+	CONSTRAINT "ck_FormatIdentification_basis" CHECK (basis IN ('existing_catalog', 'provider_documentation', 'native_header', 'signature', 'validator_report'))
+);
 
 CREATE TABLE "OmopConceptBinding" (
 	id INTEGER NOT NULL,
@@ -15,6 +24,34 @@ CREATE TABLE "OmopConceptBinding" (
 	concept_status VARCHAR(18) NOT NULL,
 	PRIMARY KEY (id),
 	CONSTRAINT "ck_OmopConceptBinding_concept_status" CHECK (concept_status IN ('mapped_standard', 'mapped_nonstandard', 'candidate_mapping', 'vocabulary_gap', 'not_evaluated'))
+);
+
+CREATE TABLE "FormatDetails" (
+	id INTEGER NOT NULL,
+	format_family VARCHAR(19) NOT NULL,
+	format_variant TEXT,
+	data_model VARCHAR(8),
+	physical_container VARCHAR(9),
+	format_profile TEXT,
+	profile_conformance_status VARCHAR(14),
+	expected_filename_extensions_scope VARCHAR(14),
+	catalog_family TEXT,
+	filename_pattern TEXT,
+	delivery_structure VARCHAR(17),
+	packaging VARCHAR(9),
+	conventions_attribute TEXT,
+	cf_conformance_status VARCHAR(14),
+	identification_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(identification_id) REFERENCES "FormatIdentification" (id),
+	CONSTRAINT "ck_FormatDetails_format_family" CHECK (format_family IN ('netcdf', 'hdf', 'tiff', 'grib', 'esri_ascii_grid', 'arcinfo_binary_grid', 'bil', 'shapefile', 'file_geodatabase', 'kml', 'csv', 'delimited_text', 'fixed_width_text', 'zarr', 'parquet')),
+	CONSTRAINT "ck_FormatDetails_data_model" CHECK (data_model IN ('classic', 'enhanced')),
+	CONSTRAINT "ck_FormatDetails_physical_container" CHECK (physical_container IN ('cdf', 'hdf4', 'hdf5', 'tiff', 'grib', 'text', 'binary', 'sqlite', 'parquet', 'directory')),
+	CONSTRAINT "ck_FormatDetails_profile_conformance_status" CHECK (profile_conformance_status IN ('not_assessed', 'conformant', 'nonconformant', 'not_applicable')),
+	CONSTRAINT "ck_FormatDetails_expected_filename_extensions_scope" CHECK (expected_filename_extensions_scope IN ('product', 'catalog_family')),
+	CONSTRAINT "ck_FormatDetails_delivery_structure" CHECK (delivery_structure IN ('single_file', 'multifile_dataset', 'directory_store')),
+	CONSTRAINT "ck_FormatDetails_packaging" CHECK (packaging IN ('none', 'zip', 'gzip', 'tar', 'tar_gzip', 'seven_zip', 'other')),
+	CONSTRAINT "ck_FormatDetails_cf_conformance_status" CHECK (cf_conformance_status IN ('not_assessed', 'conformant', 'nonconformant', 'not_applicable'))
 );
 
 CREATE TABLE "DataSource" (
@@ -200,15 +237,17 @@ CREATE TABLE "Product" (
 	supports_server_side_subset BOOLEAN,
 	stac_collection_id TEXT,
 	privacy_profile TEXT,
+	format_details_id INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(data_source) REFERENCES "DataSource" (id),
 	FOREIGN KEY(grid_definition) REFERENCES "GridDefinition" (id),
 	FOREIGN KEY(privacy_profile) REFERENCES "PrivacyProfile" (id),
-	CONSTRAINT "ck_Product_native_format" CHECK (native_format IN ('netcdf4_cf', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet')),
+	FOREIGN KEY(format_details_id) REFERENCES "FormatDetails" (id),
+	CONSTRAINT "ck_Product_native_format" CHECK (native_format IN ('netcdf4_cf', 'csv', 'arcinfo_binary_grid', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet')),
 	CONSTRAINT "ck_Product_spatial_support_type" CHECK (spatial_support_type IN ('point', 'monitoring_station', 'raster_grid_cell', 'model_grid_cell', 'polygon', 'administrative_area', 'statistical_area', 'hex_cell', 'line_feature', 'other')),
 	CONSTRAINT "ck_Product_temporal_resolution" CHECK (temporal_resolution IN ('instantaneous', 'subhourly', 'hourly', 'three_hourly', 'daily', 'multi_day', 'monthly', 'seasonal', 'annual', 'multi_year_epoch', 'timeless')),
 	CONSTRAINT "ck_Product_temporal_alignment" CHECK (temporal_alignment IN ('start', 'center', 'end', 'interval', 'unknown')),
-	CONSTRAINT "ck_Product_day_boundary_convention" CHECK (day_boundary_convention IN ('local_midnight', 'utc_midnight', 'ending_1200_gmt', 'solar_noon_centered', 'observation_dependent', 'not_applicable')),
+	CONSTRAINT "ck_Product_day_boundary_convention" CHECK (day_boundary_convention IN ('local_midnight', 'utc_midnight', 'ending_1200_gmt', 'solar_noon_centered', 'observation_dependent', 'not_established', 'not_applicable')),
 	CONSTRAINT "ck_Product_calendar" CHECK (calendar IN ('gregorian', 'proleptic_gregorian', 'noleap', 'daymet_365', 'all_leap', 'day_360', 'julian')),
 	CONSTRAINT "ck_Product_default_data_status" CHECK (default_data_status IN ('preliminary', 'provisional', 'quality_controlled', 'final', 'forecast', 'reanalysis', 'superseded', 'unknown')),
 	CONSTRAINT "ck_Product_homogenisation_status" CHECK (homogenisation_status IN ('homogenised', 'not_homogenised', 'partial'))
@@ -245,6 +284,27 @@ CREATE TABLE "PrivacyDeclaration" (
 	CONSTRAINT "ck_PrivacyDeclaration_input_phi_assessment_status" CHECK (input_phi_assessment_status IN ('not_assessed', 'in_progress', 'assessed')),
 	CONSTRAINT "ck_PrivacyDeclaration_input_phi_status" CHECK (input_phi_status IN ('no_phi', 'aggregated_no_phi', 'phi_present')),
 	CONSTRAINT "ck_PrivacyDeclaration_location_identifiability" CHECK (location_identifiability IN ('not_assessed', 'potentially_identifiable', 'not_identifiable_in_assessed_context'))
+);
+
+CREATE TABLE "FormatDetails_expected_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	expected_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", expected_filename_extensions),
+	FOREIGN KEY("FormatDetails_id") REFERENCES "FormatDetails" (id)
+);
+
+CREATE TABLE "FormatDetails_package_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	package_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", package_filename_extensions),
+	FOREIGN KEY("FormatDetails_id") REFERENCES "FormatDetails" (id)
+);
+
+CREATE TABLE "FormatDetails_companion_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	companion_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", companion_filename_extensions),
+	FOREIGN KEY("FormatDetails_id") REFERENCES "FormatDetails" (id)
 );
 
 CREATE TABLE "GridDefinition_vertical_levels" (
@@ -325,6 +385,8 @@ CREATE TABLE "Asset" (
 	id TEXT NOT NULL,
 	product TEXT NOT NULL,
 	asset_key TEXT,
+	filename TEXT,
+	filename_extension TEXT,
 	url TEXT,
 	local_path TEXT,
 	media_type TEXT,
@@ -344,9 +406,11 @@ CREATE TABLE "Asset" (
 	cache_expires_at TIMESTAMP,
 	value_state VARCHAR(15) NOT NULL,
 	produced_by_run TEXT,
+	format_details_id INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(product) REFERENCES "Product" (id),
-	CONSTRAINT "ck_Asset_native_format" CHECK (native_format IN ('netcdf4_cf', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet')),
+	FOREIGN KEY(format_details_id) REFERENCES "FormatDetails" (id),
+	CONSTRAINT "ck_Asset_native_format" CHECK (native_format IN ('netcdf4_cf', 'csv', 'arcinfo_binary_grid', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet')),
 	CONSTRAINT "ck_Asset_materialization_mode" CHECK (materialization_mode IN ('direct_remote_scan', 'server_side_subset', 'bounded_cache', 'full_materialization')),
 	CONSTRAINT "ck_Asset_value_state" CHECK (value_state IN ('registered_only', 'materialized'))
 );

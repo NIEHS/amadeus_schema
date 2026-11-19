@@ -337,6 +337,134 @@ class AmadeusDatabase(YAMLRoot):
 
 
 @dataclass(repr=False)
+class FormatDetails(YAMLRoot):
+    """
+    Optional format identification, independent of filename suffix and scientific metadata. Missing values mean
+    unknown. Product expectations describe payloads; Asset identification describes actual delivered bytes. Legacy
+    native_format is retained without implying assessed CF or COG conformance.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = AMADEUS["FormatDetails"]
+    class_class_curie: ClassVar[str] = "amadeus:FormatDetails"
+    class_name: ClassVar[str] = "FormatDetails"
+    class_model_uri: ClassVar[URIRef] = AMADEUS.FormatDetails
+
+    format_family: Union[str, "FormatFamilyEnum"] = None
+    identification: Union[dict, "FormatIdentification"] = None
+    format_variant: Optional[str] = None
+    data_model: Optional[Union[str, "NetcdfDataModelEnum"]] = None
+    physical_container: Optional[Union[str, "PhysicalContainerEnum"]] = None
+    format_profile: Optional[str] = None
+    profile_conformance_status: Optional[Union[str, "FormatConformanceStatusEnum"]] = None
+    expected_filename_extensions: Optional[Union[str, list[str]]] = empty_list()
+    expected_filename_extensions_scope: Optional[Union[str, "ExtensionScopeEnum"]] = None
+    catalog_family: Optional[str] = None
+    filename_pattern: Optional[str] = None
+    delivery_structure: Optional[Union[str, "DeliveryStructureEnum"]] = None
+    packaging: Optional[Union[str, "PackagingEnum"]] = None
+    package_filename_extensions: Optional[Union[str, list[str]]] = empty_list()
+    companion_filename_extensions: Optional[Union[str, list[str]]] = empty_list()
+    conventions_attribute: Optional[str] = None
+    cf_conformance_status: Optional[Union[str, "FormatConformanceStatusEnum"]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.format_family):
+            self.MissingRequiredField("format_family")
+        if not isinstance(self.format_family, FormatFamilyEnum):
+            self.format_family = FormatFamilyEnum(self.format_family)
+
+        if self._is_empty(self.identification):
+            self.MissingRequiredField("identification")
+        if not isinstance(self.identification, FormatIdentification):
+            self.identification = FormatIdentification(**as_dict(self.identification))
+
+        if self.format_variant is not None and not isinstance(self.format_variant, str):
+            self.format_variant = str(self.format_variant)
+
+        if self.data_model is not None and not isinstance(self.data_model, NetcdfDataModelEnum):
+            self.data_model = NetcdfDataModelEnum(self.data_model)
+
+        if self.physical_container is not None and not isinstance(self.physical_container, PhysicalContainerEnum):
+            self.physical_container = PhysicalContainerEnum(self.physical_container)
+
+        if self.format_profile is not None and not isinstance(self.format_profile, str):
+            self.format_profile = str(self.format_profile)
+
+        if self.profile_conformance_status is not None and not isinstance(self.profile_conformance_status, FormatConformanceStatusEnum):
+            self.profile_conformance_status = FormatConformanceStatusEnum(self.profile_conformance_status)
+
+        if not isinstance(self.expected_filename_extensions, list):
+            self.expected_filename_extensions = [self.expected_filename_extensions] if self.expected_filename_extensions is not None else []
+        self.expected_filename_extensions = [v if isinstance(v, str) else str(v) for v in self.expected_filename_extensions]
+
+        if self.expected_filename_extensions_scope is not None and not isinstance(self.expected_filename_extensions_scope, ExtensionScopeEnum):
+            self.expected_filename_extensions_scope = ExtensionScopeEnum(self.expected_filename_extensions_scope)
+
+        if self.catalog_family is not None and not isinstance(self.catalog_family, str):
+            self.catalog_family = str(self.catalog_family)
+
+        if self.filename_pattern is not None and not isinstance(self.filename_pattern, str):
+            self.filename_pattern = str(self.filename_pattern)
+
+        if self.delivery_structure is not None and not isinstance(self.delivery_structure, DeliveryStructureEnum):
+            self.delivery_structure = DeliveryStructureEnum(self.delivery_structure)
+
+        if self.packaging is not None and not isinstance(self.packaging, PackagingEnum):
+            self.packaging = PackagingEnum(self.packaging)
+
+        if not isinstance(self.package_filename_extensions, list):
+            self.package_filename_extensions = [self.package_filename_extensions] if self.package_filename_extensions is not None else []
+        self.package_filename_extensions = [v if isinstance(v, str) else str(v) for v in self.package_filename_extensions]
+
+        if not isinstance(self.companion_filename_extensions, list):
+            self.companion_filename_extensions = [self.companion_filename_extensions] if self.companion_filename_extensions is not None else []
+        self.companion_filename_extensions = [v if isinstance(v, str) else str(v) for v in self.companion_filename_extensions]
+
+        if self.conventions_attribute is not None and not isinstance(self.conventions_attribute, str):
+            self.conventions_attribute = str(self.conventions_attribute)
+
+        if self.cf_conformance_status is not None and not isinstance(self.cf_conformance_status, FormatConformanceStatusEnum):
+            self.cf_conformance_status = FormatConformanceStatusEnum(self.cf_conformance_status)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class FormatIdentification(YAMLRoot):
+    """
+    Evidence for only the format assertions actually established. A catalog declaration is not a native-file
+    inspection or conformance test.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = AMADEUS["FormatIdentification"]
+    class_class_curie: ClassVar[str] = "amadeus:FormatIdentification"
+    class_name: ClassVar[str] = "FormatIdentification"
+    class_model_uri: ClassVar[URIRef] = AMADEUS.FormatIdentification
+
+    basis: Union[str, "FormatIdentificationBasisEnum"] = None
+    evidence_reference: str = None
+    identification_note: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.basis):
+            self.MissingRequiredField("basis")
+        if not isinstance(self.basis, FormatIdentificationBasisEnum):
+            self.basis = FormatIdentificationBasisEnum(self.basis)
+
+        if self._is_empty(self.evidence_reference):
+            self.MissingRequiredField("evidence_reference")
+        if not isinstance(self.evidence_reference, str):
+            self.evidence_reference = str(self.evidence_reference)
+
+        if self.identification_note is not None and not isinstance(self.identification_note, str):
+            self.identification_note = str(self.identification_note)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
 class DataSource(YAMLRoot):
     """
     A provider programme that publishes one or more products: EPA AQS, NASA MODIS, NOAA NARR, Climatology Lab. One row
@@ -524,6 +652,7 @@ class Product(YAMLRoot):
     product_version: Optional[str] = None
     data_genre: Optional[Union[Union[str, "DataGenreEnum"], list[Union[str, "DataGenreEnum"]]]] = empty_list()
     native_format: Optional[Union[str, "NativeFormatEnum"]] = None
+    format_details: Optional[Union[dict, FormatDetails]] = None
     grid_definition: Optional[Union[str, GridDefinitionId]] = None
     crs: Optional[str] = None
     srid: Optional[int] = None
@@ -593,6 +722,9 @@ class Product(YAMLRoot):
 
         if self.native_format is not None and not isinstance(self.native_format, NativeFormatEnum):
             self.native_format = NativeFormatEnum(self.native_format)
+
+        if self.format_details is not None and not isinstance(self.format_details, FormatDetails):
+            self.format_details = FormatDetails(**as_dict(self.format_details))
 
         if self.grid_definition is not None and not isinstance(self.grid_definition, GridDefinitionId):
             self.grid_definition = GridDefinitionId(self.grid_definition)
@@ -1060,10 +1192,13 @@ class Asset(YAMLRoot):
     materialization_mode: Union[str, "MaterializationModeEnum"] = None
     value_state: Union[str, "ValueMaterializationEnum"] = None
     asset_key: Optional[str] = None
+    filename: Optional[str] = None
+    filename_extension: Optional[str] = None
     url: Optional[Union[str, URI]] = None
     local_path: Optional[str] = None
     media_type: Optional[str] = None
     native_format: Optional[Union[str, "NativeFormatEnum"]] = None
+    format_details: Optional[Union[dict, FormatDetails]] = None
     size_bytes: Optional[int] = None
     sha256: Optional[Union[str, Sha256]] = None
     source_last_modified: Optional[Union[str, XSDDateTime]] = None
@@ -1104,6 +1239,12 @@ class Asset(YAMLRoot):
         if self.asset_key is not None and not isinstance(self.asset_key, str):
             self.asset_key = str(self.asset_key)
 
+        if self.filename is not None and not isinstance(self.filename, str):
+            self.filename = str(self.filename)
+
+        if self.filename_extension is not None and not isinstance(self.filename_extension, str):
+            self.filename_extension = str(self.filename_extension)
+
         if self.url is not None and not isinstance(self.url, URI):
             self.url = URI(self.url)
 
@@ -1115,6 +1256,9 @@ class Asset(YAMLRoot):
 
         if self.native_format is not None and not isinstance(self.native_format, NativeFormatEnum):
             self.native_format = NativeFormatEnum(self.native_format)
+
+        if self.format_details is not None and not isinstance(self.format_details, FormatDetails):
+            self.format_details = FormatDetails(**as_dict(self.format_details))
 
         if self.size_bytes is not None and not isinstance(self.size_bytes, int):
             self.size_bytes = int(self.size_bytes)
@@ -2412,6 +2556,134 @@ class ProvenanceChain(YAMLRoot):
 
 
 # Enumerations
+class FormatFamilyEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    netcdf = PermissibleValue(text="netcdf")
+    hdf = PermissibleValue(text="hdf")
+    tiff = PermissibleValue(text="tiff")
+    grib = PermissibleValue(text="grib")
+    esri_ascii_grid = PermissibleValue(text="esri_ascii_grid")
+    arcinfo_binary_grid = PermissibleValue(text="arcinfo_binary_grid")
+    bil = PermissibleValue(text="bil")
+    shapefile = PermissibleValue(text="shapefile")
+    file_geodatabase = PermissibleValue(text="file_geodatabase")
+    kml = PermissibleValue(text="kml")
+    csv = PermissibleValue(text="csv")
+    delimited_text = PermissibleValue(text="delimited_text")
+    fixed_width_text = PermissibleValue(text="fixed_width_text")
+    zarr = PermissibleValue(text="zarr")
+    parquet = PermissibleValue(text="parquet")
+
+    _defn = EnumDefinition(
+        name="FormatFamilyEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
+class NetcdfDataModelEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    classic = PermissibleValue(text="classic")
+    enhanced = PermissibleValue(text="enhanced")
+
+    _defn = EnumDefinition(
+        name="NetcdfDataModelEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
+class PhysicalContainerEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    cdf = PermissibleValue(text="cdf")
+    hdf4 = PermissibleValue(text="hdf4")
+    hdf5 = PermissibleValue(text="hdf5")
+    tiff = PermissibleValue(text="tiff")
+    grib = PermissibleValue(text="grib")
+    text = PermissibleValue(text="text")
+    binary = PermissibleValue(text="binary")
+    sqlite = PermissibleValue(text="sqlite")
+    parquet = PermissibleValue(text="parquet")
+    directory = PermissibleValue(text="directory")
+
+    _defn = EnumDefinition(
+        name="PhysicalContainerEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
+class ExtensionScopeEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    product = PermissibleValue(text="product")
+    catalog_family = PermissibleValue(text="catalog_family")
+
+    _defn = EnumDefinition(
+        name="ExtensionScopeEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
+class FormatConformanceStatusEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    not_assessed = PermissibleValue(text="not_assessed")
+    conformant = PermissibleValue(text="conformant")
+    nonconformant = PermissibleValue(text="nonconformant")
+    not_applicable = PermissibleValue(text="not_applicable")
+
+    _defn = EnumDefinition(
+        name="FormatConformanceStatusEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
+class FormatIdentificationBasisEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    existing_catalog = PermissibleValue(text="existing_catalog")
+    provider_documentation = PermissibleValue(text="provider_documentation")
+    native_header = PermissibleValue(text="native_header")
+    signature = PermissibleValue(text="signature")
+    validator_report = PermissibleValue(text="validator_report")
+
+    _defn = EnumDefinition(
+        name="FormatIdentificationBasisEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
+class DeliveryStructureEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    single_file = PermissibleValue(text="single_file")
+    multifile_dataset = PermissibleValue(text="multifile_dataset")
+    directory_store = PermissibleValue(text="directory_store")
+
+    _defn = EnumDefinition(
+        name="DeliveryStructureEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
+class PackagingEnum(EnumDefinitionImpl):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    none = PermissibleValue(text="none")
+    zip = PermissibleValue(text="zip")
+    gzip = PermissibleValue(text="gzip")
+    tar = PermissibleValue(text="tar")
+    tar_gzip = PermissibleValue(text="tar_gzip")
+    seven_zip = PermissibleValue(text="seven_zip")
+    other = PermissibleValue(text="other")
+
+    _defn = EnumDefinition(
+        name="PackagingEnum",
+        description="Orthogonal format metadata classification; unknown values remain absent.",
+    )
+
 class SpatialSupportTypeEnum(EnumDefinitionImpl):
     """
     What a single value spatially *is* — the source-side question. Distinct from `TargetGeographyTypeEnum`, which says
@@ -2526,6 +2798,9 @@ class DayBoundaryConventionEnum(EnumDefinitionImpl):
     ending_1200_gmt = PermissibleValue(text="ending_1200_gmt")
     solar_noon_centered = PermissibleValue(text="solar_noon_centered")
     observation_dependent = PermissibleValue(text="observation_dependent")
+    not_established = PermissibleValue(
+        text="not_established",
+        description="Daily boundary is unresolved; not an assertion of midnight or not applicable.")
     not_applicable = PermissibleValue(text="not_applicable")
 
     _defn = EnumDefinition(
@@ -2730,6 +3005,12 @@ class NativeFormatEnum(EnumDefinitionImpl):
     The format the source actually ships.
     """
     netcdf4_cf = PermissibleValue(text="netcdf4_cf")
+    csv = PermissibleValue(
+        text="csv",
+        description="Generic comma-separated tabular data, without a station-observation assertion.")
+    arcinfo_binary_grid = PermissibleValue(
+        text="arcinfo_binary_grid",
+        description="Arc/Info binary Grid multifile directory, often delivered inside ZIP.")
     netcdf3 = PermissibleValue(text="netcdf3")
     hdf4 = PermissibleValue(
         text="hdf4",
@@ -2739,7 +3020,7 @@ class NativeFormatEnum(EnumDefinitionImpl):
     cloud_optimized_geotiff = PermissibleValue(text="cloud_optimized_geotiff")
     ascii_grid = PermissibleValue(
         text="ascii_grid",
-        description="GMTED2010, PRISM `.asc`.")
+        description="Textual ESRI ASCII raster, distinct from Arc/Info binary Grid.")
     grib1 = PermissibleValue(text="grib1")
     grib2 = PermissibleValue(text="grib2")
     bil = PermissibleValue(
@@ -3627,6 +3908,79 @@ slots.value_state = Slot(uri=AMADEUS.value_state, name="value_state", curie=AMAD
 slots.produced_by_run = Slot(uri=AMADEUS.produced_by_run, name="produced_by_run", curie=AMADEUS.curie('produced_by_run'),
                    model_uri=AMADEUS.produced_by_run, domain=None, range=Optional[str])
 
+slots.format_details = Slot(uri=AMADEUS.format_details, name="format_details", curie=AMADEUS.curie('format_details'),
+                   model_uri=AMADEUS.format_details, domain=None, range=Optional[Union[dict, FormatDetails]])
+
+slots.identification = Slot(uri=AMADEUS.identification, name="identification", curie=AMADEUS.curie('identification'),
+                   model_uri=AMADEUS.identification, domain=None, range=Optional[Union[dict, FormatIdentification]])
+
+slots.filename = Slot(uri=AMADEUS.filename, name="filename", curie=AMADEUS.curie('filename'),
+                   model_uri=AMADEUS.filename, domain=None, range=Optional[str])
+
+slots.filename_extension = Slot(uri=AMADEUS.filename_extension, name="filename_extension", curie=AMADEUS.curie('filename_extension'),
+                   model_uri=AMADEUS.filename_extension, domain=None, range=Optional[str],
+                   pattern=re.compile(r'^\.[a-z0-9]+(?:\.[a-z0-9]+)*$'))
+
+slots.format_family = Slot(uri=AMADEUS.format_family, name="format_family", curie=AMADEUS.curie('format_family'),
+                   model_uri=AMADEUS.format_family, domain=None, range=Optional[Union[str, "FormatFamilyEnum"]])
+
+slots.format_variant = Slot(uri=AMADEUS.format_variant, name="format_variant", curie=AMADEUS.curie('format_variant'),
+                   model_uri=AMADEUS.format_variant, domain=None, range=Optional[str])
+
+slots.data_model = Slot(uri=AMADEUS.data_model, name="data_model", curie=AMADEUS.curie('data_model'),
+                   model_uri=AMADEUS.data_model, domain=None, range=Optional[Union[str, "NetcdfDataModelEnum"]])
+
+slots.physical_container = Slot(uri=AMADEUS.physical_container, name="physical_container", curie=AMADEUS.curie('physical_container'),
+                   model_uri=AMADEUS.physical_container, domain=None, range=Optional[Union[str, "PhysicalContainerEnum"]])
+
+slots.format_profile = Slot(uri=AMADEUS.format_profile, name="format_profile", curie=AMADEUS.curie('format_profile'),
+                   model_uri=AMADEUS.format_profile, domain=None, range=Optional[str])
+
+slots.profile_conformance_status = Slot(uri=AMADEUS.profile_conformance_status, name="profile_conformance_status", curie=AMADEUS.curie('profile_conformance_status'),
+                   model_uri=AMADEUS.profile_conformance_status, domain=None, range=Optional[Union[str, "FormatConformanceStatusEnum"]])
+
+slots.expected_filename_extensions_scope = Slot(uri=AMADEUS.expected_filename_extensions_scope, name="expected_filename_extensions_scope", curie=AMADEUS.curie('expected_filename_extensions_scope'),
+                   model_uri=AMADEUS.expected_filename_extensions_scope, domain=None, range=Optional[Union[str, "ExtensionScopeEnum"]])
+
+slots.catalog_family = Slot(uri=AMADEUS.catalog_family, name="catalog_family", curie=AMADEUS.curie('catalog_family'),
+                   model_uri=AMADEUS.catalog_family, domain=None, range=Optional[str])
+
+slots.filename_pattern = Slot(uri=AMADEUS.filename_pattern, name="filename_pattern", curie=AMADEUS.curie('filename_pattern'),
+                   model_uri=AMADEUS.filename_pattern, domain=None, range=Optional[str])
+
+slots.delivery_structure = Slot(uri=AMADEUS.delivery_structure, name="delivery_structure", curie=AMADEUS.curie('delivery_structure'),
+                   model_uri=AMADEUS.delivery_structure, domain=None, range=Optional[Union[str, "DeliveryStructureEnum"]])
+
+slots.packaging = Slot(uri=AMADEUS.packaging, name="packaging", curie=AMADEUS.curie('packaging'),
+                   model_uri=AMADEUS.packaging, domain=None, range=Optional[Union[str, "PackagingEnum"]])
+
+slots.conventions_attribute = Slot(uri=AMADEUS.conventions_attribute, name="conventions_attribute", curie=AMADEUS.curie('conventions_attribute'),
+                   model_uri=AMADEUS.conventions_attribute, domain=None, range=Optional[str])
+
+slots.cf_conformance_status = Slot(uri=AMADEUS.cf_conformance_status, name="cf_conformance_status", curie=AMADEUS.curie('cf_conformance_status'),
+                   model_uri=AMADEUS.cf_conformance_status, domain=None, range=Optional[Union[str, "FormatConformanceStatusEnum"]])
+
+slots.basis = Slot(uri=AMADEUS.basis, name="basis", curie=AMADEUS.curie('basis'),
+                   model_uri=AMADEUS.basis, domain=None, range=Optional[Union[str, "FormatIdentificationBasisEnum"]])
+
+slots.evidence_reference = Slot(uri=AMADEUS.evidence_reference, name="evidence_reference", curie=AMADEUS.curie('evidence_reference'),
+                   model_uri=AMADEUS.evidence_reference, domain=None, range=Optional[str])
+
+slots.identification_note = Slot(uri=AMADEUS.identification_note, name="identification_note", curie=AMADEUS.curie('identification_note'),
+                   model_uri=AMADEUS.identification_note, domain=None, range=Optional[str])
+
+slots.expected_filename_extensions = Slot(uri=AMADEUS.expected_filename_extensions, name="expected_filename_extensions", curie=AMADEUS.curie('expected_filename_extensions'),
+                   model_uri=AMADEUS.expected_filename_extensions, domain=None, range=Optional[Union[str, list[str]]],
+                   pattern=re.compile(r'^\.[a-z0-9]+(?:\.[a-z0-9]+)*$'))
+
+slots.package_filename_extensions = Slot(uri=AMADEUS.package_filename_extensions, name="package_filename_extensions", curie=AMADEUS.curie('package_filename_extensions'),
+                   model_uri=AMADEUS.package_filename_extensions, domain=None, range=Optional[Union[str, list[str]]],
+                   pattern=re.compile(r'^\.[a-z0-9]+(?:\.[a-z0-9]+)*$'))
+
+slots.companion_filename_extensions = Slot(uri=AMADEUS.companion_filename_extensions, name="companion_filename_extensions", curie=AMADEUS.curie('companion_filename_extensions'),
+                   model_uri=AMADEUS.companion_filename_extensions, domain=None, range=Optional[Union[str, list[str]]],
+                   pattern=re.compile(r'^\.[a-z0-9]+(?:\.[a-z0-9]+)*$'))
+
 slots.product_variable = Slot(uri=AMADEUS.product_variable, name="product_variable", curie=AMADEUS.curie('product_variable'),
                    model_uri=AMADEUS.product_variable, domain=None, range=Optional[Union[str, ProductVariableId]])
 
@@ -4026,6 +4380,18 @@ slots.terminus_type = Slot(uri=AMADEUS.terminus_type, name="terminus_type", curi
 
 slots.compatibility_assertions = Slot(uri=AMADEUS.compatibility_assertions, name="compatibility_assertions", curie=AMADEUS.curie('compatibility_assertions'),
                    model_uri=AMADEUS.compatibility_assertions, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.FormatDetails_format_family = Slot(uri=AMADEUS.format_family, name="FormatDetails_format_family", curie=AMADEUS.curie('format_family'),
+                   model_uri=AMADEUS.FormatDetails_format_family, domain=FormatDetails, range=Union[str, "FormatFamilyEnum"])
+
+slots.FormatDetails_identification = Slot(uri=AMADEUS.identification, name="FormatDetails_identification", curie=AMADEUS.curie('identification'),
+                   model_uri=AMADEUS.FormatDetails_identification, domain=FormatDetails, range=Union[dict, "FormatIdentification"])
+
+slots.FormatIdentification_basis = Slot(uri=AMADEUS.basis, name="FormatIdentification_basis", curie=AMADEUS.curie('basis'),
+                   model_uri=AMADEUS.FormatIdentification_basis, domain=FormatIdentification, range=Union[str, "FormatIdentificationBasisEnum"])
+
+slots.FormatIdentification_evidence_reference = Slot(uri=AMADEUS.evidence_reference, name="FormatIdentification_evidence_reference", curie=AMADEUS.curie('evidence_reference'),
+                   model_uri=AMADEUS.FormatIdentification_evidence_reference, domain=FormatIdentification, range=str)
 
 slots.DataSource_name = Slot(uri=AMADEUS.name, name="DataSource_name", curie=AMADEUS.curie('name'),
                    model_uri=AMADEUS.DataSource_name, domain=DataSource, range=str)

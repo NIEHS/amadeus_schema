@@ -101,30 +101,21 @@ TEMPORAL_AGG = {
     "other": "point_in_time",
 }
 
+# This projection describes formats; it performs no conversion. Preserve only
+# identities and valid base-family reductions supported by EnVar.
 NATIVE_FORMAT = {
-    # EnVar's SourceNativeFormatEnum has 8 members; AmadeusDB's has 19. The
-    # ones with no home fall back to the closest family, and the loss is
-    # recorded as a crosswalk note rather than hidden.
-    "netcdf4_cf": "netcdf4_cf",
-    "netcdf3": "netcdf4_cf",
-    "hdf4": "hdf5",
-    "hdf5": "hdf5",
-    "geotiff": "geotiff",
-    "cloud_optimized_geotiff": "geotiff",
-    "ascii_grid": "geotiff",
-    "bil": "geotiff",
-    "grib1": "grib1",
-    "grib2": "grib2",
-    "shapefile": "csv_station_observations",  # no vector member at all
-    "geodatabase": "csv_station_observations",
-    "kml": "csv_station_observations",
-    "csv_station_observations": "csv_station_observations",
-    "pipe_delimited_text": "csv_station_observations",
-    "fixed_width_text": "csv_station_observations",
-    "zarr": "zarr",
-    "parquet": "parquet",
-    "geoparquet": "parquet",
+    "netcdf4_cf": "netcdf4_cf", "hdf5": "hdf5", "geotiff": "geotiff",
+    "cloud_optimized_geotiff": "geotiff", "grib1": "grib1", "grib2": "grib2",
+    "csv_station_observations": "csv_station_observations", "zarr": "zarr",
+    "parquet": "parquet", "geoparquet": "parquet",
 }
+
+
+def envar_native_format(value):
+    if value not in NATIVE_FORMAT:
+        raise ValueError(f"EnVar cannot faithfully represent native format {value!r}; no conversion was performed")
+    return NATIVE_FORMAT[value]
+
 
 EXPOSURE_MODEL_TYPE = {
     # Not derivable from AmadeusDB at all today — this is the Tier 3 field that
@@ -426,7 +417,7 @@ def build(doc: dict, L: Ledger) -> dict:
             "source_access_url": L.d("source_access_url", asset.get("url")),
             "source_native_format": L.x(
                 "source_native_format",
-                NATIVE_FORMAT[prod["native_format"]],
+                envar_native_format(prod["native_format"]),
                 f"`{prod['native_format']}` -> EnVar's 8-member enum; vector "
                 "formats have no home there at all.",
             ),

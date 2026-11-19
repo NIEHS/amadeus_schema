@@ -1,7 +1,12 @@
 -- Integrity checks LinkML cannot express: referential integrity,
 -- uniqueness, and enum domains. Generated from the FK graph,
 -- unique_keys and enum ranges. Every query must return n = 0.
--- 127 checks
+-- 142 checks
+
+-- [FK] FormatDetails.identification_id -> FormatIdentification.id
+SELECT COUNT(*) AS n FROM "FormatDetails" c
+  LEFT JOIN "FormatIdentification" p ON c."identification_id" = p."id"
+  WHERE c."identification_id" IS NOT NULL AND p."id" IS NULL;
 
 -- [FK] CanonicalVariable.omop_concept_binding_id -> OmopConceptBinding.id
 SELECT COUNT(*) AS n FROM "CanonicalVariable" c
@@ -23,6 +28,11 @@ SELECT COUNT(*) AS n FROM "Product" c
   LEFT JOIN "PrivacyProfile" p ON c."privacy_profile" = p."id"
   WHERE c."privacy_profile" IS NOT NULL AND p."id" IS NULL;
 
+-- [FK] Product.format_details_id -> FormatDetails.id
+SELECT COUNT(*) AS n FROM "Product" c
+  LEFT JOIN "FormatDetails" p ON c."format_details_id" = p."id"
+  WHERE c."format_details_id" IS NOT NULL AND p."id" IS NULL;
+
 -- [FK] Location.location_set -> LocationSet.id
 SELECT COUNT(*) AS n FROM "Location" c
   LEFT JOIN "LocationSet" p ON c."location_set" = p."id"
@@ -32,6 +42,21 @@ SELECT COUNT(*) AS n FROM "Location" c
 SELECT COUNT(*) AS n FROM "PrivacyDeclaration" c
   LEFT JOIN "LocationSet" p ON c."location_set" = p."id"
   WHERE c."location_set" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] FormatDetails_expected_filename_extensions.FormatDetails_id -> FormatDetails.id
+SELECT COUNT(*) AS n FROM "FormatDetails_expected_filename_extensions" c
+  LEFT JOIN "FormatDetails" p ON c."FormatDetails_id" = p."id"
+  WHERE c."FormatDetails_id" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] FormatDetails_package_filename_extensions.FormatDetails_id -> FormatDetails.id
+SELECT COUNT(*) AS n FROM "FormatDetails_package_filename_extensions" c
+  LEFT JOIN "FormatDetails" p ON c."FormatDetails_id" = p."id"
+  WHERE c."FormatDetails_id" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] FormatDetails_companion_filename_extensions.FormatDetails_id -> FormatDetails.id
+SELECT COUNT(*) AS n FROM "FormatDetails_companion_filename_extensions" c
+  LEFT JOIN "FormatDetails" p ON c."FormatDetails_id" = p."id"
+  WHERE c."FormatDetails_id" IS NOT NULL AND p."id" IS NULL;
 
 -- [FK] GridDefinition_vertical_levels.GridDefinition_id -> GridDefinition.id
 SELECT COUNT(*) AS n FROM "GridDefinition_vertical_levels" c
@@ -77,6 +102,11 @@ SELECT COUNT(*) AS n FROM "ProductVariable" c
 SELECT COUNT(*) AS n FROM "Asset" c
   LEFT JOIN "Product" p ON c."product" = p."id"
   WHERE c."product" IS NOT NULL AND p."id" IS NULL;
+
+-- [FK] Asset.format_details_id -> FormatDetails.id
+SELECT COUNT(*) AS n FROM "Asset" c
+  LEFT JOIN "FormatDetails" p ON c."format_details_id" = p."id"
+  WHERE c."format_details_id" IS NOT NULL AND p."id" IS NULL;
 
 -- [FK] Product_data_genre.Product_id -> Product.id
 SELECT COUNT(*) AS n FROM "Product_data_genre" c
@@ -294,6 +324,42 @@ SELECT COUNT(*) AS n FROM "PrivacyReleaseAssessment_performed_privacy_transforma
   LEFT JOIN "PrivacyTransformation" p ON c."performed_privacy_transformations_id" = p."id"
   WHERE c."performed_privacy_transformations_id" IS NOT NULL AND p."id" IS NULL;
 
+-- [ENUM] FormatDetails.format_family in FormatFamilyEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "format_family" IS NOT NULL AND "format_family" NOT IN ('netcdf', 'hdf', 'tiff', 'grib', 'esri_ascii_grid', 'arcinfo_binary_grid', 'bil', 'shapefile', 'file_geodatabase', 'kml', 'csv', 'delimited_text', 'fixed_width_text', 'zarr', 'parquet');
+
+-- [ENUM] FormatDetails.data_model in NetcdfDataModelEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "data_model" IS NOT NULL AND "data_model" NOT IN ('classic', 'enhanced');
+
+-- [ENUM] FormatDetails.physical_container in PhysicalContainerEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "physical_container" IS NOT NULL AND "physical_container" NOT IN ('cdf', 'hdf4', 'hdf5', 'tiff', 'grib', 'text', 'binary', 'sqlite', 'parquet', 'directory');
+
+-- [ENUM] FormatDetails.profile_conformance_status in FormatConformanceStatusEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "profile_conformance_status" IS NOT NULL AND "profile_conformance_status" NOT IN ('not_assessed', 'conformant', 'nonconformant', 'not_applicable');
+
+-- [ENUM] FormatDetails.expected_filename_extensions_scope in ExtensionScopeEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "expected_filename_extensions_scope" IS NOT NULL AND "expected_filename_extensions_scope" NOT IN ('product', 'catalog_family');
+
+-- [ENUM] FormatDetails.delivery_structure in DeliveryStructureEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "delivery_structure" IS NOT NULL AND "delivery_structure" NOT IN ('single_file', 'multifile_dataset', 'directory_store');
+
+-- [ENUM] FormatDetails.packaging in PackagingEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "packaging" IS NOT NULL AND "packaging" NOT IN ('none', 'zip', 'gzip', 'tar', 'tar_gzip', 'seven_zip', 'other');
+
+-- [ENUM] FormatDetails.cf_conformance_status in FormatConformanceStatusEnum
+SELECT COUNT(*) AS n FROM "FormatDetails"
+  WHERE "cf_conformance_status" IS NOT NULL AND "cf_conformance_status" NOT IN ('not_assessed', 'conformant', 'nonconformant', 'not_applicable');
+
+-- [ENUM] FormatIdentification.basis in FormatIdentificationBasisEnum
+SELECT COUNT(*) AS n FROM "FormatIdentification"
+  WHERE "basis" IS NOT NULL AND "basis" NOT IN ('existing_catalog', 'provider_documentation', 'native_header', 'signature', 'validator_report');
+
 -- [ENUM] DataSource.access_protocol in AccessProtocolEnum
 SELECT COUNT(*) AS n FROM "DataSource"
   WHERE "access_protocol" IS NOT NULL AND "access_protocol" NOT IN ('https_bulk_file', 'ftp', 's3_object_store', 'stac_api', 'opendap', 'thredds', 'rest_api', 'harmony', 'arcgis_service');
@@ -320,7 +386,7 @@ SELECT COUNT(*) AS n FROM "PrivacyProfile"
 
 -- [ENUM] Product.native_format in NativeFormatEnum
 SELECT COUNT(*) AS n FROM "Product"
-  WHERE "native_format" IS NOT NULL AND "native_format" NOT IN ('netcdf4_cf', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet');
+  WHERE "native_format" IS NOT NULL AND "native_format" NOT IN ('netcdf4_cf', 'csv', 'arcinfo_binary_grid', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet');
 
 -- [ENUM] Product.spatial_support_type in SpatialSupportTypeEnum
 SELECT COUNT(*) AS n FROM "Product"
@@ -336,7 +402,7 @@ SELECT COUNT(*) AS n FROM "Product"
 
 -- [ENUM] Product.day_boundary_convention in DayBoundaryConventionEnum
 SELECT COUNT(*) AS n FROM "Product"
-  WHERE "day_boundary_convention" IS NOT NULL AND "day_boundary_convention" NOT IN ('local_midnight', 'utc_midnight', 'ending_1200_gmt', 'solar_noon_centered', 'observation_dependent', 'not_applicable');
+  WHERE "day_boundary_convention" IS NOT NULL AND "day_boundary_convention" NOT IN ('local_midnight', 'utc_midnight', 'ending_1200_gmt', 'solar_noon_centered', 'observation_dependent', 'not_established', 'not_applicable');
 
 -- [ENUM] Product.calendar in CalendarEnum
 SELECT COUNT(*) AS n FROM "Product"
@@ -384,7 +450,7 @@ SELECT COUNT(*) AS n FROM "OmopConceptBinding"
 
 -- [ENUM] Asset.native_format in NativeFormatEnum
 SELECT COUNT(*) AS n FROM "Asset"
-  WHERE "native_format" IS NOT NULL AND "native_format" NOT IN ('netcdf4_cf', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet');
+  WHERE "native_format" IS NOT NULL AND "native_format" NOT IN ('netcdf4_cf', 'csv', 'arcinfo_binary_grid', 'netcdf3', 'hdf4', 'hdf5', 'geotiff', 'cloud_optimized_geotiff', 'ascii_grid', 'grib1', 'grib2', 'bil', 'shapefile', 'geodatabase', 'kml', 'csv_station_observations', 'pipe_delimited_text', 'fixed_width_text', 'zarr', 'parquet', 'geoparquet');
 
 -- [ENUM] Asset.materialization_mode in MaterializationModeEnum
 SELECT COUNT(*) AS n FROM "Asset"

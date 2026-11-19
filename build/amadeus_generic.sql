@@ -1,6 +1,27 @@
 -- # Class: AmadeusDatabase Description: Container for a complete or partial AmadeusDB instance. Exists so a catalog snapshot, a sample dataset or an import bundle can be validated as one document with `linkml-validate`, and so the SQL generator has a root from which to reach every table.All collections are optional: a catalog-only bundle (the normal shape of a curation pull request) is as valid as a full instance.PrivacyProfile is public source metadata. PrivacyDeclaration, PrivacyTransformation and PrivacyReleaseAssessment are restricted instance records. The public catalog workflow rejects restricted collections; root-schema validity alone is not publication authorization.
 --     * Slot: id
 --     * Slot: schema_version Description: Version of the AmadeusDB schema a record conforms to, so consumers can branch on schema evolution rather than guess.
+-- # Class: FormatDetails Description: Optional format identification, independent of filename suffix and scientific metadata. Missing values mean unknown. Product expectations describe payloads; Asset identification describes actual delivered bytes. Legacy native_format is retained without implying assessed CF or COG conformance.
+--     * Slot: id
+--     * Slot: format_family Description: Underlying payload family; not inferred from suffix alone.
+--     * Slot: format_variant Description: Extensible exact serialization variant, e.g. netcdf3_classic, netcdf3_64bit_offset, netcdf3_64bit_data, netcdf4, hdf4_eos2, hdf5_eos5, zarr_v2 or zarr_v3. Unknown when absent.
+--     * Slot: data_model Description: NetCDF logical model only: classic or enhanced, independently of CDF/HDF5 encoding.
+--     * Slot: physical_container Description: Underlying payload container, distinct from outer archive packaging.
+--     * Slot: format_profile Description: Declared profile such as cloud_optimized_geotiff; does not itself certify conformance.
+--     * Slot: profile_conformance_status Description: Whether the declared format profile was assessed.
+--     * Slot: expected_filename_extensions_scope Description: Product scope by default; catalog_family explicitly describes a broader discovery union, never decoder selection.
+--     * Slot: catalog_family Description: Catalog family owning an explicitly family-scoped extension union.
+--     * Slot: filename_pattern Description: Case-sensitive shell-style glob narrowing this Product payload naming, not a validator of bytes.
+--     * Slot: delivery_structure Description: Single payload, multifile dataset or directory store; independent of outer compression.
+--     * Slot: packaging Description: Outer delivery compression/archive, independent of the payload container.
+--     * Slot: conventions_attribute Description: Literal observed Conventions attribute; preserve spelling and version. Missing means unknown or unrecorded, not nonconforming.
+--     * Slot: cf_conformance_status Description: Assessment status, independent of a NetCDF suffix or legacy netcdf4_cf label.
+--     * Slot: identification_id Description: Evidence scoped to these format assertions.
+-- # Class: FormatIdentification Description: Evidence for only the format assertions actually established. A catalog declaration is not a native-file inspection or conformance test.
+--     * Slot: id
+--     * Slot: basis Description: How the format assertions were established.
+--     * Slot: evidence_reference Description: Provider URL or repository-relative retained evidence reference.
+--     * Slot: identification_note Description: Assertion scope, limitations and unresolved details; no claim of byte inspection unless performed.
 -- # Class: DataSource Description: A provider programme that publishes one or more products: EPA AQS, NASA MODIS, NOAA NARR, Climatology Lab. One row per row of the amadeus README source table.
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
 --     * Slot: name Description: A short machine-friendly name.
@@ -69,6 +90,7 @@
 --     * Slot: stac_collection_id Description: STAC collection identifier, where the product is STAC-published.
 --     * Slot: privacy_profile Description: Optional reference to public privacy metadata. Omission preserves legacy catalogs and makes no statement about source PHI or downstream safety.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+--     * Slot: format_details_id Description: Optional inline format metadata on Product expectations or concrete Asset bytes.
 -- # Class: GridDefinition Description: A reusable description of a raster or model grid. Its own entity because several products share one grid (all NARR monolevel variables) and because resolution, projection and vertical levels must be computable, not prose.
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
 --     * Slot: name Description: A short machine-friendly name.
@@ -140,6 +162,8 @@
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
 --     * Slot: product
 --     * Slot: asset_key Description: STAC asset key or other within-item key.
+--     * Slot: filename Description: Actual Asset basename, excluding URL query and fragment; not a Product filename pattern.
+--     * Slot: filename_extension Description: Actual lower-case Asset suffix, including leading dot; outer archive suffix for packaged Assets.
 --     * Slot: url Description: Where the bytes live upstream. Retained even after local caching so a result can be re-derived from source.
 --     * Slot: local_path Description: Present only when bytes were actually written locally. Absent for `direct_remote_scan` and `server_side_subset`.
 --     * Slot: media_type
@@ -160,6 +184,7 @@
 --     * Slot: value_state Description: Whether rows for this asset exist in a value table. `registered_only` is the normal case for the asset-centric discovery path.
 --     * Slot: produced_by_run Description: Identifier of the tool run that registered or materialised this asset. Typed as a string rather than an object reference to keep the catalog and provenance modules independently loadable; the FK is added by the SQL post-processor.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+--     * Slot: format_details_id Description: Optional inline format metadata on Product expectations or concrete Asset bytes.
 -- # Abstract Class: AmbientValue Description: One value of one variable, at one place, over one time interval, from one asset, produced by one run. A property of the environment; not an exposure.Abstract: no table of its own. The SQL generator flattens these slots into each concrete child, which is the right physical design — a single polymorphic value table with mostly-null geometry columns would defeat both partitioning and spatial indexing.
 --     * Slot: id Description: Stable identifier for this entity within an AmadeusDB instance.
 --     * Slot: product_variable Description: Which source delivery this is. Carries the native units, the CF metadata and the aggregation — so the row does not have to.
@@ -467,6 +492,15 @@
 --     * Slot: null_semantics
 --     * Slot: superseded_by Description: Identifier of the row that replaces this one. Revisions append; they do not mutate.
 --     * Slot: AmadeusDatabase_id Description: Autocreated FK slot
+-- # Class: FormatDetails_expected_filename_extensions
+--     * Slot: FormatDetails_id Description: Autocreated FK slot
+--     * Slot: expected_filename_extensions Description: Expected payload suffixes, including leading dot; discovery hints rather than proof of format.
+-- # Class: FormatDetails_package_filename_extensions
+--     * Slot: FormatDetails_id Description: Autocreated FK slot
+--     * Slot: package_filename_extensions Description: Expected outer delivery suffixes, e.g. .zip or .7z; not payload format.
+-- # Class: FormatDetails_companion_filename_extensions
+--     * Slot: FormatDetails_id Description: Autocreated FK slot
+--     * Slot: companion_filename_extensions Description: Companion metadata or multifile component suffixes, e.g. .shx, .dbf or .nc4.xml.
 -- # Class: Product_data_genre
 --     * Slot: Product_id Description: Autocreated FK slot
 --     * Slot: data_genre Description: Thematic classification, from the README source table.
@@ -519,6 +553,14 @@ CREATE TABLE "AmadeusDatabase" (
 	PRIMARY KEY (id)
 );
 
+CREATE TABLE "FormatIdentification" (
+	id INTEGER NOT NULL,
+	basis VARCHAR(22) NOT NULL,
+	evidence_reference TEXT NOT NULL,
+	identification_note TEXT,
+	PRIMARY KEY (id)
+);
+
 CREATE TABLE "OmopConceptBinding" (
 	id INTEGER NOT NULL,
 	omop_concept_id INTEGER,
@@ -528,6 +570,26 @@ CREATE TABLE "OmopConceptBinding" (
 	omop_standard_concept TEXT,
 	concept_status VARCHAR(18) NOT NULL,
 	PRIMARY KEY (id)
+);
+
+CREATE TABLE "FormatDetails" (
+	id INTEGER NOT NULL,
+	format_family VARCHAR(19) NOT NULL,
+	format_variant TEXT,
+	data_model VARCHAR(8),
+	physical_container VARCHAR(9),
+	format_profile TEXT,
+	profile_conformance_status VARCHAR(14),
+	expected_filename_extensions_scope VARCHAR(14),
+	catalog_family TEXT,
+	filename_pattern TEXT,
+	delivery_structure VARCHAR(17),
+	packaging VARCHAR(9),
+	conventions_attribute TEXT,
+	cf_conformance_status VARCHAR(14),
+	identification_id INTEGER NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY(identification_id) REFERENCES "FormatIdentification" (id)
 );
 
 CREATE TABLE "DataSource" (
@@ -713,11 +775,13 @@ CREATE TABLE "Product" (
 	stac_collection_id TEXT,
 	privacy_profile TEXT,
 	"AmadeusDatabase_id" INTEGER,
+	format_details_id INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(data_source) REFERENCES "DataSource" (id),
 	FOREIGN KEY(grid_definition) REFERENCES "GridDefinition" (id),
 	FOREIGN KEY(privacy_profile) REFERENCES "PrivacyProfile" (id),
-	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
+	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id),
+	FOREIGN KEY(format_details_id) REFERENCES "FormatDetails" (id)
 );
 
 CREATE TABLE "Location" (
@@ -750,6 +814,27 @@ CREATE TABLE "PrivacyDeclaration" (
 	PRIMARY KEY (id),
 	FOREIGN KEY(location_set) REFERENCES "LocationSet" (id),
 	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
+);
+
+CREATE TABLE "FormatDetails_expected_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	expected_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", expected_filename_extensions),
+	FOREIGN KEY("FormatDetails_id") REFERENCES "FormatDetails" (id)
+);
+
+CREATE TABLE "FormatDetails_package_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	package_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", package_filename_extensions),
+	FOREIGN KEY("FormatDetails_id") REFERENCES "FormatDetails" (id)
+);
+
+CREATE TABLE "FormatDetails_companion_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	companion_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", companion_filename_extensions),
+	FOREIGN KEY("FormatDetails_id") REFERENCES "FormatDetails" (id)
 );
 
 CREATE TABLE "GridDefinition_vertical_levels" (
@@ -828,6 +913,8 @@ CREATE TABLE "Asset" (
 	id TEXT NOT NULL,
 	product TEXT NOT NULL,
 	asset_key TEXT,
+	filename TEXT,
+	filename_extension TEXT,
 	url TEXT,
 	local_path TEXT,
 	media_type TEXT,
@@ -848,9 +935,11 @@ CREATE TABLE "Asset" (
 	value_state VARCHAR(15) NOT NULL,
 	produced_by_run TEXT,
 	"AmadeusDatabase_id" INTEGER,
+	format_details_id INTEGER,
 	PRIMARY KEY (id),
 	FOREIGN KEY(product) REFERENCES "Product" (id),
-	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id)
+	FOREIGN KEY("AmadeusDatabase_id") REFERENCES "AmadeusDatabase" (id),
+	FOREIGN KEY(format_details_id) REFERENCES "FormatDetails" (id)
 );
 
 CREATE TABLE "Product_data_genre" (

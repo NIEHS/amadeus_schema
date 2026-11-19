@@ -57,6 +57,47 @@ imports:
 
 classes:
 
+  FormatDetails:
+    description: Optional format identification, independent of filename suffix and scientific metadata.
+      Missing values mean unknown. Product expectations describe payloads; Asset identification describes
+      actual delivered bytes. Legacy native_format is retained without implying assessed CF or COG
+      conformance.
+    slots:
+    - format_family
+    - format_variant
+    - data_model
+    - physical_container
+    - format_profile
+    - profile_conformance_status
+    - expected_filename_extensions
+    - expected_filename_extensions_scope
+    - catalog_family
+    - filename_pattern
+    - delivery_structure
+    - packaging
+    - package_filename_extensions
+    - companion_filename_extensions
+    - conventions_attribute
+    - cf_conformance_status
+    - identification
+    slot_usage:
+      format_family:
+        required: true
+      identification:
+        required: true
+  FormatIdentification:
+    description: Evidence for only the format assertions actually established. A catalog declaration
+      is not a native-file inspection or conformance test.
+    slots:
+    - basis
+    - evidence_reference
+    - identification_note
+    slot_usage:
+      basis:
+        required: true
+      evidence_reference:
+        required: true
+
   DataSource:
     title: Data Source
     description: >-
@@ -176,6 +217,7 @@ classes:
     - product_version
     - data_genre
     - native_format
+    - format_details
     - spatial_support_type
     - grid_definition
     - crs
@@ -517,10 +559,13 @@ classes:
     - id
     - product
     - asset_key
+    - filename
+    - filename_extension
     - url
     - local_path
     - media_type
     - native_format
+    - format_details
     - size_bytes
     - sha256
     - source_last_modified
@@ -1173,6 +1218,93 @@ slots:
 #────────────────────────────────────────────────────────────────
 # ADDITIONAL ENUMS
 #────────────────────────────────────────────────────────────────
+
+# Orthogonal scientific format and delivery metadata.
+  format_details:
+    range: FormatDetails
+    inlined: true
+    description: Optional inline format metadata on Product expectations or concrete Asset bytes.
+  identification:
+    range: FormatIdentification
+    inlined: true
+    description: Evidence scoped to these format assertions.
+  filename:
+    range: string
+    description: Actual Asset basename, excluding URL query and fragment; not a Product filename pattern.
+  filename_extension:
+    range: string
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+    description: Actual lower-case Asset suffix, including leading dot; outer archive suffix for packaged
+      Assets.
+  format_family:
+    range: FormatFamilyEnum
+    description: Underlying payload family; not inferred from suffix alone.
+  format_variant:
+    range: string
+    description: Extensible exact serialization variant, e.g. netcdf3_classic, netcdf3_64bit_offset,
+      netcdf3_64bit_data, netcdf4, hdf4_eos2, hdf5_eos5, zarr_v2 or zarr_v3. Unknown when absent.
+  data_model:
+    range: NetcdfDataModelEnum
+    description: 'NetCDF logical model only: classic or enhanced, independently of CDF/HDF5 encoding.'
+  physical_container:
+    range: PhysicalContainerEnum
+    description: Underlying payload container, distinct from outer archive packaging.
+  format_profile:
+    range: string
+    description: Declared profile such as cloud_optimized_geotiff; does not itself certify conformance.
+  profile_conformance_status:
+    range: FormatConformanceStatusEnum
+    description: Whether the declared format profile was assessed.
+  expected_filename_extensions_scope:
+    range: ExtensionScopeEnum
+    description: Product scope by default; catalog_family explicitly describes a broader discovery
+      union, never decoder selection.
+  catalog_family:
+    range: string
+    description: Catalog family owning an explicitly family-scoped extension union.
+  filename_pattern:
+    range: string
+    description: Case-sensitive shell-style glob narrowing this Product payload naming, not a validator
+      of bytes.
+  delivery_structure:
+    range: DeliveryStructureEnum
+    description: Single payload, multifile dataset or directory store; independent of outer compression.
+  packaging:
+    range: PackagingEnum
+    description: Outer delivery compression/archive, independent of the payload container.
+  conventions_attribute:
+    range: string
+    description: Literal observed Conventions attribute; preserve spelling and version. Missing means
+      unknown or unrecorded, not nonconforming.
+  cf_conformance_status:
+    range: FormatConformanceStatusEnum
+    description: Assessment status, independent of a NetCDF suffix or legacy netcdf4_cf label.
+  basis:
+    range: FormatIdentificationBasisEnum
+    description: How the format assertions were established.
+  evidence_reference:
+    range: string
+    description: Provider URL or repository-relative retained evidence reference.
+  identification_note:
+    range: string
+    description: Assertion scope, limitations and unresolved details; no claim of byte inspection unless
+      performed.
+  expected_filename_extensions:
+    range: string
+    multivalued: true
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+    description: Expected payload suffixes, including leading dot; discovery hints rather than proof
+      of format.
+  package_filename_extensions:
+    range: string
+    multivalued: true
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+    description: Expected outer delivery suffixes, e.g. .zip or .7z; not payload format.
+  companion_filename_extensions:
+    range: string
+    multivalued: true
+    pattern: ^\.[a-z0-9]+(?:\.[a-z0-9]+)*$
+    description: Companion metadata or multifile component suffixes, e.g. .shx, .dbf or .nc4.xml.
 
 enums:
 

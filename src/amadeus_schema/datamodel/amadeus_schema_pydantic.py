@@ -169,8 +169,104 @@ linkml_meta = LinkMLMeta({'default_prefix': 'amadeus',
      'see_also': ['https://monarch-initiative.github.io/linkml-microschemas-envar/overview/',
                   'https://github.com/NIEHS/HEW_Catalog_Data_Model/tree/develop',
                   'https://github.com/NIEHS/amadeus/issues/249'],
-     'source_file': 'amadeus_schema/src/amadeus_schema/schema/amadeus_schema.yaml',
+     'source_file': 'src/amadeus_schema/schema/amadeus_schema.yaml',
      'title': 'AmadeusDB — Data Model'} )
+
+class FormatFamilyEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    netcdf = "netcdf"
+    hdf = "hdf"
+    tiff = "tiff"
+    grib = "grib"
+    esri_ascii_grid = "esri_ascii_grid"
+    arcinfo_binary_grid = "arcinfo_binary_grid"
+    bil = "bil"
+    shapefile = "shapefile"
+    file_geodatabase = "file_geodatabase"
+    kml = "kml"
+    csv = "csv"
+    delimited_text = "delimited_text"
+    fixed_width_text = "fixed_width_text"
+    zarr = "zarr"
+    parquet = "parquet"
+
+
+class NetcdfDataModelEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    classic = "classic"
+    enhanced = "enhanced"
+
+
+class PhysicalContainerEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    cdf = "cdf"
+    hdf4 = "hdf4"
+    hdf5 = "hdf5"
+    tiff = "tiff"
+    grib = "grib"
+    text = "text"
+    binary = "binary"
+    sqlite = "sqlite"
+    parquet = "parquet"
+    directory = "directory"
+
+
+class ExtensionScopeEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    product = "product"
+    catalog_family = "catalog_family"
+
+
+class FormatConformanceStatusEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    not_assessed = "not_assessed"
+    conformant = "conformant"
+    nonconformant = "nonconformant"
+    not_applicable = "not_applicable"
+
+
+class FormatIdentificationBasisEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    existing_catalog = "existing_catalog"
+    provider_documentation = "provider_documentation"
+    native_header = "native_header"
+    signature = "signature"
+    validator_report = "validator_report"
+
+
+class DeliveryStructureEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    single_file = "single_file"
+    multifile_dataset = "multifile_dataset"
+    directory_store = "directory_store"
+
+
+class PackagingEnum(str, Enum):
+    """
+    Orthogonal format metadata classification; unknown values remain absent.
+    """
+    none = "none"
+    zip = "zip"
+    gzip = "gzip"
+    tar = "tar"
+    tar_gzip = "tar_gzip"
+    seven_zip = "seven_zip"
+    other = "other"
+
 
 class SpatialSupportTypeEnum(str, Enum):
     """
@@ -281,6 +377,10 @@ class DayBoundaryConventionEnum(str, Enum):
     ending_1200_gmt = "ending_1200_gmt"
     solar_noon_centered = "solar_noon_centered"
     observation_dependent = "observation_dependent"
+    not_established = "not_established"
+    """
+    Daily boundary is unresolved; not an assertion of midnight or not applicable.
+    """
     not_applicable = "not_applicable"
 
 
@@ -451,6 +551,14 @@ class NativeFormatEnum(str, Enum):
     The format the source actually ships.
     """
     netcdf4_cf = "netcdf4_cf"
+    csv = "csv"
+    """
+    Generic comma-separated tabular data, without a station-observation assertion.
+    """
+    arcinfo_binary_grid = "arcinfo_binary_grid"
+    """
+    Arc/Info binary Grid multifile directory, often delivered inside ZIP.
+    """
     netcdf3 = "netcdf3"
     hdf4 = "hdf4"
     """
@@ -461,7 +569,7 @@ class NativeFormatEnum(str, Enum):
     cloud_optimized_geotiff = "cloud_optimized_geotiff"
     ascii_grid = "ascii_grid"
     """
-    GMTED2010, PRISM `.asc`.
+    Textual ESRI ASCII raster, distinct from Arc/Info binary Grid.
     """
     grib1 = "grib1"
     grib2 = "grib2"
@@ -847,6 +955,86 @@ class ProvenanceChainTerminusEnum(str, Enum):
 
 
 
+class FormatDetails(ConfiguredBaseModel):
+    """
+    Optional format identification, independent of filename suffix and scientific metadata. Missing values mean unknown. Product expectations describe payloads; Asset identification describes actual delivered bytes. Legacy native_format is retained without implying assessed CF or COG conformance.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/catalog',
+         'slot_usage': {'format_family': {'name': 'format_family', 'required': True},
+                        'identification': {'name': 'identification', 'required': True}}})
+
+    format_family: FormatFamilyEnum = Field(default=..., description="""Underlying payload family; not inferred from suffix alone.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    format_variant: Optional[str] = Field(default=None, description="""Extensible exact serialization variant, e.g. netcdf3_classic, netcdf3_64bit_offset, netcdf3_64bit_data, netcdf4, hdf4_eos2, hdf5_eos5, zarr_v2 or zarr_v3. Unknown when absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    data_model: Optional[NetcdfDataModelEnum] = Field(default=None, description="""NetCDF logical model only: classic or enhanced, independently of CDF/HDF5 encoding.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    physical_container: Optional[PhysicalContainerEnum] = Field(default=None, description="""Underlying payload container, distinct from outer archive packaging.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    format_profile: Optional[str] = Field(default=None, description="""Declared profile such as cloud_optimized_geotiff; does not itself certify conformance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    profile_conformance_status: Optional[FormatConformanceStatusEnum] = Field(default=None, description="""Whether the declared format profile was assessed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    expected_filename_extensions: Optional[list[str]] = Field(default=None, description="""Expected payload suffixes, including leading dot; discovery hints rather than proof of format.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    expected_filename_extensions_scope: Optional[ExtensionScopeEnum] = Field(default=None, description="""Product scope by default; catalog_family explicitly describes a broader discovery union, never decoder selection.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    catalog_family: Optional[str] = Field(default=None, description="""Catalog family owning an explicitly family-scoped extension union.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    filename_pattern: Optional[str] = Field(default=None, description="""Case-sensitive shell-style glob narrowing this Product payload naming, not a validator of bytes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    delivery_structure: Optional[DeliveryStructureEnum] = Field(default=None, description="""Single payload, multifile dataset or directory store; independent of outer compression.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    packaging: Optional[PackagingEnum] = Field(default=None, description="""Outer delivery compression/archive, independent of the payload container.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    package_filename_extensions: Optional[list[str]] = Field(default=None, description="""Expected outer delivery suffixes, e.g. .zip or .7z; not payload format.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    companion_filename_extensions: Optional[list[str]] = Field(default=None, description="""Companion metadata or multifile component suffixes, e.g. .shx, .dbf or .nc4.xml.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    conventions_attribute: Optional[str] = Field(default=None, description="""Literal observed Conventions attribute; preserve spelling and version. Missing means unknown or unrecorded, not nonconforming.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    cf_conformance_status: Optional[FormatConformanceStatusEnum] = Field(default=None, description="""Assessment status, independent of a NetCDF suffix or legacy netcdf4_cf label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+    identification: FormatIdentification = Field(default=..., description="""Evidence scoped to these format assertions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatDetails']} })
+
+    @field_validator('expected_filename_extensions')
+    def pattern_expected_filename_extensions(cls, v):
+        pattern=re.compile(r"^\.[a-z0-9]+(?:\.[a-z0-9]+)*$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.search(element):
+                    err_msg = f"Invalid expected_filename_extensions format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.search(v):
+            err_msg = f"Invalid expected_filename_extensions format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('package_filename_extensions')
+    def pattern_package_filename_extensions(cls, v):
+        pattern=re.compile(r"^\.[a-z0-9]+(?:\.[a-z0-9]+)*$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.search(element):
+                    err_msg = f"Invalid package_filename_extensions format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.search(v):
+            err_msg = f"Invalid package_filename_extensions format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('companion_filename_extensions')
+    def pattern_companion_filename_extensions(cls, v):
+        pattern=re.compile(r"^\.[a-z0-9]+(?:\.[a-z0-9]+)*$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.search(element):
+                    err_msg = f"Invalid companion_filename_extensions format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.search(v):
+            err_msg = f"Invalid companion_filename_extensions format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class FormatIdentification(ConfiguredBaseModel):
+    """
+    Evidence for only the format assertions actually established. A catalog declaration is not a native-file inspection or conformance test.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/niehs/amadeus/catalog',
+         'slot_usage': {'basis': {'name': 'basis', 'required': True},
+                        'evidence_reference': {'name': 'evidence_reference',
+                                               'required': True}}})
+
+    basis: FormatIdentificationBasisEnum = Field(default=..., description="""How the format assertions were established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatIdentification']} })
+    evidence_reference: str = Field(default=..., description="""Provider URL or repository-relative retained evidence reference.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatIdentification']} })
+    identification_note: Optional[str] = Field(default=None, description="""Assertion scope, limitations and unresolved details; no claim of byte inspection unless performed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FormatIdentification']} })
+
+
 class DataSource(ConfiguredBaseModel):
     """
     A provider programme that publishes one or more products: EPA AQS, NASA MODIS, NOAA NARR, Climatology Lab. One row per row of the amadeus README source table.
@@ -1107,6 +1295,7 @@ class Product(ConfiguredBaseModel):
     data_genre: Optional[list[DataGenreEnum]] = Field(default=None, description="""Thematic classification, from the README source table.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product']} })
     native_format: Optional[NativeFormatEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'Asset'],
          'exact_mappings': ['envar:source_native_format']} })
+    format_details: Optional[FormatDetails] = Field(default=None, description="""Optional inline format metadata on Product expectations or concrete Asset bytes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'Asset']} })
     spatial_support_type: SpatialSupportTypeEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Product'], 'exact_mappings': ['hew:support_type']} })
     grid_definition: Optional[str] = Field(default=None, description="""Required when `spatial_support_type` is a grid cell type, forbidden otherwise. Enforced by the rules below rather than by two separate classes — the project lead's \"grid size is a dataset-level property\" becomes a foreign key, not a copied field.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'GridCellValue']} })
     crs: Optional[str] = Field(default=None, description="""Coordinate reference system as an authority code. Stored as the string form (`EPSG:4326`) because that is what both `terra` and the SQL engines accept; the numeric SRID is derived for `ST_SetSRID`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'GridDefinition', 'LocationSet'],
@@ -1578,11 +1767,14 @@ class Asset(ConfiguredBaseModel):
                        'PrivacyReleaseAssessment']} })
     product: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ProductVariable', 'Asset', 'VectorFeature']} })
     asset_key: Optional[str] = Field(default=None, description="""STAC asset key or other within-item key.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
+    filename: Optional[str] = Field(default=None, description="""Actual Asset basename, excluding URL query and fragment; not a Product filename pattern.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
+    filename_extension: Optional[str] = Field(default=None, description="""Actual lower-case Asset suffix, including leading dot; outer archive suffix for packaged Assets.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     url: Optional[str] = Field(default=None, description="""Where the bytes live upstream. Retained even after local caching so a result can be re-derived from source.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     local_path: Optional[str] = Field(default=None, description="""Present only when bytes were actually written locally. Absent for `direct_remote_scan` and `server_side_subset`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     media_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset'], 'examples': [{'value': 'application/x-netcdf'}]} })
     native_format: Optional[NativeFormatEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'Asset'],
          'exact_mappings': ['envar:source_native_format']} })
+    format_details: Optional[FormatDetails] = Field(default=None, description="""Optional inline format metadata on Product expectations or concrete Asset bytes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Product', 'Asset']} })
     size_bytes: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     sha256: Optional[str] = Field(default=None, description="""SHA-256 of the byte stream, for integrity and idempotency.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     source_last_modified: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
@@ -1609,6 +1801,19 @@ class Asset(ConfiguredBaseModel):
     cache_expires_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     value_state: ValueMaterializationEnum = Field(default=..., description="""Whether rows for this asset exist in a value table. `registered_only` is the normal case for the asset-centric discovery path.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
     produced_by_run: Optional[str] = Field(default=None, description="""Identifier of the tool run that registered or materialised this asset. Typed as a string rather than an object reference to keep the catalog and provenance modules independently loadable; the FK is added by the SQL post-processor.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Asset']} })
+
+    @field_validator('filename_extension')
+    def pattern_filename_extension(cls, v):
+        pattern=re.compile(r"^\.[a-z0-9]+(?:\.[a-z0-9]+)*$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.search(element):
+                    err_msg = f"Invalid filename_extension format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.search(v):
+            err_msg = f"Invalid filename_extension format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class AmbientValue(ConfiguredBaseModel):
@@ -2888,6 +3093,8 @@ class AmadeusDatabase(ConfiguredBaseModel):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+FormatDetails.model_rebuild()
+FormatIdentification.model_rebuild()
 DataSource.model_rebuild()
 PrivacyProfile.model_rebuild()
 Product.model_rebuild()

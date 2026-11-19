@@ -1,6 +1,14 @@
 -- AmadeusDB DDL — dialect: sedonadb
 -- Generated from amadeus_schema.yaml via linkml gen-sqltables + scripts/gen_backend_ddl.py
--- 38 tables, 8 geometry views
+-- 43 tables, 8 geometry views
+
+CREATE TABLE "FormatIdentification" (
+	id INTEGER NOT NULL,
+	basis VARCHAR(22) NOT NULL,
+	evidence_reference TEXT NOT NULL,
+	identification_note TEXT,
+	PRIMARY KEY (id)
+);
 
 CREATE TABLE "OmopConceptBinding" (
 	id INTEGER NOT NULL,
@@ -10,6 +18,25 @@ CREATE TABLE "OmopConceptBinding" (
 	omop_domain_id TEXT,
 	omop_standard_concept TEXT,
 	concept_status VARCHAR(18) NOT NULL,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE "FormatDetails" (
+	id INTEGER NOT NULL,
+	format_family VARCHAR(19) NOT NULL,
+	format_variant TEXT,
+	data_model VARCHAR(8),
+	physical_container VARCHAR(9),
+	format_profile TEXT,
+	profile_conformance_status VARCHAR(14),
+	expected_filename_extensions_scope VARCHAR(14),
+	catalog_family TEXT,
+	filename_pattern TEXT,
+	delivery_structure VARCHAR(17),
+	packaging VARCHAR(9),
+	conventions_attribute TEXT,
+	cf_conformance_status VARCHAR(14),
+	identification_id INTEGER NOT NULL,
 	PRIMARY KEY (id)
 );
 
@@ -178,6 +205,7 @@ CREATE TABLE "Product" (
 	supports_server_side_subset BOOLEAN,
 	stac_collection_id TEXT,
 	privacy_profile TEXT,
+	format_details_id INTEGER,
 	PRIMARY KEY (id)
 );
 
@@ -205,6 +233,24 @@ CREATE TABLE "PrivacyDeclaration" (
 	privacy_declaration_note TEXT,
 	assessment_evidence_reference TEXT,
 	PRIMARY KEY (id)
+);
+
+CREATE TABLE "FormatDetails_expected_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	expected_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", expected_filename_extensions)
+);
+
+CREATE TABLE "FormatDetails_package_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	package_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", package_filename_extensions)
+);
+
+CREATE TABLE "FormatDetails_companion_filename_extensions" (
+	"FormatDetails_id" INTEGER,
+	companion_filename_extensions TEXT,
+	PRIMARY KEY ("FormatDetails_id", companion_filename_extensions)
 );
 
 CREATE TABLE "GridDefinition_vertical_levels" (
@@ -273,6 +319,8 @@ CREATE TABLE "Asset" (
 	id TEXT NOT NULL,
 	product TEXT NOT NULL,
 	asset_key TEXT,
+	filename TEXT,
+	filename_extension TEXT,
 	url TEXT,
 	local_path TEXT,
 	media_type TEXT,
@@ -292,6 +340,7 @@ CREATE TABLE "Asset" (
 	cache_expires_at TIMESTAMP,
 	value_state VARCHAR(15) NOT NULL,
 	produced_by_run TEXT,
+	format_details_id INTEGER,
 	PRIMARY KEY (id)
 );
 

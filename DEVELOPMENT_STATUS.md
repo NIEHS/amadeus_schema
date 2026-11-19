@@ -28,6 +28,18 @@ its own table, so four value tables cover all of them.
 Model: 20 classes (1 abstract), 31 enums, 235 slots, 23 types, 22 conditional
 rules, in five modules (catalog, value, request, provenance, common).
 
+## Scientific-format extension — 2026-11-18
+
+Implemented user-approved optional inline format/evidence metadata, explicit Asset
+filenames, accurate CSV/binary ArcGrid labels and separate archive packaging.
+Nested objects/extension arrays round-trip through both database backends and the
+R JSON converter. Unsupported EnVar format mappings now fail explicitly.
+Measured: 26 classes, 46 enums, 299 slots, 23 types, 27 rules, 44 backend tables;
+57 Python schema checks and 24 generated R-validator checks pass. The maintained
+23 families have 243 Products including two discovery-only GlobalFWI registrations.
+Existing scientific metadata and 1,869 protected files are unchanged; historical
+snapshots and the R package remain outside this change. See REPORT for scope.
+
 ## Privacy metadata extension — 2026-11-18
 
 Implemented at the user's request in the maintained local catalog workflow:
@@ -135,6 +147,8 @@ Newest first. One line per change that moved the state above.
 
 | Date | Change |
 |---|---|
+| 2026-11-18 | Prepared shared format metadata commit; reran schema/R checks and regenerated metadata with repository-relative source paths |
+| 2026-11-18 | Added shared format/evidence metadata and GlobalFWI registration; regenerated models/catalogs; nested engine and R serialization checks pass; scientific/historical preservation verified |
 | 2026-11-18 | Added optional public privacy profiles and restricted request/transformation/release metadata; regenerated models and catalog artifacts; verified backward compatibility, original metadata preservation and both database test suites |
 | 2026-10-20 | Added `HACKATHON.md`: 3-hour plan for designing the real data infrastructure (components and per-stage metadata, artefact requirements, schema-repo → amadeus workflow, decision log). Repo reframed as a strawman, not the foundation |
 | 2026-10-09 | Removed machine-local paths and links to uncommitted files from committed files; `AMADEUS_REPO` no longer has a default (stage 4 skips when unset); machine-specific agent context moved to gitignored `CLAUDE.local.md` |
@@ -145,3 +159,12 @@ Newest first. One line per change that moved the state above.
 | 2026-10-09 | Repo history committed and pushed to `matentzn/amadeus_schema` |
 | 2026-09-25 | Schema extracted from the draft inside a local amadeus checkout into this standalone repo |
 | 2026-09-22 | Presented in the Database-and-Schema slot |
+
+
+Legacy test limitation recorded during this migration: the separate
+`validated_catalog_handles` legacy suite reports 12 passed and 36 setup failures
+because it still reads absent `dataset_spec_objects/gridmet.yaml`, `merra2.yaml`
+and `modis.yaml`. Those legacy tests/helper paths were not changed. Maintained
+catalog validation reads `global_dataset_catalogs` and passes all 47 full/global/
+projection checks, RDS parity and the retained native-evidence checks. Exact
+pre-migration scientific record/order comparisons independently pass.

@@ -17,6 +17,125 @@
 # span a join and belong to the database or the query planner.
 # ---------------------------------------------------------------------------
 
+#' Validate one FormatDetails record
+#' Optional format identification, independent of filename suffix and scientific metadata. Missing values mean unknown. Product expectations describe pay
+check_FormatDetails <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["format_family"]])) return("FormatDetails: required slot `format_family` is missing")
+  if (!is.null(x[["format_family"]])) {
+    .e <- checkmate::check_choice(x[["format_family"]], c("netcdf", "hdf", "tiff", "grib", "esri_ascii_grid", "arcinfo_binary_grid", "bil", "shapefile", "file_geodatabase", "kml", "csv", "delimited_text", "fixed_width_text", "zarr", "parquet"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$format_family: ", .e))
+  }
+  if (!is.null(x[["format_variant"]])) {
+    .e <- checkmate::check_string(x[["format_variant"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("FormatDetails$format_variant: ", .e))
+  }
+  if (!is.null(x[["data_model"]])) {
+    .e <- checkmate::check_choice(x[["data_model"]], c("classic", "enhanced"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$data_model: ", .e))
+  }
+  if (!is.null(x[["physical_container"]])) {
+    .e <- checkmate::check_choice(x[["physical_container"]], c("cdf", "hdf4", "hdf5", "tiff", "grib", "text", "binary", "sqlite", "parquet", "directory"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$physical_container: ", .e))
+  }
+  if (!is.null(x[["format_profile"]])) {
+    .e <- checkmate::check_string(x[["format_profile"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("FormatDetails$format_profile: ", .e))
+  }
+  if (!is.null(x[["profile_conformance_status"]])) {
+    .e <- checkmate::check_choice(x[["profile_conformance_status"]], c("not_assessed", "conformant", "nonconformant", "not_applicable"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$profile_conformance_status: ", .e))
+  }
+  if (!is.null(x[["expected_filename_extensions"]])) {
+    if (!is.character(x[["expected_filename_extensions"]]) && !is.list(x[["expected_filename_extensions"]])) return("FormatDetails$expected_filename_extensions: expected string array")
+    for (.item in x[["expected_filename_extensions"]]) {
+      if (!is.character(.item) || length(.item) != 1L || is.na(.item)) return("expected string array item")
+      if (!grepl("^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$", .item, perl = TRUE)) return("invalid filename extension")
+    }
+  }
+  if (!is.null(x[["expected_filename_extensions_scope"]])) {
+    .e <- checkmate::check_choice(x[["expected_filename_extensions_scope"]], c("product", "catalog_family"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$expected_filename_extensions_scope: ", .e))
+  }
+  if (!is.null(x[["catalog_family"]])) {
+    .e <- checkmate::check_string(x[["catalog_family"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("FormatDetails$catalog_family: ", .e))
+  }
+  if (!is.null(x[["filename_pattern"]])) {
+    .e <- checkmate::check_string(x[["filename_pattern"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("FormatDetails$filename_pattern: ", .e))
+  }
+  if (!is.null(x[["delivery_structure"]])) {
+    .e <- checkmate::check_choice(x[["delivery_structure"]], c("single_file", "multifile_dataset", "directory_store"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$delivery_structure: ", .e))
+  }
+  if (!is.null(x[["packaging"]])) {
+    .e <- checkmate::check_choice(x[["packaging"]], c("none", "zip", "gzip", "tar", "tar_gzip", "seven_zip", "other"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$packaging: ", .e))
+  }
+  if (!is.null(x[["package_filename_extensions"]])) {
+    if (!is.character(x[["package_filename_extensions"]]) && !is.list(x[["package_filename_extensions"]])) return("FormatDetails$package_filename_extensions: expected string array")
+    for (.item in x[["package_filename_extensions"]]) {
+      if (!is.character(.item) || length(.item) != 1L || is.na(.item)) return("expected string array item")
+      if (!grepl("^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$", .item, perl = TRUE)) return("invalid filename extension")
+    }
+  }
+  if (!is.null(x[["companion_filename_extensions"]])) {
+    if (!is.character(x[["companion_filename_extensions"]]) && !is.list(x[["companion_filename_extensions"]])) return("FormatDetails$companion_filename_extensions: expected string array")
+    for (.item in x[["companion_filename_extensions"]]) {
+      if (!is.character(.item) || length(.item) != 1L || is.na(.item)) return("expected string array item")
+      if (!grepl("^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$", .item, perl = TRUE)) return("invalid filename extension")
+    }
+  }
+  if (!is.null(x[["conventions_attribute"]])) {
+    .e <- checkmate::check_string(x[["conventions_attribute"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("FormatDetails$conventions_attribute: ", .e))
+  }
+  if (!is.null(x[["cf_conformance_status"]])) {
+    .e <- checkmate::check_choice(x[["cf_conformance_status"]], c("not_assessed", "conformant", "nonconformant", "not_applicable"))
+    if (!isTRUE(.e)) return(paste0("FormatDetails$cf_conformance_status: ", .e))
+  }
+  if (is.null(x[["identification"]])) return("FormatDetails: required slot `identification` is missing")
+  if (!is.null(x[["identification"]])) {
+    .e <- check_FormatIdentification(x[["identification"]])
+    if (!isTRUE(.e)) return(paste0("FormatDetails$identification: ", .e))
+  }
+  TRUE
+}
+
+assert_FormatDetails <- function(x) {
+  res <- check_FormatDetails(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
+#' Validate one FormatIdentification record
+#' Evidence for only the format assertions actually established. A catalog declaration is not a native-file inspection or conformance test.
+check_FormatIdentification <- function(x) {
+  if (!is.list(x)) return("expected a named list")
+  if (is.null(x[["basis"]])) return("FormatIdentification: required slot `basis` is missing")
+  if (!is.null(x[["basis"]])) {
+    .e <- checkmate::check_choice(x[["basis"]], c("existing_catalog", "provider_documentation", "native_header", "signature", "validator_report"))
+    if (!isTRUE(.e)) return(paste0("FormatIdentification$basis: ", .e))
+  }
+  if (is.null(x[["evidence_reference"]])) return("FormatIdentification: required slot `evidence_reference` is missing")
+  if (!is.null(x[["evidence_reference"]])) {
+    .e <- checkmate::check_string(x[["evidence_reference"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("FormatIdentification$evidence_reference: ", .e))
+  }
+  if (!is.null(x[["identification_note"]])) {
+    .e <- checkmate::check_string(x[["identification_note"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("FormatIdentification$identification_note: ", .e))
+  }
+  TRUE
+}
+
+assert_FormatIdentification <- function(x) {
+  res <- check_FormatIdentification(x)
+  if (!isTRUE(res)) stop(res, call. = FALSE)
+  invisible(x)
+}
+
 #' Validate one DataSource record
 #' A provider programme that publishes one or more products: EPA AQS, NASA MODIS, NOAA NARR, Climatology Lab. One row per row of the amadeus README sourc
 check_DataSource <- function(x) {
@@ -200,8 +319,12 @@ check_Product <- function(x) {
     if (!isTRUE(.e)) return(paste0("Product$product_version: ", .e))
   }
   if (!is.null(x[["native_format"]])) {
-    .e <- checkmate::check_choice(x[["native_format"]], c("netcdf4_cf", "netcdf3", "hdf4", "hdf5", "geotiff", "cloud_optimized_geotiff", "ascii_grid", "grib1", "grib2", "bil", "shapefile", "geodatabase", "kml", "csv_station_observations", "pipe_delimited_text", "fixed_width_text", "zarr", "parquet", "geoparquet"))
+    .e <- checkmate::check_choice(x[["native_format"]], c("netcdf4_cf", "csv", "arcinfo_binary_grid", "netcdf3", "hdf4", "hdf5", "geotiff", "cloud_optimized_geotiff", "ascii_grid", "grib1", "grib2", "bil", "shapefile", "geodatabase", "kml", "csv_station_observations", "pipe_delimited_text", "fixed_width_text", "zarr", "parquet", "geoparquet"))
     if (!isTRUE(.e)) return(paste0("Product$native_format: ", .e))
+  }
+  if (!is.null(x[["format_details"]])) {
+    .e <- check_FormatDetails(x[["format_details"]])
+    if (!isTRUE(.e)) return(paste0("Product$format_details: ", .e))
   }
   if (is.null(x[["spatial_support_type"]])) return("Product: required slot `spatial_support_type` is missing")
   if (!is.null(x[["spatial_support_type"]])) {
@@ -254,7 +377,7 @@ check_Product <- function(x) {
     if (!isTRUE(.e)) return(paste0("Product$temporal_alignment: ", .e))
   }
   if (!is.null(x[["day_boundary_convention"]])) {
-    .e <- checkmate::check_choice(x[["day_boundary_convention"]], c("local_midnight", "utc_midnight", "ending_1200_gmt", "solar_noon_centered", "observation_dependent", "not_applicable"))
+    .e <- checkmate::check_choice(x[["day_boundary_convention"]], c("local_midnight", "utc_midnight", "ending_1200_gmt", "solar_noon_centered", "observation_dependent", "not_established", "not_applicable"))
     if (!isTRUE(.e)) return(paste0("Product$day_boundary_convention: ", .e))
   }
   if (!is.null(x[["calendar"]])) {
@@ -502,7 +625,7 @@ check_CanonicalVariable <- function(x) {
     if (!isTRUE(.e)) return(paste0("CanonicalVariable$plausible_max: ", .e))
   }
   if (!is.null(x[["omop_concept_binding"]])) {
-    .e <- checkmate::check_string(x[["omop_concept_binding"]], min.chars = 1)
+    .e <- check_OmopConceptBinding(x[["omop_concept_binding"]])
     if (!isTRUE(.e)) return(paste0("CanonicalVariable$omop_concept_binding: ", .e))
   }
   if (!is.null(x[["envar_variable_family"]])) {
@@ -703,6 +826,16 @@ check_Asset <- function(x) {
     .e <- checkmate::check_string(x[["asset_key"]], na.ok = FALSE)
     if (!isTRUE(.e)) return(paste0("Asset$asset_key: ", .e))
   }
+  if (!is.null(x[["filename"]])) {
+    .e <- checkmate::check_string(x[["filename"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("Asset$filename: ", .e))
+  }
+  if (!is.null(x[["filename_extension"]])) {
+    .e <- checkmate::check_string(x[["filename_extension"]], na.ok = FALSE)
+    if (!isTRUE(.e)) return(paste0("Asset$filename_extension: ", .e))
+  }
+  if (!is.null(x[["filename_extension"]]) && !grepl("^\\.[a-z0-9]+(?:\\.[a-z0-9]+)*$", x[["filename_extension"]], perl = TRUE))
+    return("Asset$filename_extension: does not match required pattern")
   if (!is.null(x[["url"]])) {
     .e <- checkmate::check_string(x[["url"]], min.chars = 1)
     if (!isTRUE(.e)) return(paste0("Asset$url: ", .e))
@@ -716,8 +849,12 @@ check_Asset <- function(x) {
     if (!isTRUE(.e)) return(paste0("Asset$media_type: ", .e))
   }
   if (!is.null(x[["native_format"]])) {
-    .e <- checkmate::check_choice(x[["native_format"]], c("netcdf4_cf", "netcdf3", "hdf4", "hdf5", "geotiff", "cloud_optimized_geotiff", "ascii_grid", "grib1", "grib2", "bil", "shapefile", "geodatabase", "kml", "csv_station_observations", "pipe_delimited_text", "fixed_width_text", "zarr", "parquet", "geoparquet"))
+    .e <- checkmate::check_choice(x[["native_format"]], c("netcdf4_cf", "csv", "arcinfo_binary_grid", "netcdf3", "hdf4", "hdf5", "geotiff", "cloud_optimized_geotiff", "ascii_grid", "grib1", "grib2", "bil", "shapefile", "geodatabase", "kml", "csv_station_observations", "pipe_delimited_text", "fixed_width_text", "zarr", "parquet", "geoparquet"))
     if (!isTRUE(.e)) return(paste0("Asset$native_format: ", .e))
+  }
+  if (!is.null(x[["format_details"]])) {
+    .e <- check_FormatDetails(x[["format_details"]])
+    if (!isTRUE(.e)) return(paste0("Asset$format_details: ", .e))
   }
   if (!is.null(x[["size_bytes"]])) {
     .e <- checkmate::check_int(x[["size_bytes"]])
@@ -2196,6 +2333,8 @@ assert_AmbientValueAtLocation <- function(x) {
 
 #' Every generated validator, by class name
 amadeus_validators <- list(
+  "FormatDetails" = check_FormatDetails,
+  "FormatIdentification" = check_FormatIdentification,
   "DataSource" = check_DataSource,
   "PrivacyProfile" = check_PrivacyProfile,
   "Product" = check_Product,
