@@ -520,3 +520,18 @@ Existing scientific metadata and protected historical files were compared to
 pre-migration snapshots. No R package source or packaged catalog snapshot changes
 are part of this extension. Missing model/conventions/conformance findings remain
 unknown rather than inferred from a suffix or a legacy label.
+
+
+## Authentication metadata clarification — 2026-11-19
+
+The existing optional `DataSource.requires_authentication` Boolean now documents
+provider/delivery-route scope: true requires credentials, false explicitly denotes
+public delivery and absence is unassessed. It is metadata, not an HTTP detector.
+No new schema fields, classes or constraints were introduced; generated schema,
+Pydantic and merged model metadata were refreshed and 57 schema tests pass.
+The surrounding catalogs explicitly classify GlobalFWI as public independently of
+GES DISC MERRA-2. The R downloader plans per-request authentication and separates
+public/protected transfers without changing its arguments. Focused download tests
+pass; a broader R calculation run crashed in native terra buffer code, so no full
+R calculation-suite success is claimed. Original snapshots and scientific catalog
+metadata are preserved; the downloader source edit has an explicit checksum review.

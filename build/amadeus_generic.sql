@@ -30,7 +30,7 @@
 --     * Slot: producer_institution
 --     * Slot: homepage
 --     * Slot: access_protocol Description: Primary access mechanism. Determines whether "subset early" is achievable at all for this source.
---     * Slot: requires_authentication Description: Whether a credential is needed. True for all NASA Earthdata sources (`modis`, `merra2`, `geos`, SEDAC `population`).
+--     * Slot: requires_authentication Description: Default credential requirement for this source's described data-delivery route, not its public discovery pages. True means credentials are needed; false explicitly means public access; absence means unassessed. Classify delivery providers separately: GES DISC MERRA-2 and NCCS GlobalFWI have different access requirements. This metadata does not detect HTTP access requirements or execute authentication.
 --     * Slot: auth_mechanism
 --     * Slot: rate_limit_requests_per_second Description: Provider rate limit, as `download_data(rate_limit=)` already takes. In the catalog so a query planner can respect it without hard-coding.
 --     * Slot: license_spdx

@@ -1734,7 +1734,7 @@
                     ]
                 },
                 "requires_authentication": {
-                    "description": "Whether a credential is needed. True for all NASA Earthdata sources (`modis`, `merra2`, `geos`, SEDAC `population`).",
+                    "description": "Default credential requirement for this source's described data-delivery route, not its public discovery pages. True means credentials are needed; false explicitly means public access; absence means unassessed. Classify delivery providers separately: GES DISC MERRA-2 and NCCS GlobalFWI have different access requirements. This metadata does not detect HTTP access requirements or execute authentication.",
                     "type": [
                         "boolean",
                         "null"

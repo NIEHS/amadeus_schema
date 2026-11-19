@@ -1091,7 +1091,7 @@ class DataSource(ConfiguredBaseModel):
          'examples': [{'value': 'US Environmental Protection Agency'}]} })
     homepage: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource']} })
     access_protocol: Optional[AccessProtocolEnum] = Field(default=None, description="""Primary access mechanism. Determines whether \"subset early\" is achievable at all for this source.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource']} })
-    requires_authentication: Optional[bool] = Field(default=None, description="""Whether a credential is needed. True for all NASA Earthdata sources (`modis`, `merra2`, `geos`, SEDAC `population`).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource']} })
+    requires_authentication: Optional[bool] = Field(default=None, description="""Default credential requirement for this source's described data-delivery route, not its public discovery pages. True means credentials are needed; false explicitly means public access; absence means unassessed. Classify delivery providers separately: GES DISC MERRA-2 and NCCS GlobalFWI have different access requirements. This metadata does not detect HTTP access requirements or execute authentication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource']} })
     auth_mechanism: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSource'],
          'examples': [{'value': 'NASA Earthdata bearer token'},
                       {'value': 'EPA AQS email + API key'}]} })

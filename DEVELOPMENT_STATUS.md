@@ -1,6 +1,6 @@
 # Development status
 
-_Last updated: 2026-11-18_
+_Last updated: 2026-11-19_
 
 **At a glance.** The schema is a finished prototype that has been presented and
 is now **waiting on other people**, not on more modelling. It was built for
@@ -27,6 +27,29 @@ its own table, so four value tables cover all of them.
 
 Model: 20 classes (1 abstract), 31 enums, 235 slots, 23 types, 22 conditional
 rules, in five modules (catalog, value, request, provenance, common).
+
+## MERRA-2 authentication clarification — 2026-11-19
+
+Clarified the existing optional source Boolean: true requires credentials, false
+explicitly denotes public delivery and omission remains unassessed. No classes,
+slots or required fields changed. Regenerated schema/models pass 57 Python tests.
+The surrounding catalogs explicitly classify GlobalFWI as public; the R downloader
+isolates anonymous/protected transfers in mixed calls. Focused R download checks
+pass; the broader calculation suite terminated in native terra buffer code and is
+not certified. Historical snapshots and scientific catalog content are preserved
+apart from the approved authentication metadata. This task explicitly authorizes
+the downloader edit; its before/after hashes are recorded in a separate review.
+
+## Catalog regression repair — 2026-11-19
+
+The surrounding maintained catalog workflow now passes all 48 original scientific
+regressions plus seven configuration/evidence/reporting checks, and 44 catalog/
+bridge tests. Catalog and provider-evidence paths are separate. Historical science
+checkers remain unchanged; a maintained adapter preserves their scientific
+assertions and verifies retained evidence hashes without applying obsolete
+whole-workspace snapshots to the current schema. Missing inputs, assertion errors
+and other execution failures are reported separately. Pre-format test outcomes
+remain unknown. No schema definitions or package R sources changed in this repair.
 
 ## Scientific-format extension — 2026-11-18
 
@@ -147,6 +170,8 @@ Newest first. One line per change that moved the state above.
 
 | Date | Change |
 |---|---|
+| 2026-11-19 | Clarified source authentication metadata, regenerated models, and verified mixed public/native MERRA-2 credential separation; focused tests pass and broader terra calculation crash is recorded separately |
+| 2026-11-19 | Repaired catalog regression configuration and historical/current science checks; original suite 48/48 and seven prevention checks pass; removed unsupported pre-format baseline claim |
 | 2026-11-18 | Prepared shared format metadata commit; reran schema/R checks and regenerated metadata with repository-relative source paths |
 | 2026-11-18 | Added shared format/evidence metadata and GlobalFWI registration; regenerated models/catalogs; nested engine and R serialization checks pass; scientific/historical preservation verified |
 | 2026-11-18 | Added optional public privacy profiles and restricted request/transformation/release metadata; regenerated models and catalog artifacts; verified backward compatibility, original metadata preservation and both database test suites |
@@ -159,12 +184,3 @@ Newest first. One line per change that moved the state above.
 | 2026-10-09 | Repo history committed and pushed to `matentzn/amadeus_schema` |
 | 2026-09-25 | Schema extracted from the draft inside a local amadeus checkout into this standalone repo |
 | 2026-09-22 | Presented in the Database-and-Schema slot |
-
-
-Legacy test limitation recorded during this migration: the separate
-`validated_catalog_handles` legacy suite reports 12 passed and 36 setup failures
-because it still reads absent `dataset_spec_objects/gridmet.yaml`, `merra2.yaml`
-and `modis.yaml`. Those legacy tests/helper paths were not changed. Maintained
-catalog validation reads `global_dataset_catalogs` and passes all 47 full/global/
-projection checks, RDS parity and the retained native-evidence checks. Exact
-pre-migration scientific record/order comparisons independently pass.
