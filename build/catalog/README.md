@@ -15,6 +15,21 @@ second independent inventory.
 | `catalog_build_manifest.json` | Generator-recorded input/context checksums, catalog output checksums and environment versions. |
 | `metadata_gap_report.json` | Explicit binding metadata gaps and grid CRS readiness; not observation QA. |
 
+## GOES-ADP update
+
+The JSON set adds only NOAA GOES-ADP: satellites 16/18, sectors C/F/M, and
+separate Baseline/Enterprise algorithm profiles. Existing family definitions
+are unchanged. The published subset contains JSON; local YAML/RDS files are
+generation and validation artifacts and are not included in this commit.
+The schema and three reports listed above remain at this directory's root.
+They are not duplicated inside `validated_catalog_handles/`.
+
+`global_dataset_catalogs/goes.json` contains the full definitions.
+`validated_catalog_handles/goes.json` is the optional discovery projection;
+see that directory's README. Both global JSON files contain the assembled full
+union, preserving the existing layout. The JSON Schema is unchanged by GOES
+registration and is already tracked.
+
 ## Regenerate and validate
 
 Run these commands from the **parent `amadeus/` repository root**, with
@@ -24,6 +39,10 @@ Python 3.12 `.venv-catalog` environment and dependencies pinned in
 is also required for lossless RDS generation and validation.
 
 ```sh
+mkdir -p amadeus_schema/build/catalog/validated_catalog_handles
+# Request the existing generator's optional GOES discovery JSON output.
+touch amadeus_schema/build/catalog/validated_catalog_handles/goes.json
+
 .venv-catalog/bin/python -B dataset_spec_objects/catalog_workflow.py generate \
   --output-dir amadeus_schema/build/catalog
 
@@ -40,6 +59,10 @@ Stop if any command fails. Generate into a fresh output directory when dataset
 membership changes, so obsolete files cannot survive from an earlier build.
 The manifest hashes the catalog artifacts and schema source inputs; it does
 not hash every companion file in this directory.
+Its output hashes describe the complete generated YAML/JSON/RDS build, including
+the optional GOES handle JSON. A JSON-only checkout does not contain every file
+listed in that full-build manifest; regenerate the complete tree before running
+serialization-parity validation.
 
 Generation is offline: it reuses reviewed YAML and retained provider evidence.
 It does not download environmental arrays or refresh provider inventories.
@@ -48,6 +71,9 @@ serialization checks; it does not certify scientific completeness or successful
 R/DuckDB/Sedona execution. The companion JSON Schema comes from the same schema
 sources and generator environment; existing schema/SQL outputs in `build/`
 are separate artifacts and are not rebuilt by these commands.
+All 48 GOES bindings retain explicit investigation flags. Existing R adapters
+do not apply all required algorithm-specific QA screens or guarantee categorical
+resampling; these catalogs do not certify quantitative aerosol exposure.
 
 The generation code and retained evidence currently live in the parent
 repository. This bundle alone cannot regenerate itself from a standalone

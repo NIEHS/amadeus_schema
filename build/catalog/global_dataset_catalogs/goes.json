@@ -1,0 +1,1786 @@
+{
+  "schema_version": "0.1.0",
+  "data_sources": [
+    {
+      "id": "amadeus:source/noaa_goes_abi_adp",
+      "name": "noaa_goes_abi_adp",
+      "label": "NOAA GOES ABI Aerosol Detection Product",
+      "producer_institution": "NOAA NESDIS Office of Satellite and Product Operations",
+      "homepage": "https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C01510",
+      "access_protocol": "https_bulk_file",
+      "requires_authentication": false,
+      "amadeus_function_suffix": "_goes",
+      "citation_apa": "GOES-R Algorithm Working Group and GOES-R Series Program. (2017). NOAA GOES-R Series Advanced Baseline Imager Level 2 Aerosol Detection. NOAA NCEI. gov.noaa.ncdc:C01510. Cite the actual subset and access date.",
+      "description": "GOES is NOAA satellite imagery, distinct from NASA GEOS and GEOS-CF model output. GEOS-ADP is not an evidenced provider name. Repository download aliases are goes/goes_adp/GOES. This intake covers only downloader-supported satellites 16 and 18. Registry-listed 17 and 19 are not supported by download_goes. The shared unassessed privacy profile is not a source PHI finding."
+    }
+  ],
+  "products": [
+    {
+      "id": "amadeus:product/goes16_abi_l2_adpc_baseline",
+      "name": "goes16_abi_l2_adpc_baseline",
+      "label": "GOES-16 ABI ADP-C Baseline algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "baseline",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes16_adpc_fixed",
+      "crs": "AMADEUS:100008",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "CONUS/PACUS sector; satellite-specific fixed-grid window",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2019-12-03",
+      "access_url": "https://noaa-goes16.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPC/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      },
+      "temporal_coverage_end": "2024-04-17"
+    },
+    {
+      "id": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+      "name": "goes16_abi_l2_adpc_enterprise",
+      "label": "GOES-16 ABI ADP-C Enterprise algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "enterprise",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes16_adpc_fixed",
+      "crs": "AMADEUS:100008",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "CONUS/PACUS sector; satellite-specific fixed-grid window",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2024-04-17",
+      "access_url": "https://noaa-goes16.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPC/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      }
+    },
+    {
+      "id": "amadeus:product/goes16_abi_l2_adpf_baseline",
+      "name": "goes16_abi_l2_adpf_baseline",
+      "label": "GOES-16 ABI ADP-F Baseline algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "baseline",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes16_adpf_fixed",
+      "crs": "AMADEUS:100008",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Visible hemispheric disk; off-earth and unretrievable pixels are missing",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2019-12-03",
+      "access_url": "https://noaa-goes16.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPF/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      },
+      "temporal_coverage_end": "2024-04-17"
+    },
+    {
+      "id": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+      "name": "goes16_abi_l2_adpf_enterprise",
+      "label": "GOES-16 ABI ADP-F Enterprise algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "enterprise",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes16_adpf_fixed",
+      "crs": "AMADEUS:100008",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Visible hemispheric disk; off-earth and unretrievable pixels are missing",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2024-04-17",
+      "access_url": "https://noaa-goes16.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPF/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      }
+    },
+    {
+      "id": "amadeus:product/goes16_abi_l2_adpm_baseline",
+      "name": "goes16_abi_l2_adpm_baseline",
+      "label": "GOES-16 ABI ADP-M Baseline algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "baseline",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes16_adpm_fixed",
+      "crs": "AMADEUS:100008",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Moving Mesoscale 1 and 2 windows; never a fixed geographic bbox",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2019-12-03",
+      "access_url": "https://noaa-goes16.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPM/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      },
+      "temporal_coverage_end": "2024-04-17"
+    },
+    {
+      "id": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+      "name": "goes16_abi_l2_adpm_enterprise",
+      "label": "GOES-16 ABI ADP-M Enterprise algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "enterprise",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes16_adpm_fixed",
+      "crs": "AMADEUS:100008",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Moving Mesoscale 1 and 2 windows; never a fixed geographic bbox",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2024-04-17",
+      "access_url": "https://noaa-goes16.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPM/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      }
+    },
+    {
+      "id": "amadeus:product/goes18_abi_l2_adpc_baseline",
+      "name": "goes18_abi_l2_adpc_baseline",
+      "label": "GOES-18 ABI ADP-C Baseline algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "baseline",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes18_adpc_fixed",
+      "crs": "AMADEUS:100009",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "CONUS/PACUS sector; satellite-specific fixed-grid window",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2023-01-04",
+      "access_url": "https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPC/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      },
+      "temporal_coverage_end": "2024-04-17"
+    },
+    {
+      "id": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+      "name": "goes18_abi_l2_adpc_enterprise",
+      "label": "GOES-18 ABI ADP-C Enterprise algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "enterprise",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes18_adpc_fixed",
+      "crs": "AMADEUS:100009",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "CONUS/PACUS sector; satellite-specific fixed-grid window",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2024-04-17",
+      "access_url": "https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPC/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      }
+    },
+    {
+      "id": "amadeus:product/goes18_abi_l2_adpf_baseline",
+      "name": "goes18_abi_l2_adpf_baseline",
+      "label": "GOES-18 ABI ADP-F Baseline algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "baseline",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes18_adpf_fixed",
+      "crs": "AMADEUS:100009",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Visible hemispheric disk; off-earth and unretrievable pixels are missing",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2023-01-04",
+      "access_url": "https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPF/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      },
+      "temporal_coverage_end": "2024-04-17"
+    },
+    {
+      "id": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+      "name": "goes18_abi_l2_adpf_enterprise",
+      "label": "GOES-18 ABI ADP-F Enterprise algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "enterprise",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes18_adpf_fixed",
+      "crs": "AMADEUS:100009",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Visible hemispheric disk; off-earth and unretrievable pixels are missing",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2024-04-17",
+      "access_url": "https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPF/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      }
+    },
+    {
+      "id": "amadeus:product/goes18_abi_l2_adpm_baseline",
+      "name": "goes18_abi_l2_adpm_baseline",
+      "label": "GOES-18 ABI ADP-M Baseline algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "baseline",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes18_adpm_fixed",
+      "crs": "AMADEUS:100009",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Moving Mesoscale 1 and 2 windows; never a fixed geographic bbox",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2023-01-04",
+      "access_url": "https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPM/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      },
+      "temporal_coverage_end": "2024-04-17"
+    },
+    {
+      "id": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+      "name": "goes18_abi_l2_adpm_enterprise",
+      "label": "GOES-18 ABI ADP-M Enterprise algorithm",
+      "data_source": "amadeus:source/noaa_goes_abi_adp",
+      "product_version": "enterprise",
+      "data_genre": [
+        "satellite",
+        "aerosols",
+        "wildfire_smoke"
+      ],
+      "native_format": "netcdf4_cf",
+      "spatial_support_type": "raster_grid_cell",
+      "grid_definition": "amadeus:grid/goes18_adpm_fixed",
+      "crs": "AMADEUS:100009",
+      "native_spatial_resolution_m": 2000,
+      "native_spatial_resolution_descriptor": "Nominal 2 km at nadir; footprint grows off-nadir. Projected coordinate spacing is recorded separately. Mesoscale sector location varies per file.",
+      "spatial_extent_descriptor": "Moving Mesoscale 1 and 2 windows; never a fixed geographic bbox",
+      "temporal_resolution": "subhourly",
+      "temporal_alignment": "interval",
+      "day_boundary_convention": "observation_dependent",
+      "calendar": "gregorian",
+      "temporal_coverage_start": "2024-04-17",
+      "access_url": "https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=ABI-L2-ADPM/",
+      "amadeus_dataset_name": "goes",
+      "amadeus_process_covariate": "goes",
+      "amadeus_calculate_covariate": "goes",
+      "privacy_profile": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "description": "Provider registry C01510 and retained native_headers.json establish identity and sample layout. Algorithm transition on 2024-04-17 is day-level; inspect each granule to disambiguate the transition day. GOES-16 Baseline starts at the first object date observed in the S3 prefix, not the NCEI programme start or proof of continuous coverage. GOES-18 Baseline is limited to the operational GOES-West epoch starting 2023-01-04 at 18:00 UTC. Earlier GOES-18 test/drift files beginning in 2022 use different orbital positions and are excluded from this 137-degree-West grid profile. NOAA operational/drift notices are retained in the evidence directory; date-only coverage cannot encode the within-day transition. Cadence depends on mode/epoch/sector: no uniform five-minute interval is asserted. Use file time bounds. Smoke/Dust are column detection flags, not AOD, PM2.5, surface exposure or verified absence under clouds/night/snow. Apply algorithm-specific DQF, solar/view-angle and glint screens from the NOAA guide. Current process_goes does not apply those screens; it may interpolate flags during reprojection and permits arithmetic daily aggregation. These routes identify existing interfaces, not scientific execution certification. Separate Baseline/Enterprise runs; never pool their QA codes. GOES-16 is a historical archive; an absent end date is not a claim of ongoing acquisition.",
+      "format_details": {
+        "format_family": "netcdf",
+        "delivery_structure": "single_file",
+        "identification": {
+          "basis": "native_header",
+          "evidence_reference": "dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json",
+          "identification_note": "Version-matched provider metadata; no all-file conformance assessment."
+        },
+        "physical_container": "hdf5",
+        "expected_filename_extensions": [
+          ".nc"
+        ],
+        "expected_filename_extensions_scope": "product",
+        "format_variant": "netcdf4",
+        "cf_conformance_status": "not_assessed",
+        "conventions_attribute": "CF-1.7"
+      }
+    }
+  ],
+  "grid_definitions": [
+    {
+      "id": "amadeus:grid/goes16_adpc_fixed",
+      "name": "goes16_adpc_fixed",
+      "crs": "AMADEUS:100008",
+      "grid_mapping_name": "geostationary",
+      "proj_string": "+proj=geos +h=35786023 +lon_0=-75 +a=6378137 +b=6356752.31414 +sweep=x +units=m +no_defs",
+      "resolution_x": 2004.0173154875413,
+      "resolution_y": 2004.0173154875413,
+      "resolution_unit": "m",
+      "n_columns": 2500,
+      "n_rows": 1500
+    },
+    {
+      "id": "amadeus:grid/goes16_adpf_fixed",
+      "name": "goes16_adpf_fixed",
+      "crs": "AMADEUS:100008",
+      "grid_mapping_name": "geostationary",
+      "proj_string": "+proj=geos +h=35786023 +lon_0=-75 +a=6378137 +b=6356752.31414 +sweep=x +units=m +no_defs",
+      "resolution_x": 2004.0173154875413,
+      "resolution_y": 2004.0173154875413,
+      "resolution_unit": "m",
+      "n_columns": 5424,
+      "n_rows": 5424
+    },
+    {
+      "id": "amadeus:grid/goes16_adpm_fixed",
+      "name": "goes16_adpm_fixed",
+      "crs": "AMADEUS:100008",
+      "grid_mapping_name": "geostationary",
+      "proj_string": "+proj=geos +h=35786023 +lon_0=-75 +a=6378137 +b=6356752.31414 +sweep=x +units=m +no_defs",
+      "resolution_x": 2004.0173154875413,
+      "resolution_y": 2004.0173154875413,
+      "resolution_unit": "m",
+      "n_columns": 500,
+      "n_rows": 500
+    },
+    {
+      "id": "amadeus:grid/goes18_adpc_fixed",
+      "name": "goes18_adpc_fixed",
+      "crs": "AMADEUS:100009",
+      "grid_mapping_name": "geostationary",
+      "proj_string": "+proj=geos +h=35786023 +lon_0=-137 +a=6378137 +b=6356752.31414 +sweep=x +units=m +no_defs",
+      "resolution_x": 2004.0173154875413,
+      "resolution_y": 2004.0173154875413,
+      "resolution_unit": "m",
+      "n_columns": 2500,
+      "n_rows": 1500
+    },
+    {
+      "id": "amadeus:grid/goes18_adpf_fixed",
+      "name": "goes18_adpf_fixed",
+      "crs": "AMADEUS:100009",
+      "grid_mapping_name": "geostationary",
+      "proj_string": "+proj=geos +h=35786023 +lon_0=-137 +a=6378137 +b=6356752.31414 +sweep=x +units=m +no_defs",
+      "resolution_x": 2004.0173154875413,
+      "resolution_y": 2004.0173154875413,
+      "resolution_unit": "m",
+      "n_columns": 5424,
+      "n_rows": 5424
+    },
+    {
+      "id": "amadeus:grid/goes18_adpm_fixed",
+      "name": "goes18_adpm_fixed",
+      "crs": "AMADEUS:100009",
+      "grid_mapping_name": "geostationary",
+      "proj_string": "+proj=geos +h=35786023 +lon_0=-137 +a=6378137 +b=6356752.31414 +sweep=x +units=m +no_defs",
+      "resolution_x": 2004.0173154875413,
+      "resolution_y": 2004.0173154875413,
+      "resolution_unit": "m",
+      "n_columns": 500,
+      "n_rows": 500
+    }
+  ],
+  "canonical_variables": [
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_baseline_smoke",
+      "name": "goes16_abi_l2_adpc_baseline_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_baseline_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_baseline_dust",
+      "name": "goes16_abi_l2_adpc_baseline_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_baseline_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_baseline_dqf",
+      "name": "goes16_abi_l2_adpc_baseline_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_baseline_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_enterprise_smoke",
+      "name": "goes16_abi_l2_adpc_enterprise_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_enterprise_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_enterprise_dust",
+      "name": "goes16_abi_l2_adpc_enterprise_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_enterprise_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_enterprise_dqf",
+      "name": "goes16_abi_l2_adpc_enterprise_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_enterprise_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_enterprise_pqi1",
+      "name": "goes16_abi_l2_adpc_enterprise_pqi1",
+      "label": "PQI1",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_enterprise_pqi1",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi1 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpc_enterprise_pqi2",
+      "name": "goes16_abi_l2_adpc_enterprise_pqi2",
+      "label": "PQI2",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpc_enterprise_pqi2",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi2 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_baseline_smoke",
+      "name": "goes16_abi_l2_adpf_baseline_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_baseline_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_baseline_dust",
+      "name": "goes16_abi_l2_adpf_baseline_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_baseline_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_baseline_dqf",
+      "name": "goes16_abi_l2_adpf_baseline_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_baseline_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_enterprise_smoke",
+      "name": "goes16_abi_l2_adpf_enterprise_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_enterprise_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_enterprise_dust",
+      "name": "goes16_abi_l2_adpf_enterprise_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_enterprise_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_enterprise_dqf",
+      "name": "goes16_abi_l2_adpf_enterprise_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_enterprise_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_enterprise_pqi1",
+      "name": "goes16_abi_l2_adpf_enterprise_pqi1",
+      "label": "PQI1",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_enterprise_pqi1",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi1 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpf_enterprise_pqi2",
+      "name": "goes16_abi_l2_adpf_enterprise_pqi2",
+      "label": "PQI2",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpf_enterprise_pqi2",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi2 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_baseline_smoke",
+      "name": "goes16_abi_l2_adpm_baseline_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_baseline_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_baseline_dust",
+      "name": "goes16_abi_l2_adpm_baseline_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_baseline_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_baseline_dqf",
+      "name": "goes16_abi_l2_adpm_baseline_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_baseline_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_enterprise_smoke",
+      "name": "goes16_abi_l2_adpm_enterprise_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_enterprise_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_enterprise_dust",
+      "name": "goes16_abi_l2_adpm_enterprise_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_enterprise_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_enterprise_dqf",
+      "name": "goes16_abi_l2_adpm_enterprise_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_enterprise_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_enterprise_pqi1",
+      "name": "goes16_abi_l2_adpm_enterprise_pqi1",
+      "label": "PQI1",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_enterprise_pqi1",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi1 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes16_abi_l2_adpm_enterprise_pqi2",
+      "name": "goes16_abi_l2_adpm_enterprise_pqi2",
+      "label": "PQI2",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes16_abi_l2_adpm_enterprise_pqi2",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi2 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_baseline_smoke",
+      "name": "goes18_abi_l2_adpc_baseline_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_baseline_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_baseline_dust",
+      "name": "goes18_abi_l2_adpc_baseline_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_baseline_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_baseline_dqf",
+      "name": "goes18_abi_l2_adpc_baseline_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_baseline_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_enterprise_smoke",
+      "name": "goes18_abi_l2_adpc_enterprise_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_enterprise_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_enterprise_dust",
+      "name": "goes18_abi_l2_adpc_enterprise_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_enterprise_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_enterprise_dqf",
+      "name": "goes18_abi_l2_adpc_enterprise_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_enterprise_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_enterprise_pqi1",
+      "name": "goes18_abi_l2_adpc_enterprise_pqi1",
+      "label": "PQI1",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_enterprise_pqi1",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi1 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpc_enterprise_pqi2",
+      "name": "goes18_abi_l2_adpc_enterprise_pqi2",
+      "label": "PQI2",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpc_enterprise_pqi2",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi2 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_baseline_smoke",
+      "name": "goes18_abi_l2_adpf_baseline_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_baseline_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_baseline_dust",
+      "name": "goes18_abi_l2_adpf_baseline_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_baseline_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_baseline_dqf",
+      "name": "goes18_abi_l2_adpf_baseline_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_baseline_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_enterprise_smoke",
+      "name": "goes18_abi_l2_adpf_enterprise_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_enterprise_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_enterprise_dust",
+      "name": "goes18_abi_l2_adpf_enterprise_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_enterprise_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_enterprise_dqf",
+      "name": "goes18_abi_l2_adpf_enterprise_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_enterprise_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_enterprise_pqi1",
+      "name": "goes18_abi_l2_adpf_enterprise_pqi1",
+      "label": "PQI1",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_enterprise_pqi1",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi1 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpf_enterprise_pqi2",
+      "name": "goes18_abi_l2_adpf_enterprise_pqi2",
+      "label": "PQI2",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpf_enterprise_pqi2",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi2 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_baseline_smoke",
+      "name": "goes18_abi_l2_adpm_baseline_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_baseline_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_baseline_dust",
+      "name": "goes18_abi_l2_adpm_baseline_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_baseline_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_baseline_dqf",
+      "name": "goes18_abi_l2_adpm_baseline_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_baseline_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_enterprise_smoke",
+      "name": "goes18_abi_l2_adpm_enterprise_smoke",
+      "label": "Smoke",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_enterprise_smoke",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column smoke detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_enterprise_dust",
+      "name": "goes18_abi_l2_adpm_enterprise_dust",
+      "label": "Dust",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_enterprise_dust",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "binary_flag",
+      "extensivity": "categorical",
+      "description": "Satellite-column dust detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_enterprise_dqf",
+      "name": "goes18_abi_l2_adpm_enterprise_dqf",
+      "label": "DQF",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_enterprise_dqf",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column dqf detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_enterprise_pqi1",
+      "name": "goes18_abi_l2_adpm_enterprise_pqi1",
+      "label": "PQI1",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_enterprise_pqi1",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi1 detection/quality code; consult the algorithm-specific NOAA guide."
+    },
+    {
+      "id": "amadeus:var/goes18_abi_l2_adpm_enterprise_pqi2",
+      "name": "goes18_abi_l2_adpm_enterprise_pqi2",
+      "label": "PQI2",
+      "standard_name": "https://w3id.org/niehs/amadeus/var/goes18_abi_l2_adpm_enterprise_pqi2",
+      "standard_name_authority": "AMADEUS project-local identifier; no cross-product or external ontology equivalence asserted",
+      "units_ucum": "1",
+      "value_data_type": "categorical",
+      "extensivity": "categorical",
+      "description": "Satellite-column pqi2 detection/quality code; consult the algorithm-specific NOAA guide."
+    }
+  ],
+  "product_variables": [
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_baseline_smoke",
+      "product": "amadeus:product/goes16_abi_l2_adpc_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_baseline_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_baseline_dust",
+      "product": "amadeus:product/goes16_abi_l2_adpc_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_baseline_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_baseline_dqf",
+      "product": "amadeus:product/goes16_abi_l2_adpc_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_baseline_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_smoke",
+      "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_dust",
+      "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_dqf",
+      "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_pqi1",
+      "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_pqi1",
+      "native_name": "PQI1",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_pqi2",
+      "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_pqi2",
+      "native_name": "PQI2",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_baseline_smoke",
+      "product": "amadeus:product/goes16_abi_l2_adpf_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_baseline_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_baseline_dust",
+      "product": "amadeus:product/goes16_abi_l2_adpf_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_baseline_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_baseline_dqf",
+      "product": "amadeus:product/goes16_abi_l2_adpf_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_baseline_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_smoke",
+      "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_dust",
+      "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_dqf",
+      "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_pqi1",
+      "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_pqi1",
+      "native_name": "PQI1",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_pqi2",
+      "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_pqi2",
+      "native_name": "PQI2",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_baseline_smoke",
+      "product": "amadeus:product/goes16_abi_l2_adpm_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_baseline_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_baseline_dust",
+      "product": "amadeus:product/goes16_abi_l2_adpm_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_baseline_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_baseline_dqf",
+      "product": "amadeus:product/goes16_abi_l2_adpm_baseline",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_baseline_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_smoke",
+      "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_dust",
+      "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_dqf",
+      "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_pqi1",
+      "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_pqi1",
+      "native_name": "PQI1",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_pqi2",
+      "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_pqi2",
+      "native_name": "PQI2",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_baseline_smoke",
+      "product": "amadeus:product/goes18_abi_l2_adpc_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_baseline_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_baseline_dust",
+      "product": "amadeus:product/goes18_abi_l2_adpc_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_baseline_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_baseline_dqf",
+      "product": "amadeus:product/goes18_abi_l2_adpc_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_baseline_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_smoke",
+      "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_dust",
+      "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_dqf",
+      "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_pqi1",
+      "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_pqi1",
+      "native_name": "PQI1",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_pqi2",
+      "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_pqi2",
+      "native_name": "PQI2",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_baseline_smoke",
+      "product": "amadeus:product/goes18_abi_l2_adpf_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_baseline_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_baseline_dust",
+      "product": "amadeus:product/goes18_abi_l2_adpf_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_baseline_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_baseline_dqf",
+      "product": "amadeus:product/goes18_abi_l2_adpf_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_baseline_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_smoke",
+      "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_dust",
+      "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_dqf",
+      "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_pqi1",
+      "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_pqi1",
+      "native_name": "PQI1",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_pqi2",
+      "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_pqi2",
+      "native_name": "PQI2",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_baseline_smoke",
+      "product": "amadeus:product/goes18_abi_l2_adpm_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_baseline_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_baseline_dust",
+      "product": "amadeus:product/goes18_abi_l2_adpm_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_baseline_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "255",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_baseline_dqf",
+      "product": "amadeus:product/goes18_abi_l2_adpm_baseline",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_baseline_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_smoke",
+      "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_smoke",
+      "native_name": "Smoke",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_dust",
+      "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_dust",
+      "native_name": "Dust",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "-128",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_dqf",
+      "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_dqf",
+      "native_name": "DQF",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_pqi1",
+      "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_pqi1",
+      "native_name": "PQI1",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    },
+    {
+      "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_pqi2",
+      "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+      "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_pqi2",
+      "native_name": "PQI2",
+      "native_units_ucum": "1",
+      "harmonization_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions.",
+      "missing_value_sentinel": "65535",
+      "metadata_gaps": [
+        "under_investigation"
+      ]
+    }
+  ],
+  "assets": [],
+  "privacy_profiles": [
+    {
+      "id": "amadeus:privacy_profile/location_linked_environmental_data_v1",
+      "name": "location_linked_environmental_data_v1",
+      "privacy_profile_version": "1",
+      "description": "Public metadata placeholder for environmental source Products and future location-linked use. No source PHI finding, completed disclosure assessment, transformation, or release approval is asserted. Native spatial support, grid and temporal resolution remain on each Product and GridDefinition. No participant coordinates, household identifiers or restricted records belong here.",
+      "source_phi_assessment_status": "not_assessed",
+      "source_phi_status_missing_reason": "under_investigation",
+      "location_identifiability": "not_assessed",
+      "linkage_risk_assessment_status": "not_assessed",
+      "linkage_risk_note": "Public environmental information does not automatically constitute PHI. Values, time series, geographic memberships, distances and combinations of datasets may constrain individual or household locations when linked to precise residences or auxiliary information. Assess the actual joint output, audience and threat model; native cell size and masking alone do not establish privacy or de-identification. Classification of source data does not classify a location-linked derivative.",
+      "location_linked_review_required": true
+    }
+  ]
+}

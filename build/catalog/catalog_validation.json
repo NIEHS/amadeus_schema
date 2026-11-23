@@ -1,23 +1,25 @@
 {
   "status": "PASS",
-  "documents_checked": 47,
+  "documents_checked": 49,
   "schema": "amadeus_schema/src/amadeus_schema/schema/amadeus_schema.yaml",
+  "reviewed_intake": "PASS GOES-ADP: distinct NOAA source, algorithm-specific flags, native grids and supported satellite/sector scope",
+  "intake_evidence_files": 39,
   "unique_ids": true,
   "closed_references": true,
   "asset_product_binding_consistency": true,
   "catalog_root": "/Users/tedlage/Desktop/amadeus/amadeus_schema/build/catalog",
   "global_counts": {
-    "data_sources": 26,
-    "products": 307,
-    "grid_definitions": 45,
-    "canonical_variables": 4441,
-    "product_variables": 4883,
+    "data_sources": 27,
+    "products": 319,
+    "grid_definitions": 51,
+    "canonical_variables": 4489,
+    "product_variables": 4931,
     "assets": 124,
     "privacy_profiles": 1
   },
   "yaml_json_and_projection_parity": true,
   "r_objects": {
-    "objects_checked": 24,
+    "objects_checked": 25,
     "packages": {
       "R": "4.6.0",
       "yaml": "2.3.12",
@@ -25,10 +27,10 @@
     }
   },
   "metadata": {
-    "binding_count": 4883,
-    "flagged_binding_count": 3187,
-    "canonical_variable_count": 4441,
-    "canonical_variables_with_flagged_bindings": 2868,
+    "binding_count": 4931,
+    "flagged_binding_count": 3235,
+    "canonical_variable_count": 4489,
+    "canonical_variables_with_flagged_bindings": 2916,
     "families": {
       "aqs": {
         "bindings": 7,
@@ -72,6 +74,14 @@
         "bindings": 21,
         "flag_counts": {},
         "absent": 21,
+        "empty_list": 0
+      },
+      "goes": {
+        "bindings": 48,
+        "flag_counts": {
+          "under_investigation": 48
+        },
+        "absent": 0,
         "empty_list": 0
       },
       "gridmet": {
@@ -4378,6 +4388,438 @@
           "under_investigation"
         ],
         "catalog_note": "NASA Office Note 17 v1.3 (2022), section xgc_tavg_1hr_g1440x721_v36, printed p.49: Lumped semivolatile aerosol products of monoterpene + sesquiterpene oxidation (MW = 150.00 g mol-1) volume mixing ratio dry air; native dimensions tzyx, literal units mol mol-1. Evidence dataset_spec_objects/geos_collection_extension_20261120/specification_tables.json, retained text lines [2091, 2092, 2093]; source https://gmao.gsfc.nasa.gov/pubs/docs/Knowland1446.pdf; workbook Amadeus Source and Product!O125. Native name/casing follows the original specification; lowercase/truncated OPeNDAP names are a separate service namespace. Read each acquired file: mask actual _FillValue/missing_value before native CF unpacking, apply packing once, then any explicitly reviewed physical unit conversion. No fill, scale/offset, CF standard_name/cell_methods or valid range is inferred from the six earlier files or rewritten DAP metadata. Keep species and dry-air/total-air, mass/mole and GOCART/GCC bases distinct. Original coordinates, hybrid pressure dependencies and datum remain unresolved."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_baseline_smoke",
+        "product": "amadeus:product/goes16_abi_l2_adpc_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_baseline_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_baseline_dust",
+        "product": "amadeus:product/goes16_abi_l2_adpc_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_baseline_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_baseline_dqf",
+        "product": "amadeus:product/goes16_abi_l2_adpc_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_baseline_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_smoke",
+        "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_dust",
+        "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_dqf",
+        "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_pqi1",
+        "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_pqi1",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpc_enterprise_pqi2",
+        "product": "amadeus:product/goes16_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpc_enterprise_pqi2",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_baseline_smoke",
+        "product": "amadeus:product/goes16_abi_l2_adpf_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_baseline_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_baseline_dust",
+        "product": "amadeus:product/goes16_abi_l2_adpf_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_baseline_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_baseline_dqf",
+        "product": "amadeus:product/goes16_abi_l2_adpf_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_baseline_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_smoke",
+        "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_dust",
+        "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_dqf",
+        "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_pqi1",
+        "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_pqi1",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpf_enterprise_pqi2",
+        "product": "amadeus:product/goes16_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpf_enterprise_pqi2",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_baseline_smoke",
+        "product": "amadeus:product/goes16_abi_l2_adpm_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_baseline_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_baseline_dust",
+        "product": "amadeus:product/goes16_abi_l2_adpm_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_baseline_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_baseline_dqf",
+        "product": "amadeus:product/goes16_abi_l2_adpm_baseline",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_baseline_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_smoke",
+        "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_dust",
+        "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_dqf",
+        "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_pqi1",
+        "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_pqi1",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes16_abi_l2_adpm_enterprise_pqi2",
+        "product": "amadeus:product/goes16_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes16_abi_l2_adpm_enterprise_pqi2",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_baseline_smoke",
+        "product": "amadeus:product/goes18_abi_l2_adpc_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_baseline_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_baseline_dust",
+        "product": "amadeus:product/goes18_abi_l2_adpc_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_baseline_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_baseline_dqf",
+        "product": "amadeus:product/goes18_abi_l2_adpc_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_baseline_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_smoke",
+        "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_dust",
+        "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_dqf",
+        "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_pqi1",
+        "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_pqi1",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpc_enterprise_pqi2",
+        "product": "amadeus:product/goes18_abi_l2_adpc_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpc_enterprise_pqi2",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_baseline_smoke",
+        "product": "amadeus:product/goes18_abi_l2_adpf_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_baseline_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_baseline_dust",
+        "product": "amadeus:product/goes18_abi_l2_adpf_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_baseline_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_baseline_dqf",
+        "product": "amadeus:product/goes18_abi_l2_adpf_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_baseline_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_smoke",
+        "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_dust",
+        "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_dqf",
+        "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_pqi1",
+        "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_pqi1",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpf_enterprise_pqi2",
+        "product": "amadeus:product/goes18_abi_l2_adpf_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpf_enterprise_pqi2",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_baseline_smoke",
+        "product": "amadeus:product/goes18_abi_l2_adpm_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_baseline_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_baseline_dust",
+        "product": "amadeus:product/goes18_abi_l2_adpm_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_baseline_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_baseline_dqf",
+        "product": "amadeus:product/goes18_abi_l2_adpm_baseline",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_baseline_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_smoke",
+        "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_smoke",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_dust",
+        "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_dust",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_dqf",
+        "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_dqf",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_pqi1",
+        "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_pqi1",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
+      },
+      {
+        "id": "amadeus:pvar/goes18_abi_l2_adpm_enterprise_pqi2",
+        "product": "amadeus:product/goes18_abi_l2_adpm_enterprise",
+        "canonical_variable": "amadeus:var/goes18_abi_l2_adpm_enterprise_pqi2",
+        "metadata_gaps": [
+          "under_investigation"
+        ],
+        "catalog_note": "Native flag_values/flag_masks/flag_meanings retained verbatim in dataset_spec_objects/missing_dataset_review_20261123/evidence/native_headers.json. Do not apply packing to flag values or treat fill as zero. QA definitions differ by algorithm. Enterprise sample is GOES-18 CONUS only; other Enterprise sectors/satellite combinations are guide-backed, not sample-verified. Projected coordinates require packed coordinate scaling, then multiplication by satellite height; native arrays use radians. Use nearest-neighbour for flags and an explicit valid-observation denominator for proportions."
       },
       {
         "id": "amadeus:pvar/gridmet_drought.spei14d.category",
@@ -28993,6 +29435,54 @@
           "verified_database_srid": 4326,
           "database_geometry_ready": true,
           "scope": "CRS metadata readiness only; ingestion has not been tested."
+        },
+        {
+          "grid": "amadeus:grid/goes16_adpc_fixed",
+          "catalog_identifier": "AMADEUS:100008",
+          "resolve_using": "GridDefinition.proj_string",
+          "verified_database_srid": null,
+          "database_geometry_ready": false,
+          "required_action": "Resolve/transform the exact native projection or explicitly register a matching CRS in the target engine; reject implicit SRID fallback."
+        },
+        {
+          "grid": "amadeus:grid/goes16_adpf_fixed",
+          "catalog_identifier": "AMADEUS:100008",
+          "resolve_using": "GridDefinition.proj_string",
+          "verified_database_srid": null,
+          "database_geometry_ready": false,
+          "required_action": "Resolve/transform the exact native projection or explicitly register a matching CRS in the target engine; reject implicit SRID fallback."
+        },
+        {
+          "grid": "amadeus:grid/goes16_adpm_fixed",
+          "catalog_identifier": "AMADEUS:100008",
+          "resolve_using": "GridDefinition.proj_string",
+          "verified_database_srid": null,
+          "database_geometry_ready": false,
+          "required_action": "Resolve/transform the exact native projection or explicitly register a matching CRS in the target engine; reject implicit SRID fallback."
+        },
+        {
+          "grid": "amadeus:grid/goes18_adpc_fixed",
+          "catalog_identifier": "AMADEUS:100009",
+          "resolve_using": "GridDefinition.proj_string",
+          "verified_database_srid": null,
+          "database_geometry_ready": false,
+          "required_action": "Resolve/transform the exact native projection or explicitly register a matching CRS in the target engine; reject implicit SRID fallback."
+        },
+        {
+          "grid": "amadeus:grid/goes18_adpf_fixed",
+          "catalog_identifier": "AMADEUS:100009",
+          "resolve_using": "GridDefinition.proj_string",
+          "verified_database_srid": null,
+          "database_geometry_ready": false,
+          "required_action": "Resolve/transform the exact native projection or explicitly register a matching CRS in the target engine; reject implicit SRID fallback."
+        },
+        {
+          "grid": "amadeus:grid/goes18_adpm_fixed",
+          "catalog_identifier": "AMADEUS:100009",
+          "resolve_using": "GridDefinition.proj_string",
+          "verified_database_srid": null,
+          "database_geometry_ready": false,
+          "required_action": "Resolve/transform the exact native projection or explicitly register a matching CRS in the target engine; reject implicit SRID fallback."
         },
         {
           "grid": "amadeus:grid/gridmet_4km",
