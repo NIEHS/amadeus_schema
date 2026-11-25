@@ -15,9 +15,9 @@ second independent inventory.
 | `catalog_build_manifest.json` | Generator-recorded input/context checksums, catalog output checksums and environment versions. |
 | `metadata_gap_report.json` | Explicit binding metadata gaps and grid CRS readiness; not observation QA. |
 
-## GOES-ADP update
+## Earlier GOES-ADP update
 
-The JSON set adds only NOAA GOES-ADP: satellites 16/18, sectors C/F/M, and
+The earlier JSON update added only NOAA GOES-ADP: satellites 16/18, sectors C/F/M, and
 separate Baseline/Enterprise algorithm profiles. Existing family definitions
 are unchanged. The published subset contains JSON; local YAML/RDS files are
 generation and validation artifacts and are not included in this commit.
@@ -29,6 +29,28 @@ They are not duplicated inside `validated_catalog_handles/`.
 see that directory's README. Both global JSON files contain the assembled full
 union, preserving the existing layout. The JSON Schema is unchanged by GOES
 registration and is already tracked.
+
+## MODIS/VIIRS catalog update
+
+The MODIS JSON catalog now covers all 38 downloader short names in 41 product
+profiles and 372 variable bindings. The original seven profiles and 64 bindings
+are preserved; 33 additional short names contribute 34 profiles and 308 bindings.
+The family registry remains at 24 families. Both global JSON catalogs contain
+the regenerated full union, now totaling 353 products. Other family JSON files
+are unchanged.
+
+Thirty-six short names have version-matched CMR collection evidence. MCD14ML
+and MCD64CMQ use documented NASA/UMD identities without invented CMR identifiers.
+All 308 new bindings retain `under_investigation`: catalog registration does not
+certify native decoding, QA application, authenticated access, or existing R
+processing compatibility. Unresolved CRS and format declarations remain explicit.
+
+This update stages only JSON catalogs, the refreshed build/validation/gap reports,
+and this README. YAML/RDS remain local generation and parity-validation artifacts.
+The existing schema, processing code, and unrelated catalog definitions are not
+part of the update. Source evidence, scientific decisions, and execution limits
+are documented in the parent repository's
+`dataset_spec_objects/modis_viirs_intake_20261124/README.md`.
 
 ## Regenerate and validate
 
