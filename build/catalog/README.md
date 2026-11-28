@@ -52,6 +52,33 @@ part of the update. Source evidence, scientific decisions, and execution limits
 are documented in the parent repository's
 `dataset_spec_objects/modis_viirs_intake_20261124/README.md`.
 
+## MERRA-2 temporal and adapter review (2026-11-28)
+
+The MERRA-2 family retains 95 Products (93 native collections and two derived
+GlobalFWI discovery Products) and 2,673 bindings. Live NASA collection identities
+and all 93 exact variable dictionaries were reviewed. This update adds 32
+missing collection coverage starts, 10 documented hourly timestamp alignments,
+and 32 download registrations matching the current Amadeus lookup. Monthly and
+diurnal processing routes are not added. All other family definitions are
+unchanged; the global catalogs are the regenerated full union.
+
+Two specification-backed bindings absent by exact name from the live
+dictionaries remain flagged: `inst3_3d_gas_Nv.DELP` (the dictionary lists `delp`)
+and `tavg1_2d_adg_Nx.DUSV001`. No bindings, units or canonical identities are
+deleted or inferred. The parent checkout retains the responses, checksums,
+implementation snapshots and full review in
+`dataset_spec_objects/merra2_temporal_review_20261128/`.
+
+The strict workflow now records the exact saved schema artifact's SHA-256 in
+both the manifest and validation report. Schema constraints and version are
+unchanged; serialization of the artifact is controlled by that workflow.
+Its PASS covers strict JSON/schema/version/hash, union, reference, privacy,
+format, RDS and retained-evidence checks. Separate checkmate validation passes
+all 5,269 MERRA-2 records, but finds 18 pre-existing failures on unchanged global
+assets (fractional-second datetime patterns and large integer checks). These
+additional failures are reported separately and are not represented as a pass.
+The working Amadeus `inst/catalog/` release snapshot is not republished.
+
 ## Regenerate and validate
 
 Run these commands from the **parent `amadeus/` repository root**, with
@@ -65,15 +92,13 @@ mkdir -p amadeus_schema/build/catalog/validated_catalog_handles
 # Request the existing generator's optional GOES discovery JSON output.
 touch amadeus_schema/build/catalog/validated_catalog_handles/goes.json
 
-.venv-catalog/bin/python -B dataset_spec_objects/catalog_workflow.py generate \
-  --output-dir amadeus_schema/build/catalog
+.venv-catalog/bin/python -B dataset_spec_objects/catalog_workflow_2.py generate \
+  --output-dir amadeus_schema/build/catalog \
+  --schema-artifact amadeus_schema.schema.json
 
-.venv-catalog/bin/gen-json-schema \
-  amadeus_schema/src/amadeus_schema/schema/amadeus_schema.yaml \
-  > amadeus_schema/build/catalog/amadeus_schema.schema.json
-
-.venv-catalog/bin/python -B dataset_spec_objects/catalog_workflow.py validate \
+.venv-catalog/bin/python -B dataset_spec_objects/catalog_workflow_2.py validate \
   --catalog-root amadeus_schema/build/catalog --native-evidence \
+  --schema-artifact amadeus_schema/build/catalog/amadeus_schema.schema.json \
   --report amadeus_schema/build/catalog/catalog_validation.json
 ```
 
